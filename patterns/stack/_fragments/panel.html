@@ -1,0 +1,416 @@
+<div class="lesson-content xp" id="lesson7">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Stack and Monotonic Stack</h1>
+    <p class="lesson-subtitle">Goal: use a stack whenever the newest unfinished thing must be handled first. Then learn its sharper cousin, the monotonic stack, which answers "who is the next one taller than me?" for every item in a single pass.</p>
+    <div class="lesson-meta"><span class="badge">Tier 1</span><span class="badge">pattern</span><span class="badge diff-medium">core</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Stack lesson"><a href="#p7-s-idea">Plates</a><a href="#p7-s-words">Pattern words</a><a href="#p7-s-map">Mental map</a><a href="#p7-s-template">Templates</a><a href="#p7-s-spot">Spot it</a><a href="#p7-s-traps">Traps</a><a href="#p7-s-cost">Cost</a><a href="#p7-s-problems">Problems</a><a href="#p7-s-check">Check yourself</a><a href="#p7-recap">Recap</a></nav>
+
+<section class="step" id="p7-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. The last thing in is the first thing out</h2>
+  <p>A stack is a pile where you only touch the top. You add to the top and you take from the top.</p>
+  <p>That sounds limiting. It is exactly right whenever the newest unfinished thing must be finished first: a bracket that was opened last must be closed first, and the last action is the first one you undo.</p>
+  <div class="card analogy"><strong>Analogy: a pile of plates.</strong> Clean plates go on top. When you need one, you take the top one. You never pull a plate from the middle. The plate you put down last is the first one you use again.</div>
+  <p>Now a sharper use. People stand in a line, all facing right. For each person, who is the first taller person they can see? A short person standing right in front of a tall one is hidden by them. Once someone taller arrives, everyone shorter who was still waiting has their answer and can leave.</p>
+  <div class="card analogy"><strong>Analogy: a line of people waiting to see over the crowd.</strong> Keep a stack of the people still waiting. When a new person arrives, every waiting person shorter than them gets their answer and steps away. What stays on the stack always falls from tallest at the bottom to shortest on top. That shape is why it is called a <dfn class="term" tabindex="0" data-def="A stack whose items stay in sorted order from bottom to top. Before pushing, you pop every item that would break the order.">monotonic stack</dfn>.</div>
+  <h3>Try it: the same line of people, two ways</h3>
+  <p>Heights are <code>[6, 2, 5, 1, 3, 4, 0, 8]</code>. For each index, find the first taller height to its right, or -1. Press <strong>Step</strong> or <strong>Play</strong> on each player. Dimmed people already have their answer.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: monotonic stack.</strong> One walk left to right. Each new person pops every shorter person still waiting, then waits too.</p>
+      <div id="p7tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: walk right for each person.</strong> For every index, scan to the right one by one until someone taller shows up.</p>
+      <div id="p7tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p7roA"><span class="lab">monotonic stack</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+    <div class="ro" id="p7roB"><span class="lab">walk right for each</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+    <div class="ro" id="p7roC"><span class="lab">stack pushes / pops</span><span class="val">-</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this list, in the page and in <code>measure.py</code> (13 comparisons against 18; 8 pushes and 7 pops). Both give the answer <code>[8, 5, 8, 3, 4, 8, 8, -1]</code>.</p>
+
+  <h3>Race: make the line longer</h3>
+  <p>On eight people the gap is small. Pick a line shape and a size, then start the race. "Falling, then a giant" is a line that gets shorter and shorter, with one very tall person at the end: everybody waits for the giant.</p>
+  <div class="card">
+    <canvas id="p7cvA" role="img" aria-label="Race between the monotonic stack and the nested scan: two bars that fill as each method counts its comparisons"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p7shape="fall">Falling, then a giant</button>
+      <button class="btn btn-sm" type="button" data-p7shape="rand">Random heights</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p7n="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p7n="100">n = 100</button>
+      <button class="btn btn-sm" type="button" data-p7n="1000">n = 1000</button>
+      <button class="btn btn-sm" type="button" id="p7raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p7roN"><span class="lab">people n</span><span class="val">10</span></div>
+      <div class="ro" id="p7roS"><span class="lab">stack comparisons</span><span class="val">17</span></div>
+      <div class="ro" id="p7roP"><span class="lab">scan comparisons</span><span class="val">45</span></div>
+      <div class="ro" id="p7roR"><span class="lab">scan / stack</span><span class="val">2.6x</span></div>
+      <div class="ro" id="p7roU"><span class="lab">pushes / pops</span><span class="val">10 / 9</span></div>
+    </div>
+    <p class="caption">The page runs both methods with a counter. Random heights use a small fixed number generator (seed 7, heights 0 to 99), the same one <code>measure.py</code> uses.</p>
+  </div>
+<pre><code><span class="c"># == 2. Operation race (measure.py) ==</span>
+<span class="c">-- falling then a giant --</span>
+n =   10: stack comps =    17  pushes =   10  pops =    9   brute comps =     45   ratio = 2.6x
+n =  100: stack comps =   197  pushes =  100  pops =   99   brute comps =   4950   ratio = 25.1x
+n = 1000: stack comps =  1997  pushes = 1000  pops =  999   brute comps = 499500   ratio = 250.1x
+<span class="c">-- random heights 0-99 (seed 7) --</span>
+n = 1000: stack comps =  1987  pushes = 1000  pops =  990   brute comps =  10033   ratio = 5.0x</code></pre>
+  <p>Look at the pushes and pops. However the line is shaped, every person is pushed once and popped at most once. That is why the stack never does more than about 2n comparisons. The nested scan has no such limit: on the falling line it does n x (n - 1) / 2.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Use a stack when the most recent unfinished item is the one to deal with next. Use a monotonic stack when each item is waiting for "the next bigger" or "the next smaller" one.</div>
+  <p class="newwords">New words: <span class="chip">stack</span><span class="chip">monotonic stack</span></p>
+</section>
+
+<section class="step" id="p7-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Plates</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A collection where you only add and remove at one end, the top. The last item added is the first removed.">stack</dfn></td><td>A pile you only touch at the top</td><td>The pile of plates</td><td><code>stack = []</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Last in, first out: the most recently added item leaves first.">LIFO</dfn></td><td>Last in, first out</td><td>The newest plate is used first</td><td>a list used only at its end</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Add an item on top of the stack. O(1) amortized for a Python list.">push</dfn></td><td>Put on top</td><td>Put a clean plate down</td><td><code>stack.append(x)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Remove and return the top item. On an empty list Python raises IndexError.">pop</dfn></td><td>Take off the top</td><td>Take the top plate</td><td><code>stack.pop()</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Look at the top item without removing it.">peek (top)</dfn></td><td>Look at the top without taking it</td><td>Glance at the top plate</td><td><code>stack[-1]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A stack kept in sorted order. Decreasing (tallest at the bottom) finds the next greater item; increasing finds the next smaller item.">monotonic stack</dfn></td><td>A stack kept in order, bottom to top</td><td>Plates that get smaller as the pile grows</td><td>pop while the order would break, then push</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="For each position, the first item to its right that is strictly larger. -1 or 0 when there is none.">next greater element</dfn></td><td>The first bigger item to my right</td><td>The first taller person ahead</td><td>the monotonic stack template</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="An average cost per operation over a whole run. One step can be expensive, but the total over n steps is still O(n).">amortized</dfn></td><td>Averaged over the whole run</td><td>A big clean-up now and then, little work overall</td><td>each index pushed once, popped at most once</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Reverse Polish notation (postfix): operators come after their two operands, as in 3 4 + for 3 + 4. No brackets are needed.">reverse Polish notation</dfn></td><td>Operators written after their numbers</td><td>Two plates go down, an operator merges them</td><td><code>3 4 +</code> means 3 + 4</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A fake value added at an edge, such as a 0-height bar at the end, so the loop handles the last items without extra code.">sentinel</dfn></td><td>A fake item at the edge that flushes the stack</td><td>A giant plate that forces a clean-up</td><td><code>heights + [0]</code></td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Indices, not values</span>A monotonic stack usually stores <strong>indices</strong>. From an index you can read the value (<code>nums[j]</code>) and the distance (<code>i - j</code>). From a value alone you cannot get the distance back.</div>
+  <p class="newwords">New words: <span class="chip">LIFO</span><span class="chip">push</span><span class="chip">pop</span><span class="chip">peek</span><span class="chip">next greater element</span><span class="chip">amortized</span><span class="chip">reverse Polish notation</span><span class="chip">sentinel</span></p>
+</section>
+
+<section class="step" id="p7-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a problem statement to a stack</h2>
+  <p>Read this when a new problem feels stack-shaped but you are not sure how to start.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>Things that open and must close in reverse order (brackets, tags, function calls). "Undo" or "go back". "For each item, the next bigger or smaller one", "how many days until warmer", "span", "histogram". Postfix expressions or a calculator.</span></li>
+    <li><b>Ask</b><span>Which earlier items are still unfinished, and is the newest of them the next one to settle? If yes, keep the unfinished items on a stack.</span></li>
+    <li><b>Pick the variant</b><span>Each variant has a tell-tale signal:</span>
+      <ul class="mm-branches">
+        <li><i>open and close in pairs</i>Matching: push openers, a closer must match the top.</li>
+        <li><i>next greater, warmer, taller</i>Monotonic decreasing: pop while the top is smaller than the new item.</li>
+        <li><i>next smaller, widest rectangle</i>Monotonic increasing: pop while the top is bigger. Often a 0 sentinel at the end.</li>
+        <li><i>tokens, operators, nesting like 3[ab]</i>Expression: push numbers, an operator pops two and pushes the result.</li>
+        <li><i>stack plus a fast extra query</i>Augmented stack: store (value, min so far) pairs, or a second stack.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Everything on the stack is still waiting for its answer, and (for monotonic stacks) the stack stays sorted from bottom to top.</span></li>
+    <li><b>Steps</b><span>Walk the input once. For each item: pop every top that this item settles, and record their answers. Then push the item (usually its index). After the loop, whatever is left never found an answer.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Never pop an empty stack. Decide what the leftovers mean (-1, 0, or "not valid"). Strict <code>&lt;</code> or <code>&lt;=</code> for equal values? Store indices when you need distances. In expressions, the first pop is the right operand.</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p7-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Four templates</h2>
+  <h3>Template A: matching pairs</h3>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> is_valid(s):</code></td><td>Is every bracket closed by the right partner, in the right order?</td></tr>
+      <tr><td><code>pairs = {<span class="s">')'</span>: <span class="s">'('</span>, <span class="s">']'</span>: <span class="s">'['</span>, <span class="s">'}'</span>: <span class="s">'{'</span>}</code></td><td>Each closer points to the opener it needs.</td></tr>
+      <tr><td><code>stack = []</code></td><td>Openers that are still waiting for their closer.</td></tr>
+      <tr><td><code><span class="k">for</span> ch <span class="k">in</span> s:</code></td><td>One pass over the characters.</td></tr>
+      <tr><td><code><span class="k">if</span> ch <span class="k">in</span> pairs:</code></td><td>A closer. It must match the newest opener.</td></tr>
+      <tr><td><code><span class="k">if not</span> stack <span class="k">or</span> stack.pop() != pairs[ch]:</code></td><td>Nothing open, or the top is the wrong kind: fail. The empty check comes first, so we never pop an empty list.</td></tr>
+      <tr><td><code><span class="k">return False</span></code></td><td>Stop at the first mistake.</td></tr>
+      <tr><td><code><span class="k">else</span>: stack.append(ch)</code></td><td>An opener: push it.</td></tr>
+      <tr><td><code><span class="k">return not</span> stack</code></td><td>Valid only if nothing is left open.</td></tr>
+    </tbody>
+  </table>
+  <p>Pick a string and step through it:</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p7br="([]{})">([]{}) valid</button>
+    <button class="btn btn-sm" type="button" data-p7br="([)]">([)] crossed</button>
+    <button class="btn btn-sm" type="button" data-p7br="(()">(() left open</button>
+    <button class="btn btn-sm" type="button" data-p7br=")(">)( starts closed</button>
+  </div>
+  <div id="p7tpBr"></div>
+
+  <h3>Template B: monotonic stack (next greater element)</h3>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>answer = [-<span class="n">1</span>] * len(nums)</code></td><td>Default for anyone who never finds a taller one.</td></tr>
+      <tr><td><code>stack = []</code></td><td>Indices still waiting. Their heights fall from bottom to top.</td></tr>
+      <tr><td><code><span class="k">for</span> i, x <span class="k">in</span> enumerate(nums):</code></td><td>One pass. x is the new arrival.</td></tr>
+      <tr><td><code><span class="k">while</span> stack <span class="k">and</span> nums[stack[-<span class="n">1</span>]] &lt; x:</code></td><td>The top is shorter than x, so x is the first taller one it sees.</td></tr>
+      <tr><td><code>j = stack.pop()</code></td><td>That index is settled and leaves for good.</td></tr>
+      <tr><td><code>answer[j] = x</code></td><td>Record its answer. For "how many days until warmer", write <code>i - j</code> instead.</td></tr>
+      <tr><td><code>stack.append(i)</code></td><td>Now x waits for someone taller than itself.</td></tr>
+      <tr><td><code><span class="k">return</span> answer</code></td><td>Leftovers keep -1.</td></tr>
+    </tbody>
+  </table>
+  <p>Flip <code>&lt;</code> to <code>&gt;</code> and you get the next <em>smaller</em> element (an increasing stack). Walk from right to left, or read the new top after pushing, and you get the previous greater or smaller one.</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p7ng="4,4,4,5">Ties [4, 4, 4, 5]</button>
+    <button class="btn btn-sm" type="button" data-p7ng="9,7,5,3,1">Falling [9, 7, 5, 3, 1]</button>
+    <button class="btn btn-sm" type="button" data-p7ng="1,3,5,7,9">Rising [1, 3, 5, 7, 9]</button>
+  </div>
+  <div id="p7tpNg"></div>
+  <p class="caption">From <code>measure.py</code>: ties give <code>[5, 5, 5, -1]</code> with 5 comparisons; falling gives all -1 with 0 pops; rising pops once per step.</p>
+
+  <h3>Template C: evaluate an expression</h3>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>OPS = {<span class="s">'+'</span>: ..., <span class="s">'/'</span>: <span class="k">lambda</span> a, b: int(a / b)}</code></td><td>Each operator as a small function. <code>int(a / b)</code> cuts toward zero, which most problems ask for.</td></tr>
+      <tr><td><code><span class="k">for</span> t <span class="k">in</span> tokens:</code></td><td>Read tokens left to right.</td></tr>
+      <tr><td><code><span class="k">if</span> t <span class="k">in</span> OPS:</code></td><td>An operator needs the two newest numbers.</td></tr>
+      <tr><td><code>b = stack.pop()</code> then <code>a = stack.pop()</code></td><td>The first pop is the <strong>right</strong> operand. Order matters for - and /.</td></tr>
+      <tr><td><code>stack.append(OPS[t](a, b))</code></td><td>The result is a new number on the pile.</td></tr>
+      <tr><td><code><span class="k">else</span>: stack.append(int(t))</code></td><td>A number waits on the stack.</td></tr>
+      <tr><td><code><span class="k">return</span> stack[<span class="n">0</span>]</code></td><td>One number is left: the answer.</td></tr>
+    </tbody>
+  </table>
+  <p>The tokens <code>5 1 2 + 4 * + 3 -</code> mean 5 + (1 + 2) x 4 - 3. <code>measure.py</code> prints 14.</p>
+  <div id="p7tpRpn"></div>
+
+  <h3>Template D: a stack that also knows its minimum</h3>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>self.stack = []</code></td><td>Store pairs: (value, smallest value at or below this one).</td></tr>
+      <tr><td><code>low = min(x, self.stack[-<span class="n">1</span>][<span class="n">1</span>]) <span class="k">if</span> self.stack <span class="k">else</span> x</code></td><td>The new minimum is x or the old minimum, whichever is smaller.</td></tr>
+      <tr><td><code>self.stack.append((x, low))</code></td><td>Each plate carries a note: "the smallest plate from here down".</td></tr>
+      <tr><td><code>self.stack.pop()</code></td><td>The pair below already knows its own minimum. Nothing to recompute.</td></tr>
+      <tr><td><code><span class="k">return</span> self.stack[-<span class="n">1</span>][<span class="n">1</span>]</code></td><td>get_min is one look at the top: O(1).</td></tr>
+    </tbody>
+  </table>
+  <p>Play with it. It starts after push 5, 3, 7, 2. Push your own numbers, pop, and watch the minimum come back without a search.</p>
+  <div class="card">
+    <div class="btn-row">
+      <label for="p7minIn" style="font-size:13.5px">value</label>
+      <input type="text" id="p7minIn" value="4" autocomplete="off" spellcheck="false" style="width:6em;font:13px var(--mono);padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-bright)">
+      <button class="btn btn-sm" type="button" id="p7minPush">Push</button>
+      <button class="btn btn-sm" type="button" id="p7minPop">Pop</button>
+      <button class="btn btn-sm" type="button" id="p7minGet">Get min</button>
+      <button class="btn btn-sm" type="button" id="p7minReset">Empty it</button>
+    </div>
+    <p class="sb-error" id="p7minErr" role="alert"></p>
+    <div id="p7tpMin"></div>
+  </div>
+<pre><code><span class="c"># == 5. Min stack (measure.py) ==</span>
+push 2: stack = [(5, 5), (3, 3), (7, 3), (2, 2)]  min = 2
+pop -> 2: stack = [(5, 5), (3, 3), (7, 3)]  min = 3</code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Push what is unfinished. Pop when something settles it. Decide what the leftovers mean.</div>
+</section>
+
+<section class="step" id="p7-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: stack or not?</h2>
+  <p>Read each made-up task. Decide if a stack fits, and which variant. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A drawing app keeps every stroke. "Undo" removes the most recent stroke, again and again.</h3>
+    <textarea aria-label="Does a stack fit task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, a plain stack.</strong> Signal: the newest action is undone first. Push each stroke, pop on undo.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. You have a week of share prices. For each day, how many days until the price is higher than today?</h3>
+    <textarea aria-label="Does a stack fit task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, a monotonic decreasing stack of indices.</strong> Signal: "the next higher one". When a day pops, its answer is <code>i - j</code>, so store indices.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A printer gets jobs from many people. Print them in the order they arrived.</h3>
+    <textarea aria-label="Does a stack fit task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: this is a queue.</strong> First in, first out. A stack would print the newest job first. In Python use <code>collections.deque</code> with <code>popleft()</code>; <code>list.pop(0)</code> costs O(n) each time.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A web page has tags like &lt;b&gt;, &lt;i&gt; and their closing tags. Check that they nest properly.</h3>
+    <textarea aria-label="Does a stack fit task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, matching pairs.</strong> It is the bracket check with longer brackets: push each opening tag, and a closing tag must match the top.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Given daily step counts, find the largest total over any 7 days in a row.</h3>
+    <textarea aria-label="Does a stack fit task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: sliding window.</strong> A fixed run of back-to-back days. Add the day that enters, subtract the day that leaves. Nothing waits for a later answer.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Bars of a skyline are given. For each bar, find the nearest bar to its left that is shorter.</h3>
+    <textarea aria-label="Does a stack fit task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, a monotonic increasing stack.</strong> Pop while the top is not shorter; whatever is on top after that is the answer for the new bar. Then push it. This is the heart of the largest-rectangle problem.</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. A string like <code>2[ab]3[c]</code> means "ab" twice then "c" three times. Expand it, with nesting allowed.</h3>
+    <textarea aria-label="Does a stack fit task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, the expression variant.</strong> On <code>[</code> push the text so far and the repeat count; on <code>]</code> pop them and glue the repeated piece on. The newest open bracket closes first.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Open and close in pairs, undo, nesting, "next greater or smaller", "days until", spans, histograms, postfix expressions. Not for "in arrival order" (queue) or "a run of k in a row" (window).</div>
+</section>
+
+<section class="step" id="p7-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: popping an empty stack</span>
+    <p>A string that starts with a closer has nothing to match. Without the empty check, Python crashes.</p>
+<pre><code><span class="k">if</span> stack.pop() != pairs[ch]:            <span class="c"># wrong</span>
+<span class="k">if not</span> stack <span class="k">or</span> stack.pop() != pairs[ch]: <span class="c"># fixed: check first</span>
+
+<span class="c"># measure.py on ')('</span>
+no empty check -> IndexError: pop from empty list
+fixed          -> False</code></pre>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: forgetting the leftovers</span>
+    <p>Reaching the end is not enough. Openers still on the stack were never closed.</p>
+<pre><code><span class="k">return</span> True        <span class="c"># wrong:  '((' -> True</span>
+<span class="k">return not</span> stack   <span class="c"># fixed:  '((' -> False</span></code></pre>
+    <p>For monotonic stacks, leftovers are items that never found an answer. Make sure the default (-1 or 0) is already in place, or flush them with a sentinel.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: storing values when you need indices</span>
+    <p>"How many days until warmer?" needs the distance <code>i - j</code>. If the stack holds temperatures, you have to search for the index again, and repeated values point to the wrong day.</p>
+<pre><code>stack.append(t); j = temps.index(v)    <span class="c"># wrong: index() finds the first copy</span>
+stack.append(i); j = stack.pop()       <span class="c"># fixed: keep the index itself</span>
+
+<span class="c"># measure.py on [3, 1, 1, 4]</span>
+values on the stack  -> [3, 2, 0, 0]
+indices on the stack -> [3, 2, 1, 0]</code></pre>
+    <p>Both 1s have value 1, so <code>index(1)</code> returns 1 twice. Day 2 never gets its answer. The <code>index</code> call is also O(n), which makes the whole thing O(n<sup>2</sup>).</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: &lt; or &lt;= with equal values</span>
+    <p>"Next greater" means strictly greater. If equal values also pop, an item can be "answered" by its twin.</p>
+<pre><code><span class="k">while</span> stack <span class="k">and</span> nums[stack[-1]] &lt;= x:   <span class="c"># wrong for strictly greater</span>
+<span class="k">while</span> stack <span class="k">and</span> nums[stack[-1]] &lt; x:    <span class="c"># fixed</span>
+
+<span class="c"># measure.py on [2, 2, 3]</span>
+with &lt;= -> [2, 3, -1]
+with &lt;  -> [3, 3, -1]</code></pre>
+    <p>Some problems want <code>&lt;=</code> (for example "span of days with price at most today"). Read the wording, then test with a tie.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 5: operand order and Python's division</span>
+    <p>In an expression, the first pop is the right-hand number. And Python's <code>//</code> rounds down, not toward zero.</p>
+<pre><code><span class="c"># measure.py</span>
+'9 4 -' with swapped pops -> -5     correct -> 5
+'7 -2 /' with //          -> -4     with int(a / b) -> -3</code></pre>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Check before you pop. Decide what leftovers mean. Store indices. Test a tie, an empty input and a negative division.</div>
+</section>
+
+<section class="step" id="p7-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Why the monotonic stack is O(n), even with a loop inside a loop</h2>
+  <p>The template has a <code>while</code> inside a <code>for</code>. That looks like O(n<sup>2</sup>). It is not, and interviewers love to ask why.</p>
+  <details class="math"><summary>Step 1: count pushes and pops</summary><div>
+    <p>Each index is pushed exactly once: n pushes. An index can only be popped after it was pushed, and it never comes back. So there are at most n pops in the whole run, no matter how they are spread out.</p>
+    <p>One arrival might pop 999 items at once. But then those 999 are gone, and no later arrival can pop them again. This style of counting is called <dfn class="term" tabindex="0" data-def="An average cost per operation over a whole run. One step can be expensive, but the total over n steps is still O(n).">amortized</dfn> analysis.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: count comparisons</summary><div>
+    <p>Every check of <code>nums[stack[-1]] &lt; x</code> either pops (true) or ends that <code>while</code> (false). A false check happens at most once per arrival. So:</p>
+    <div class="eq">comparisons &lt;= pops + (n - 1) &lt;= (n - 1) + (n - 1) = 2n - 2</div>
+    <p>The last index is pushed last and never popped, so pops are at most n - 1. On the falling line with n = 1000, <code>measure.py</code> counts 999 pops and 1997 comparisons, just under the bound of 1998. The nested scan does 1000 x 999 / 2 = 499,500.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: memory and hidden costs</summary><div>
+    <p>Extra space is O(n): on a falling line nobody ever leaves, so the stack holds everyone until the end.</p>
+    <p>A Python list is a fine stack: <code>append</code> and <code>pop()</code> at the end are O(1) amortized. The traps are at the other end: <code>pop(0)</code> and <code>insert(0, x)</code> shift every item, O(n) each. Calling <code>list.index</code> or <code>min(stack)</code> inside the loop also hides an O(n) scan.</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Costs at a glance</span>Matching and expressions: O(n) time, O(n) space. Monotonic stack: O(n) time (at most 2n - 2 comparisons), O(n) space. Min stack: O(1) per operation, O(n) space.</div>
+</section>
+
+<section class="step" id="p7-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern</h2>
+  <p>Each one is a stack in a different costume. Pages for them come in later sessions; the links open LeetCode.</p>
+  <h3><span class="badge diff-easy">easy</span></h3>
+  <table>
+    <thead><tr><th style="width:4.5em">No.</th><th style="width:38%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>20</td><td><a href="https://leetcode.com/problems/valid-parentheses/" target="_blank" rel="noopener">Valid Parentheses</a></td><td>Three kinds of brackets. A dict from closer to opener keeps the check to one line.</td></tr>
+      <tr><td>496</td><td><a href="https://leetcode.com/problems/next-greater-element-i/" target="_blank" rel="noopener">Next Greater Element I</a> <span class="caption">(extra)</span></td><td>Run Template B once on the big list, store answers in a dict, then look each query up.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-medium">medium</span></h3>
+  <table>
+    <thead><tr><th style="width:4.5em">No.</th><th style="width:38%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>155</td><td><a href="https://leetcode.com/problems/min-stack/" target="_blank" rel="noopener">Min Stack</a></td><td>get_min in O(1): keep the minimum so far beside every value.</td></tr>
+      <tr><td>150</td><td><a href="https://leetcode.com/problems/evaluate-reverse-polish-notation/" target="_blank" rel="noopener">Evaluate Reverse Polish Notation</a></td><td>Pop order for - and /, and division that cuts toward zero.</td></tr>
+      <tr><td>22</td><td><a href="https://leetcode.com/problems/generate-parentheses/" target="_blank" rel="noopener">Generate Parentheses</a></td><td>Really backtracking. The stack idea lives on as "closers may never outnumber openers".</td></tr>
+      <tr><td>739</td><td><a href="https://leetcode.com/problems/daily-temperatures/" target="_blank" rel="noopener">Daily Temperatures</a></td><td>Template B with the answer written as a distance, <code>i - j</code>. Store indices.</td></tr>
+      <tr><td>853</td><td><a href="https://leetcode.com/problems/car-fleet/" target="_blank" rel="noopener">Car Fleet</a></td><td>Sort by position first, turn cars into arrival times, then a car that would catch the one ahead merges into its fleet.</td></tr>
+      <tr><td>901</td><td><a href="https://leetcode.com/problems/online-stock-span/" target="_blank" rel="noopener">Online Stock Span</a> <span class="caption">(extra)</span></td><td>A monotonic stack that arrives one price at a time; ties pop (<code>&lt;=</code>), and each entry carries its span.</td></tr>
+      <tr><td>394</td><td><a href="https://leetcode.com/problems/decode-string/" target="_blank" rel="noopener">Decode String</a> <span class="caption">(extra)</span></td><td>Nested repeats: push (text so far, count) on <code>[</code>, pop and glue on <code>]</code>.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-hard">hard</span></h3>
+  <table>
+    <thead><tr><th style="width:4.5em">No.</th><th style="width:38%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>84</td><td><a href="https://leetcode.com/problems/largest-rectangle-in-histogram/" target="_blank" rel="noopener">Largest Rectangle in Histogram</a></td><td>Increasing stack. When a bar pops, its width runs from the new top to the current index. A 0 sentinel flushes the rest.</td></tr>
+      <tr><td>42</td><td><a href="https://leetcode.com/problems/trapping-rain-water/" target="_blank" rel="noopener">Trapping Rain Water</a> <span class="caption">(extra)</span></td><td>Solvable with a decreasing stack (fill each dip when a taller wall arrives) or with two pointers.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p7-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Run Template B on <code>[6, 2, 4, 1, 5]</code>. What is the answer list, and which indices are still on the stack at the end?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Answer <code>[-1, 4, 5, 5, -1]</code>; indices 0 and 4 are left.</strong> 4 pops the 2; 5 pops the 1 and then the 4; nothing is taller than 6, and nothing comes after 5. <code>measure.py</code> counts 3 pops and 7 comparisons.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Is <code>([)]</code> valid? At which character does the bracket check stop?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not valid; it stops at the third character, <code>)</code>.</strong> The top of the stack is <code>[</code>, but <code>)</code> needs <code>(</code>. Each kind is balanced on its own, which is why counting brackets is not enough. Try it in the sandbox.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. One arrival in a list of 1000 pops 999 items. Can the monotonic stack still be O(n)? What is the most pops in the whole run?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes. At most 999 pops in total (n - 1).</strong> Each index is pushed once and popped at most once, and the last index is never popped. If one arrival pops 999, every other arrival pops none. <code>measure.py</code> on the falling line: 999 pops, 1997 comparisons.</p></div>
+  </div>
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>stack</dt><dd>A collection you only touch at the top: push to add, pop to remove.</dd>
+    <dt>LIFO</dt><dd>Last in, first out: the newest item leaves first.</dd>
+    <dt>push / pop / peek</dt><dd>Add on top / remove from the top / look at the top. In Python: <code>append</code>, <code>pop()</code>, <code>stack[-1]</code>.</dd>
+    <dt>monotonic stack</dt><dd>A stack kept sorted from bottom to top by popping whatever would break the order before each push.</dd>
+    <dt>next greater element</dt><dd>For each position, the first strictly larger item to its right.</dd>
+    <dt>amortized</dt><dd>Cost averaged over a whole run: a single step can be big, the total stays O(n).</dd>
+    <dt>reverse Polish notation</dt><dd>Operators come after their two numbers, as in <code>3 4 +</code>.</dd>
+    <dt>sentinel</dt><dd>A fake edge item, such as a 0 bar at the end, that forces the stack to empty.</dd>
+    <dt>queue</dt><dd>The opposite order: first in, first out. Use <code>collections.deque</code>.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p7-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> keep unfinished items on a stack; the newest one is settled first. A monotonic stack keeps only items that can still get an answer, in sorted order.</p>
+    <p><strong>Signals:</strong> pairs that open and close, undo, nesting, "next greater or smaller", "days until", spans, histograms, postfix expressions.</p>
+    <p><strong>Template:</strong> for each <code>i, x</code>: <code>while stack and a[stack[-1]] &lt; x</code>: <code>j = stack.pop()</code>, <code>answer[j] = x</code>; then <code>stack.append(i)</code>. Brackets: push openers, a closer must match the top, <code>return not stack</code>.</p>
+    <p><strong>Cost:</strong> O(n) time and O(n) space. Each index is pushed once and popped at most once: 1997 comparisons against 499,500 for the nested scan at n = 1000.</p>
+    <p><strong>Traps:</strong> popping an empty stack; ignoring leftovers; values instead of indices; <code>&lt;</code> versus <code>&lt;=</code> on ties; pop order and <code>//</code> in expressions.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, switch between the monotonic stack and the bracket check. Type a falling line with one giant at the end and compare the two comparison counts.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(7)">Mark lesson complete</button>
+    </div>
+    <p class="caption">First problem in this pattern: 20 Valid Parentheses (its page comes in a later session).</p>
+  </div>
+</section>
+</div>

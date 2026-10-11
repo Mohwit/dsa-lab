@@ -1,0 +1,413 @@
+<div class="lesson-content xp" id="lesson18">
+  <style>
+    #lesson18 .tp-svg .tp-node.st-w circle, #sandbox18 .tp-svg .tp-node.st-w circle { r: 10px; fill: var(--bg-raised); stroke: var(--border); stroke-width: 1; }
+    #lesson18 .tp-svg .tp-node.st-w text, #sandbox18 .tp-svg .tp-node.st-w text { font-size: 11px; font-weight: 700; fill: var(--purple); }
+  </style>
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Advanced Graphs: Shortest Paths and MST</h1>
+    <p class="lesson-subtitle">Goal: when edges have weights, find the cheapest route from one node to all others (Dijkstra, Bellman-Ford), and the cheapest way to connect every node (Prim, Kruskal). You will see why plain BFS gives wrong answers here, and which small greedy rule makes each method correct.</p>
+    <div class="lesson-meta"><span class="badge">Tier 4</span><span class="badge">pattern</span><span class="badge diff-medium">after graphs</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+    <p>Before this lesson: BFS, DFS and union-find from the <button class="btn btn-sm" type="button" onclick="switchLesson(17)">Graphs lesson</button>. This lesson builds on all three.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Advanced Graphs lesson"><a href="#p18-s-idea">Water in pipes</a><a href="#p18-s-words">Pattern words</a><a href="#p18-s-map">Mental map</a><a href="#p18-s-template">Templates</a><a href="#p18-s-spot">Spot it</a><a href="#p18-s-traps">Traps</a><a href="#p18-s-cost">Cost</a><a href="#p18-s-problems">Problems</a><a href="#p18-s-check">Check yourself</a><a href="#p18-recap">Recap</a></nav>
+
+<section class="step" id="p18-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. The nearest unfinished town is already settled</h2>
+  <p>In the Graphs lesson every edge cost the same, so "fewest edges" meant "shortest". Now each road has its own length. Two short roads can beat one long road.</p>
+  <p>We want the cheapest cost from one start node to every other node. Trying every route works, but the number of routes explodes. One greedy rule fixes it.</p>
+  <div class="card analogy"><strong>Analogy: water spreading through pipes.</strong> Pour water in at town A. Every pipe has a length, and water flows at the same speed in all of them. The water reaches towns one by one, nearest first. The moment water first arrives at a town, that arrival time is the shortest distance: any other route is still on its way. Dijkstra simulates this, always jumping to the next town the water would reach.</div>
+  <p>The graph below has six towns. The small circles on the roads are the lengths. Start at A.</p>
+  <h3>Try it: the same graph, two ways</h3>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: try every path.</strong> Walk every route from A that never repeats a town, and keep the cheapest cost seen for each town. The teal edges show the route being tried.</p>
+      <div id="p18tpA"></div>
+    </div>
+    <div>
+      <p><strong>Fast: Dijkstra.</strong> Keep a <em>heap</em> of (cost, town). Always take the cheapest one; that town is now final. Then offer its roads to its neighbours.</p>
+      <div id="p18tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p18roA"><span class="lab">try every path</span><span class="val">-</span> <span class="unit">edge checks</span></div>
+    <div class="ro" id="p18roB"><span class="lab">Dijkstra</span><span class="val">-</span> <span class="unit">edge checks</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this graph (in the page and in <code>measure.py</code>, which prints 128 edge checks over 42 paths, against 18). Both find the same answers: A=0, B=3, C=1, D=8, E=10, F=12. Dijkstra looks at each road once from each end, so 9 roads give 18 checks.</p>
+
+  <h3>Why not plain BFS?</h3>
+  <p>BFS goes out in rings and keeps the first cost it finds for each node. With weights, the first route found is the one with the fewest roads, not the cheapest. Step through it and watch B get 4, although A to C to B costs 1 + 2 = 3.</p>
+  <div id="p18tpC"></div>
+  <div class="readouts">
+    <div class="ro" id="p18roC"><span class="lab">BFS says A to F costs</span><span class="val">-</span></div>
+    <div class="ro" id="p18roD"><span class="lab">Dijkstra says A to F costs</span><span class="val">-</span></div>
+  </div>
+  <p class="caption"><code>measure.py</code> prints BFS: B=4, D=9, E=11, F=13. Four of the five answers are wrong.</p>
+
+  <h3>The second idea: connect everything as cheaply as possible</h3>
+  <p>A different question uses the same graph: pick roads so every town is connected, with the smallest total length. You do not care how long any single trip is; you pay for the roads you build.</p>
+  <div class="card analogy"><strong>Analogy: laying cable between villages.</strong> Split the villages into any two groups. Some cable must cross between the groups, and the cheapest crossing cable is always a safe choice. Prim grows one group outward, always buying the cheapest cable that leaves it. Kruskal buys cables from cheapest up, skipping any that joins two villages already connected.</div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Shortest paths: the cheapest unfinished node in the heap is final (only true when no weight is negative). Spanning tree: the cheapest edge crossing any split is safe.</div>
+  <p class="newwords">New words: <span class="chip">weighted graph</span><span class="chip">Dijkstra</span><span class="chip">min-heap</span><span class="chip">spanning tree</span></p>
+</section>
+
+<section class="step" id="p18-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>In the pipes picture</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A graph where every edge carries a number (its weight): a length, a price, a time.">weighted graph</dfn></td><td>Every edge has a cost</td><td>Pipes of different lengths</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The path between two nodes whose edge weights add up to the smallest total.">shortest path</dfn></td><td>The route with the smallest total cost</td><td>The way the water arrives first</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Checking whether going through node u gives a cheaper way to v: if dist[u] + w &lt; dist[v], update dist[v].">relaxation</dfn></td><td>"Is it cheaper to go through u?" If yes, update</td><td>A shorter pipe to a town is found</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A structure that always hands back its smallest item quickly: O(log n) to add or remove. Python's heapq.">min-heap</dfn></td><td>A pile that always gives you the smallest first</td><td>Which town the water reaches next</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A node whose shortest distance is known for sure and will never change. In Dijkstra, a node becomes final when it is popped from the heap for the first time.">final (settled)</dfn></td><td>Its answer can no longer improve</td><td>The water has arrived</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="An old heap entry for a node that was already finalised with a smaller cost. It must be skipped when popped.">stale entry</dfn></td><td>An out-of-date offer still sitting in the heap</td><td>A slow trickle arriving after the flood</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Shortest paths from one source for graphs with non-negative weights, using a min-heap: always finalise the cheapest unfinished node.">Dijkstra</dfn></td><td>Shortest paths, greedy, with a heap</td><td>Follow the water front</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Shortest paths by relaxing every edge in rounds. After round r, every cost uses at most r edges. Works with negative weights and can cap the number of edges.">Bellman-Ford</dfn></td><td>Relax every edge, round after round</td><td>Each round lets water through one more pipe</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="An edge with weight below zero, such as a refund. It breaks Dijkstra's rule that the cheapest heap entry is final.">negative edge</dfn></td><td>A road that pays you back</td><td>A pipe that makes water arrive earlier</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A loop whose weights add up to less than zero. Going around it again and again makes the cost fall forever, so 'shortest' has no answer.">negative cycle</dfn></td><td>A loop that makes money every lap</td><td>(no water picture: the cost falls forever)</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A set of edges that connects every node with no loops. With n nodes it has exactly n - 1 edges.">spanning tree</dfn></td><td>Connects all nodes, no loops, n - 1 edges</td><td>Just enough cable to reach every village</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Minimum spanning tree: the spanning tree with the smallest total edge weight.">MST</dfn></td><td>The cheapest spanning tree</td><td>The cheapest full cable network</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="For any split of the nodes into two groups, the cheapest edge crossing between the groups belongs to some minimum spanning tree. This is why Prim and Kruskal can be greedy.">cut property</dfn></td><td>The cheapest edge across any split is safe</td><td>The cheapest cable between two groups</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="MST method that grows one tree from a start node, always adding the cheapest edge that leaves the tree (kept in a min-heap).">Prim</dfn></td><td>Grow one tree, cheapest edge out each time</td><td>Spread out from one village</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="MST method that sorts all edges and adds them cheapest first, skipping any edge whose ends are already connected (checked with union-find).">Kruskal</dfn></td><td>Cheapest edges first, skip loops</td><td>Buy cables from a price list</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A structure that keeps groups of items: find(x) names x's group, union joins two groups. Nearly O(1) per call with path halving.">union-find</dfn></td><td>"Are these two already connected?" in nearly one step</td><td>Which villages already share a network</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A path judged by its single worst edge (the largest weight on it), not by the sum. The best bottleneck path makes that worst edge as small as possible.">bottleneck path</dfn></td><td>A path whose cost is its worst single step</td><td>The narrowest pipe on the way</td></tr>
+    </tbody>
+  </table>
+  <p class="newwords">New words: <span class="chip">relaxation</span><span class="chip">final</span><span class="chip">stale entry</span><span class="chip">Bellman-Ford</span><span class="chip">negative edge</span><span class="chip">negative cycle</span><span class="chip">MST</span><span class="chip">cut property</span><span class="chip">Prim</span><span class="chip">Kruskal</span><span class="chip">bottleneck path</span></p>
+</section>
+
+<section class="step" id="p18-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from the problem statement to code</h2>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>Nodes joined by edges that carry a number: time, price, distance, effort, probability. Words like "cheapest", "minimum time", "least cost to connect", "within k stops".</span></li>
+    <li><b>Ask</b><span>Am I finding the best route from a start (a path), or choosing edges so everything is connected (a tree)? Then: can a weight be negative, and is the number of edges capped?</span></li>
+    <li><b>Pick</b><span>Each variant has a tell-tale signal:</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>one start, weights 0 or more</i>Dijkstra with a min-heap. Network Delay Time.</li>
+        <li><i>negative weights, or at most k edges</i>Bellman-Ford: k + 1 rounds, read last round, write a copy.</li>
+        <li><i>connect all, least total</i>MST. Prim for a dense graph (all point pairs), Kruskal for an edge list.</li>
+        <li><i>path cost = its worst step</i>Bottleneck: Dijkstra with max instead of plus, or binary search on the limit plus BFS.</li>
+        <li><i>every edge costs the same</i>Not this lesson: plain BFS from the Graphs lesson.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Dijkstra: every popped, non-stale node is final, and dist holds the cheapest cost found so far for the rest. Bellman-Ford: after round r, cost holds the best price using at most r edges. MST: the edges kept so far are part of some cheapest tree.</span></li>
+    <li><b>Steps</b><span>Build an adjacency list <code>graph[u] = [(v, w), ...]</code>. Push the start. Loop: pop the cheapest, skip it if stale, mark it final, relax each edge and push any improvement. Read the answer from dist (largest value, one target, or -1 if a node is missing).</span></li>
+    <li class="mm-trap"><b>Check</b><span>Directed or undirected (add both directions)? Nodes numbered from 0 or 1? Unreachable nodes (return -1)? A negative weight (not Dijkstra)? A cap on stops (copy the array each round)? Stale entries skipped?</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p18-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Four templates</h2>
+  <h3>Template A: Dijkstra</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>dist = {src: <span class="n">0</span>}</code></td><td>Best known cost per node. Missing means "not reached yet" (infinity).</td></tr>
+      <tr><td><code>heap = [(<span class="n">0</span>, src)]</code></td><td>Offers waiting to be checked, as (cost, node). heapq sorts tuples by cost first.</td></tr>
+      <tr><td><code>done = set()</code></td><td>Nodes whose answer is final.</td></tr>
+      <tr><td><code>d, u = heapq.heappop(heap)</code></td><td>Take the cheapest offer: the next place the water reaches.</td></tr>
+      <tr><td><code><span class="k">if</span> u <span class="k">in</span> done: <span class="k">continue</span></code></td><td>A stale offer: u was already finalised with a smaller cost. Skip it.</td></tr>
+      <tr><td><code>done.add(u)</code></td><td>u is final. Every other offer costs at least d, and weights are not negative.</td></tr>
+      <tr><td><code><span class="k">for</span> v, w <span class="k">in</span> graph[u]:</code></td><td>Relax every road out of u.</td></tr>
+      <tr><td><code>nd = d + w</code></td><td>The cost of reaching v through u.</td></tr>
+      <tr><td><code><span class="k">if</span> v <span class="k">not in</span> dist <span class="k">or</span> nd &lt; dist[v]:</code></td><td>First route to v, or a cheaper one?</td></tr>
+      <tr><td><code>dist[v] = nd; heapq.heappush(heap, (nd, v))</code></td><td>Write it down and add a new offer. The old offer stays in the heap and will be stale later.</td></tr>
+    </tbody>
+  </table>
+  <div id="p18tpD"></div>
+  <div class="readouts">
+    <div class="ro" id="p18roE"><span class="lab">heap pops</span><span class="val">-</span></div>
+    <div class="ro" id="p18roF"><span class="lab">stale pops skipped</span><span class="val">-</span></div>
+    <div class="ro" id="p18roG"><span class="lab">edge checks</span><span class="val">-</span></div>
+  </div>
+  <p>Nodes become final in the order A, C, B, D, E, F, the order of their distances. <code>measure.py</code> prints 9 pops, 3 of them stale, 9 pushes and 18 edge checks.</p>
+
+  <h3>Template B: Bellman-Ford with at most k stops</h3>
+  <p>A flight with k stops uses k + 1 flights. Round r finds the cheapest price using at most r flights, so k + 1 rounds give the answer. Each round must read the <em>old</em> costs, or one round could chain several flights.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>cost = {x: INF <span class="k">for</span> x <span class="k">in</span> nodes}; cost[src] = <span class="n">0</span></code></td><td>With zero flights only the start is reachable.</td></tr>
+      <tr><td><code><span class="k">for</span> _ <span class="k">in</span> range(k + <span class="n">1</span>):</code></td><td>One round per allowed flight.</td></tr>
+      <tr><td><code>new = dict(cost)</code></td><td>Write into a copy. Read from last round.</td></tr>
+      <tr><td><code><span class="k">for</span> a, b, w <span class="k">in</span> flights:</code></td><td>Look at every flight once per round.</td></tr>
+      <tr><td><code><span class="k">if</span> cost[a] + w &lt; new[b]: new[b] = cost[a] + w</code></td><td>Relax using the old cost of a: one more flight, no more.</td></tr>
+      <tr><td><code>cost = new</code></td><td>The round is over; its costs become "last round".</td></tr>
+    </tbody>
+  </table>
+  <p>Pick k and step through. Flights go A to B 1, B to C 1, C to D 1, A to C 5, B to D 4, A to D 9. Find the cheapest A to D.</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p18k="0">k = 0</button>
+    <button class="btn btn-sm" type="button" data-p18k="1">k = 1</button>
+    <button class="btn btn-sm" type="button" data-p18k="2">k = 2</button>
+  </div>
+  <div id="p18tpE"></div>
+  <div class="readouts">
+    <div class="ro" id="p18roK"><span class="lab">stops allowed k</span><span class="val">-</span></div>
+    <div class="ro" id="p18roH"><span class="lab">cheapest A to D</span><span class="val">-</span></div>
+    <div class="ro" id="p18roI"><span class="lab">edge checks</span><span class="val">-</span> <span class="unit">(k + 1) x 6</span></div>
+  </div>
+  <pre><code><span class="c"># == 6. Bellman-Ford with at most k stops (flights, A to D) ==</span>
+k = 0: cheapest = 9   edge checks = 6
+k = 1: cheapest = 5   edge checks = 12
+k = 2: cheapest = 3   edge checks = 18</code></pre>
+  <p>Without a stop limit, Bellman-Ford runs n - 1 rounds: a shortest path never needs more than n - 1 edges. If a further round still improves something, the graph has a negative cycle.</p>
+
+  <h3>Template C: Prim (grow one tree)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>heap = [(<span class="n">0</span>, start, <span class="k">None</span>)]</code></td><td>Offers as (edge weight, node, from). The start costs nothing.</td></tr>
+      <tr><td><code><span class="k">while</span> heap <span class="k">and</span> len(seen) &lt; len(graph):</code></td><td>Stop once every node is in the tree.</td></tr>
+      <tr><td><code>w, u, frm = heapq.heappop(heap)</code></td><td>The cheapest edge leaving the tree. Same loop as Dijkstra, but the key is the edge weight, not the total distance.</td></tr>
+      <tr><td><code><span class="k">if</span> u <span class="k">in</span> seen: <span class="k">continue</span></code></td><td>Both ends already in the tree: this edge would close a loop.</td></tr>
+      <tr><td><code>seen.add(u); total += w</code></td><td>Cut property: the cheapest edge out of the tree is safe.</td></tr>
+      <tr><td><code><span class="k">for</span> v, wv <span class="k">in</span> graph[u]: ... heappush(heap, (wv, v, u))</code></td><td>Offer the new edges that lead out of the tree.</td></tr>
+    </tbody>
+  </table>
+  <div id="p18tpF"></div>
+
+  <h3>Template D: Kruskal (cheapest edges first, union-find)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>parent = {x: x <span class="k">for</span> x <span class="k">in</span> nodes}</code></td><td>Each node starts as its own group.</td></tr>
+      <tr><td><code><span class="k">def</span> find(x): ...</code></td><td>Walk up to the group's root, halving the path as you go.</td></tr>
+      <tr><td><code><span class="k">for</span> w, a, b <span class="k">in</span> sorted(edges):</code></td><td>Edges as (weight, a, b), cheapest first.</td></tr>
+      <tr><td><code><span class="k">if</span> find(a) == find(b): <span class="k">continue</span></code></td><td>Already connected: this edge would make a loop.</td></tr>
+      <tr><td><code>parent[ra] = rb; total += w</code></td><td>Join the two groups. Nothing cheaper crosses between them, so the edge is safe.</td></tr>
+    </tbody>
+  </table>
+  <div id="p18tpG"></div>
+  <div class="readouts">
+    <div class="ro" id="p18roP"><span class="lab">Prim total from A</span><span class="val">-</span></div>
+    <div class="ro" id="p18roQ"><span class="lab">Kruskal total</span><span class="val">-</span></div>
+  </div>
+  <pre><code><span class="c"># == 7. MST on the lesson graph ==</span>
+prim from A : total = 13   tree = [('A', 'C', 1), ('C', 'B', 2), ('B', 'D', 5), ('D', 'E', 2), ('E', 'F', 3)]
+kruskal     : total = 13   tree = [('A', 'C', 1), ('B', 'C', 2), ('D', 'E', 2), ('E', 'F', 3), ('B', 'D', 5)]
+kruskal skipped (would close a loop): [('A', 'B', 4), ('D', 'F', 4), ('C', 'D', 8), ('C', 'E', 10)]</code></pre>
+  <p>Same five edges, picked in a different order. Six nodes need exactly five edges.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">The bottleneck variant</span>When a path costs its worst single step (Swim in Rising Water, Path With Minimum Effort), keep Template A and change one line: <code>nd = max(d, w)</code> instead of <code>d + w</code>. The greedy rule still holds, because taking one more step never makes the worst step smaller.</div>
+</section>
+
+<section class="step" id="p18-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: which tool, if any?</h2>
+  <p>Read each made-up task. Name the method and the clue. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A courier leaves the depot. Roads list travel minutes. Report the fastest time to reach each house.</h3>
+    <textarea aria-label="Which method fits task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Dijkstra.</strong> One start, cheapest cost to all, minutes are never negative.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A robot moves in a maze of open and blocked cells. Every move costs one step. Find the fewest moves to the exit.</h3>
+    <textarea aria-label="Which method fits task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern: plain BFS.</strong> Every move costs the same, so fewest edges is cheapest. Dijkstra would also work, but it adds a heap and a log factor for nothing.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A company wants every office on one network. Linking two offices has a known price. Spend as little as possible in total.</h3>
+    <textarea aria-label="Which method fits task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>MST.</strong> "Connect all" plus "least total". Kruskal on the list of links, or Prim.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Train tickets between cities have prices. You may change trains at most twice. Find the cheapest trip.</h3>
+    <textarea aria-label="Which method fits task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Bellman-Ford with a cap.</strong> Two changes means at most three tickets: three rounds, each reading last round's costs.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A hiker crosses a height map. A route is as hard as its steepest single step. Find the easiest route from corner to corner.</h3>
+    <textarea aria-label="Which method fits task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Bottleneck Dijkstra.</strong> The cost is the worst step, so use <code>max(d, w)</code> instead of <code>d + w</code>. Binary search on the allowed step plus BFS also works.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Courses list which other courses must come first. Give an order to take them all.</h3>
+    <textarea aria-label="Which method fits task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern: topological sort.</strong> There are no weights and nothing to minimise, only "before" rules. See the Graphs lesson.</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. Currency trades have rates. Taking logs turns them into costs, some below zero. Is there a loop of trades that makes money forever?</h3>
+    <textarea aria-label="Which method fits task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Bellman-Ford.</strong> Negative weights rule out Dijkstra. Run n - 1 rounds; if round n still improves a cost, a negative cycle exists.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Weights on edges plus "cheapest", "fastest", "least total", "within k". Equal weights send you back to BFS; "before" rules with no weights send you to topological sort.</div>
+</section>
+
+<section class="step" id="p18-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Six classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: plain BFS on a weighted graph</span>
+    <p>BFS keeps the first cost it finds, which comes from the route with the fewest edges.</p>
+<pre><code><span class="k">if</span> v <span class="k">not in</span> dist:            <span class="c"># first visit wins, never improved</span>
+    dist[v] = dist[u] + w</code></pre>
+    <p>On the lesson graph from A, BFS gives B=4, D=9, E=11, F=13. The real answers are B=3, D=8, E=10, F=12 (A to C to B costs 1 + 2 = 3). <strong>Fix:</strong> a min-heap and relaxation, so a cheaper route can replace an earlier one.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: Dijkstra with a negative edge</span>
+    <p>Directed edges S to A 2, S to B 3, B to A -2, A to C 1. The true cheapest S to C is 3 - 2 + 1 = 2.</p>
+<pre><code><span class="c"># == 5. Trap: a negative edge ==</span>
+dijkstra     : A=1, B=3, C=3, S=0
+bellman-ford : A=1, B=3, C=2, S=0</code></pre>
+    <p>A is popped at cost 2 and marked final, so it offers C at 3. Later B finds A at 1, but A is already done, so its roads are never offered again: C stays at 3. <strong>Fix:</strong> with any negative weight, use Bellman-Ford.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: treating a node as final when it is pushed</span>
+<pre><code><span class="k">if</span> v <span class="k">not in</span> dist:            <span class="c"># first offer wins</span>
+    dist[v] = d + w
+    heapq.heappush(heap, (d + w, v))</code></pre>
+    <p>On the lesson graph this gives B=4, D=9, E=11, F=13, the same wrong answers as BFS. B is offered 4 by A before C (cost 1) is even popped. <strong>Fix:</strong> a node is final when it is <em>popped</em>, not when it is first offered. Always compare <code>nd &lt; dist[v]</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: not skipping stale entries</span>
+    <p>Without <code>if u in done: continue</code>, an old offer for a final node scans its roads again. The answers stay correct, but the work grows:</p>
+<pre><code><span class="c"># == 3. Trap: stale heap entries (lesson graph, source A) ==</span>
+with skip    : edge checks = 18   pops = 9   stale = 3
+without skip : edge checks = 28   same answer = True   extra = 10</code></pre>
+    <p>On a dense graph the extra scans can add up to far more. <strong>Fix:</strong> skip a popped node that is already done (or whose <code>d &gt; dist[u]</code>).</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 5: Bellman-Ford with a stop cap but no copy</span>
+<pre><code><span class="k">for</span> a, b, w <span class="k">in</span> flights:
+    <span class="k">if</span> cost[a] + w &lt; cost[b]:    <span class="c"># reads values written this same round</span>
+        cost[b] = cost[a] + w</code></pre>
+    <p>With k = 1 on the flights example, the first round already chains A to B to C to D, and the answer comes out as 3. The right answer with one stop is 5 (A to B to D). <strong>Fix:</strong> <code>new = dict(cost)</code>, read <code>cost</code>, write <code>new</code>. Plain Dijkstra also returns 3 here, because it ignores the cap.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 6: thinking the MST gives shortest paths</span>
+    <p>The MST minimises the total of all edges, not any single trip. On the lesson graph:</p>
+<pre><code>shortest path tree from A: total weight = 14   (uses D-F 4)
+MST:                       total weight = 13   (uses E-F 3 instead)
+A to F inside the MST = 13   real shortest A to F = 12</code></pre>
+    <p><strong>Fix:</strong> "cheapest trip" means Dijkstra; "cheapest network" means MST. Read which one the question asks for.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Weights mean a heap, not a queue. Final on pop, not on push. Skip stale pops. No negatives in Dijkstra. Copy the costs each round when stops are capped.</div>
+</section>
+
+<section class="step" id="p18-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. What it costs</h2>
+  <table class="approaches">
+    <tr><th>Method</th><th>Idea</th><th>Time</th><th>Space</th><th>Choose it when</th></tr>
+    <tr><td>Try every path</td><td>DFS over all simple paths</td><td>exponential</td><td>O(V)</td><td>Never, beyond tiny graphs</td></tr>
+    <tr class="is-best"><td>Dijkstra</td><td>Pop the cheapest, relax its edges</td><td>O(E log E)</td><td>O(V + E)</td><td>One source, weights 0 or more</td></tr>
+    <tr><td>Bellman-Ford</td><td>Relax every edge, R rounds</td><td>O(R x E)</td><td>O(V)</td><td>Negative weights, or at most R edges</td></tr>
+    <tr><td>Prim, heap</td><td>Cheapest edge leaving the tree</td><td>O(E log E)</td><td>O(V + E)</td><td>MST on a sparse adjacency list</td></tr>
+    <tr><td>Prim, array</td><td>Scan all nodes for the cheapest</td><td>O(V<sup>2</sup>)</td><td>O(V)</td><td>MST on a complete graph (all pairs of points)</td></tr>
+    <tr><td>Kruskal</td><td>Sort edges, union-find</td><td>O(E log E)</td><td>O(V)</td><td>MST from an edge list</td></tr>
+  </table>
+  <details class="math"><summary>Step 1: counting Dijkstra's work on the lesson graph</summary><div>
+    <p>V = 6 nodes, E = 9 roads. Each node is finalised once and scans its roads once; an undirected road is scanned from both ends, so 2 x 9 = 18 edge checks. Every improvement is one push: 9 pushes (counting the start), so 9 pops, 3 of them stale.</p>
+    <p>A push or pop on a heap of size h costs about log<sub>2</sub> h steps. At most E + 1 entries are ever in the heap, so the total is O(E log E). Since E is below V<sup>2</sup>, log E is below 2 log V, which is why you also see O(E log V).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: how fast "every path" grows</summary><div>
+    <p><code>measure.py</code> builds complete graphs (every pair joined) with random weights 1 to 9 and counts edge checks for both methods. Both find the same distances.</p>
+<pre><code><span class="c"># == 2. Growth: complete graphs with random weights 1..9 (seed 7) ==</span>
+n = 4: edges =  6   brute edge checks =       48   dijkstra edge checks =  12
+n = 6: edges = 15   brute edge checks =     1630   dijkstra edge checks =  30
+n = 8: edges = 28   brute edge checks =    95900   dijkstra edge checks =  56
+n = 9: edges = 36   brute edge checks =   876808   dijkstra edge checks =  72</code></pre>
+    <p>Going from 8 to 9 nodes multiplies the brute count by about 9. Dijkstra grows only with the edge count: exactly 2E checks.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: Prim on 1000 points (dense graph)</summary><div>
+    <p>With n points and every pair connected, E = n(n - 1) / 2. For n = 1000 that is 499,500 edges.</p>
+<pre><code><span class="c"># == 8. Prim on points (like LeetCode 1584), n = 1000 random points, seed 3 ==</span>
+edges in the complete graph = n(n-1)/2 = 499500
+array Prim scan steps = 1000000   heap Prim pushes = 499501   same total = True</code></pre>
+    <p>The heap version pushes about half a million entries, each costing up to about 19 heap levels (log<sub>2</sub> of 499,501 is about 18.9), and keeps them all in memory. The array version does exactly n x n = 1,000,000 simple scans and keeps only one array. On a dense graph O(V<sup>2</sup>) beats O(E log E).</p>
+  </div></details>
+  <details class="math"><summary>Step 4: why the greedy choices are safe</summary><div>
+    <p><strong>Dijkstra.</strong> When u is popped with cost d, every other offer costs at least d. Any other route to u must leave the finished set through one of those offers, then add weights that are 0 or more. So it costs at least d. A negative edge breaks the last sentence, which is exactly Trap 2.</p>
+    <p><strong>Cut property.</strong> Suppose a cheapest tree skips the cheapest edge e across some split. Add e: it makes a loop, and that loop crosses the split a second time through some edge f with weight at least e's. Remove f: still a tree, and no more expensive. So some cheapest tree contains e.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p18-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern</h2>
+  <p>Problem pages for this pattern come in later sessions. The links open LeetCode in a new tab.</p>
+  <table>
+    <thead><tr><th>Problem</th><th>Method</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><th colspan="3"><span class="badge diff-easy">easy</span></th></tr>
+      <tr><td colspan="3">None in this pattern. Warm up with BFS and union-find in the <button class="btn btn-sm" type="button" onclick="switchLesson(17)">Graphs lesson</button>.</td></tr>
+      <tr><th colspan="3"><span class="badge diff-medium">medium</span></th></tr>
+      <tr><td><a href="https://leetcode.com/problems/network-delay-time/" target="_blank" rel="noopener">743 Network Delay Time</a></td><td>Dijkstra</td><td>Directed edges; the answer is the largest final distance, or -1 if some node is never reached.</td></tr>
+      <tr><td><a href="https://leetcode.com/problems/min-cost-to-connect-all-points/" target="_blank" rel="noopener">1584 Min Cost to Connect All Points</a></td><td>Prim</td><td>No edge list: every pair of points is an edge (Manhattan distance), so the O(n<sup>2</sup>) array Prim fits best.</td></tr>
+      <tr><td><a href="https://leetcode.com/problems/cheapest-flights-within-k-stops/" target="_blank" rel="noopener">787 Cheapest Flights Within K Stops</a></td><td>Bellman-Ford</td><td>k stops means k + 1 flights: k + 1 rounds with a copy each round.</td></tr>
+      <tr><td><a href="https://leetcode.com/problems/path-with-minimum-effort/" target="_blank" rel="noopener">1631 Path With Minimum Effort</a> (extra)</td><td>Bottleneck Dijkstra</td><td>A grid where a route costs its biggest height change: <code>max</code> instead of <code>+</code>.</td></tr>
+      <tr><th colspan="3"><span class="badge diff-hard">hard</span></th></tr>
+      <tr><td><a href="https://leetcode.com/problems/swim-in-rising-water/" target="_blank" rel="noopener">778 Swim in Rising Water</a></td><td>Bottleneck Dijkstra</td><td>The time you need is the highest cell on your route; minimise it. Binary search plus BFS also works.</td></tr>
+      <tr><td><a href="https://leetcode.com/problems/reconstruct-itinerary/" target="_blank" rel="noopener">332 Reconstruct Itinerary</a></td><td>Euler path (DFS)</td><td>Use every ticket exactly once, smallest names first: DFS that adds an airport after its tickets run out, then reverse.</td></tr>
+      <tr><td><a href="https://leetcode.com/problems/alien-dictionary/" target="_blank" rel="noopener">269 Alien Dictionary</a> (premium)</td><td>Topological sort</td><td>Build "comes before" edges from neighbouring words; a longer word listed before its own prefix means no valid order.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p18-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Dijkstra on the lesson graph from A: which node is finalised third, and with what cost? Which offer for it was pushed earlier and later skipped?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>B, at cost 3</strong> (A to C to B). A offered (4, B) first; that entry is popped later and skipped as stale. The finalised order is A, C, B, D, E, F (<code>measure.py</code> prints <code>ACBDEF</code>).</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Run Kruskal on the lesson graph. Which edge with weight 4 is kept, and which is skipped?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Neither.</strong> By then A, B, C are already one group (A-C 1, B-C 2), so A-B 4 is skipped; D, E, F are another group (D-E 2, E-F 3), so D-F 4 is skipped too. The next edge, B-D 5, joins the two groups. Total 13.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. In the flights example, what is the cheapest A to D with k = 0 stops, and with k = 2?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>9 and 3.</strong> With no stops only the direct flight counts (9). With two stops, A to B to C to D costs 1 + 1 + 1 = 3. Use the k buttons in Template B to check.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>weighted graph</dt><dd>A graph whose edges carry numbers: lengths, prices, times.</dd>
+    <dt>shortest path</dt><dd>The route whose weights add up to the smallest total.</dd>
+    <dt>relaxation</dt><dd>If going through u is cheaper than the best known way to v, update v.</dd>
+    <dt>min-heap</dt><dd>Hands back its smallest item first; O(log n) per push or pop. Python's heapq.</dd>
+    <dt>final (settled)</dt><dd>A node whose shortest distance can no longer change; in Dijkstra, after its first pop.</dd>
+    <dt>stale entry</dt><dd>An old heap offer for a node that is already final. Skip it when popped.</dd>
+    <dt>Dijkstra</dt><dd>Shortest paths from one source with weights 0 or more: always finalise the cheapest offer.</dd>
+    <dt>Bellman-Ford</dt><dd>Relax every edge in rounds; round r allows r edges. Handles negative weights and stop caps.</dd>
+    <dt>negative edge / negative cycle</dt><dd>A weight below zero / a loop whose total is below zero, which makes "shortest" undefined.</dd>
+    <dt>spanning tree / MST</dt><dd>Edges that connect every node with no loops (n - 1 of them) / the cheapest such tree.</dd>
+    <dt>cut property</dt><dd>The cheapest edge crossing any split of the nodes belongs to some MST.</dd>
+    <dt>Prim / Kruskal</dt><dd>Grow one tree with the cheapest edge out / add edges cheapest first, skipping loops with union-find.</dd>
+    <dt>union-find</dt><dd>Keeps groups: find names a node's group, union joins two groups.</dd>
+    <dt>bottleneck path</dt><dd>A path judged by its single worst edge; solved with Dijkstra using max instead of plus.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p18-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> with weights, the cheapest unfinished node is final (Dijkstra), and the cheapest edge across any split is safe (Prim, Kruskal).</p>
+    <p><strong>Signals:</strong> weighted edges plus "cheapest", "fastest", "least total to connect", "within k stops", "worst step".</p>
+    <p><strong>Templates:</strong> Dijkstra: heap of (cost, node); pop; skip if done; mark done; relax and push. Bellman-Ford: R rounds, read <code>cost</code>, write <code>new</code>. Prim: Dijkstra's loop keyed by edge weight. Kruskal: sort edges, union-find, skip loops.</p>
+    <p><strong>Cost:</strong> Dijkstra, Prim, Kruskal O(E log E); Bellman-Ford O(R x E); array Prim O(V<sup>2</sup>) for dense graphs. On the lesson graph: 18 edge checks against 128 for trying every path.</p>
+    <p><strong>Traps:</strong> BFS on weights; negative edges in Dijkstra; final on push; stale entries; no copy with a stop cap; MST is not shortest paths.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own weighted graph and run Dijkstra or Prim. Try "BFS fooled" to see a cheap three-road route beat one expensive road.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(18)">Mark lesson complete</button>
+      <button class="btn btn-sm" type="button" onclick="switchLesson(17)">Review: Graphs lesson</button>
+    </div>
+  </div>
+</section>
+</div>

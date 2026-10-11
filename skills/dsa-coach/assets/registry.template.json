@@ -1,0 +1,125 @@
+{
+  "patterns": [
+    {
+      "key": "foundations",
+      "title": "Big-O and Recursion",
+      "tier": 0,
+      "goal": 3
+    },
+    {
+      "key": "arrays-hashing",
+      "title": "Arrays and Hashing",
+      "tier": 1,
+      "goal": 8
+    },
+    {
+      "key": "two-pointers",
+      "title": "Two Pointers",
+      "tier": 1,
+      "goal": 5
+    },
+    {
+      "key": "sliding-window",
+      "title": "Sliding Window",
+      "tier": 1,
+      "goal": 6
+    },
+    {
+      "key": "stack",
+      "title": "Stack and Monotonic Stack",
+      "tier": 1,
+      "goal": 7
+    },
+    {
+      "key": "prefix-sums",
+      "title": "Prefix Sums",
+      "tier": 1,
+      "goal": 4
+    },
+    {
+      "key": "binary-search",
+      "title": "Binary Search",
+      "tier": 2,
+      "goal": 7
+    },
+    {
+      "key": "linked-list",
+      "title": "Linked List",
+      "tier": 2,
+      "goal": 11
+    },
+    {
+      "key": "trees",
+      "title": "Trees",
+      "tier": 2,
+      "goal": 15
+    },
+    {
+      "key": "heap",
+      "title": "Heap and Priority Queue",
+      "tier": 3,
+      "goal": 7
+    },
+    {
+      "key": "backtracking",
+      "title": "Backtracking",
+      "tier": 3,
+      "goal": 9
+    },
+    {
+      "key": "tries",
+      "title": "Tries",
+      "tier": 3,
+      "goal": 3
+    },
+    {
+      "key": "intervals",
+      "title": "Intervals",
+      "tier": 3,
+      "goal": 5
+    },
+    {
+      "key": "greedy",
+      "title": "Greedy",
+      "tier": 3,
+      "goal": 8
+    },
+    {
+      "key": "graphs",
+      "title": "Graphs: BFS, DFS, Topological Sort, Union-Find",
+      "tier": 4,
+      "goal": 11
+    },
+    {
+      "key": "advanced-graphs",
+      "title": "Advanced Graphs: Shortest Paths and MST",
+      "tier": 4,
+      "goal": 6
+    },
+    {
+      "key": "dp-1d",
+      "title": "1D Dynamic Programming",
+      "tier": 4,
+      "goal": 12
+    },
+    {
+      "key": "dp-2d",
+      "title": "2D Dynamic Programming",
+      "tier": 5,
+      "goal": 11
+    },
+    {
+      "key": "bit-manipulation",
+      "title": "Bit Manipulation",
+      "tier": 5,
+      "goal": 7
+    },
+    {
+      "key": "math-geometry",
+      "title": "Math and Matrix",
+      "tier": 5,
+      "goal": 6
+    }
+  ],
+  "slots": []
+}

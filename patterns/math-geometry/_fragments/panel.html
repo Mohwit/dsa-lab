@@ -1,0 +1,396 @@
+<div class="lesson-content xp" id="lesson22">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Math and Matrix</h1>
+    <p class="lesson-subtitle">Goal: handle the "puzzle" problems that have no big data structure. Turn a grid with a few index tricks, walk it in a spiral, mark it with no extra memory, and do arithmetic digit by digit the way you learned at school.</p>
+    <div class="lesson-meta"><span class="badge">Tier 5</span><span class="badge">pattern</span><span class="badge diff-medium">medium</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Math and Matrix lesson"><a href="#p22-s-idea">Turn a grid</a><a href="#p22-s-words">Pattern words</a><a href="#p22-s-map">Mental map</a><a href="#p22-s-template">Templates</a><a href="#p22-s-spot">Spot it</a><a href="#p22-s-traps">Traps</a><a href="#p22-s-cost">Complexity</a><a href="#p22-s-problems">Problems</a><a href="#p22-s-check">Check yourself</a><a href="#p22-recap">Recap</a></nav>
+
+<section class="step" id="p22-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Big moves are made of small, simple moves</h2>
+  <p>These problems feel like puzzles. There is no clever data structure. The trick is to break one hard move into two or three easy moves you can do in place.</p>
+  <p>The classic: turn a square grid a quarter turn clockwise, without a second grid. A quarter turn sounds hard. A flip across the diagonal plus a left-right mirror is easy, and together they make the same turn.</p>
+  <div class="card analogy"><strong>Analogy: turning a photo on a table.</strong> You could copy the photo onto a new sheet, pixel by pixel, already turned. Or you could flip the photo over along its diagonal, then mirror it left to right. Same result, and you never needed a second sheet.</div>
+  <p>Both players turn the same 4 x 4 grid clockwise. Step through them and watch the memory each one needs.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: transpose, then mirror each row.</strong> Swap pairs across the diagonal, then reverse every row. All in place.</p>
+      <div id="p22tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: copy into a new grid.</strong> Write each cell into its turned place in a second grid, then copy it back.</p>
+      <div id="p22tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p22roA"><span class="lab">in place</span><span class="val">-</span> <span class="unit">extra cells</span></div>
+    <div class="ro" id="p22roB"><span class="lab">copy</span><span class="val">-</span> <span class="unit">extra cells</span></div>
+    <div class="ro" id="p22roC"><span class="lab">in place</span><span class="val">-</span> <span class="unit">cell writes</span></div>
+    <div class="ro" id="p22roD"><span class="lab">copy</span><span class="val">-</span> <span class="unit">cell writes</span></div>
+  </div>
+  <p class="caption">Counts come from running both (in the page and in <code>measure.py</code>): 14 swaps (28 cell writes) and no extra cells, against 32 writes and 16 extra cells. Time is about the same. The win is memory: at n = 1000 the copy needs 1,000,000 extra cells.</p>
+
+  <h3>Try it: find the moves yourself</h3>
+  <p>Three moves are allowed. Can you make a clockwise turn in two moves? A counter-clockwise turn? A half turn? Guess first, then press.</p>
+  <div class="card">
+    <div class="grid2">
+      <div><div id="p22rot"></div></div>
+      <div>
+        <div class="btn-row">
+          <button class="btn btn-sm" type="button" id="p22rT">Transpose (flip on the diagonal)</button>
+          <button class="btn btn-sm" type="button" id="p22rM">Mirror (reverse each row)</button>
+          <button class="btn btn-sm" type="button" id="p22rF">Flip (reverse row order)</button>
+          <button class="btn btn-sm" type="button" id="p22rR">Start again</button>
+        </div>
+        <div class="readouts">
+          <div class="ro" id="p22roMv"><span class="lab">moves</span><span class="val">none</span></div>
+          <div class="ro" id="p22roTn"><span class="lab">the grid now is</span><span class="val">the start</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="caption"><code>measure.py</code> checks every answer: transpose then mirror, or flip then transpose, gives clockwise. Transpose then flip, or mirror then transpose, gives counter-clockwise. Mirror plus flip gives a half turn.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>When a move on a grid looks hard, write down where cell (r, c) must go. Then build that from transposes, mirrors and flips, which are easy to do in place.</div>
+  <p class="newwords">New words: <span class="chip">matrix</span><span class="chip">transpose</span><span class="chip">in place</span></p>
+</section>
+
+<section class="step" id="p22-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A grid of numbers with R rows and C columns. In Python, a list of lists: m[r][c] is row r, column c.">matrix</dfn></td><td>A grid of numbers</td><td><code>m[r][c]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The cells where row equals column, from top-left to bottom-right: m[0][0], m[1][1], ...">main diagonal</dfn></td><td>Top-left to bottom-right line</td><td><code>m[i][i]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Swap rows and columns: cell (r, c) moves to (c, r). For a square grid this is a flip across the main diagonal.">transpose</dfn></td><td>Flip across the diagonal</td><td>swap <code>m[i][j]</code>, <code>m[j][i]</code> for j &gt; i</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Changing the input itself instead of building a new copy. Uses O(1) extra memory.">in place</dfn></td><td>Change the grid itself, no copy</td><td><code>row.reverse()</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Four indexes (top, bottom, left, right) that mark the part of the grid not yet walked. Each pass moves one of them inwards.">boundaries</dfn></td><td>The edges of the part still to walk</td><td><code>top, bottom, left, right</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Reusing part of the input (such as the first row and column) to store flags, so no extra memory is needed.">marker</dfn></td><td>A note written inside the grid itself</td><td><code>m[0][c] = 0</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The amount passed to the next column when a digit sum is 10 or more. 7 + 5 = 12: write 2, carry 1.">carry</dfn></td><td>The "1" you carry to the next column</td><td><code>total // 10</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="divmod(n, 10) returns (n // 10, n % 10): the number without its last digit, and the last digit.">divmod</dfn></td><td>Chop off the last digit</td><td><code>n, d = divmod(n, 10)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The remainder after division. In Python the result has the sign of the divisor, so -7 % 3 is 2.">modulo</dfn> (%)</td><td>The remainder</td><td><code>17 % 10 == 7</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A sequence that comes back to a value it had before, and so repeats forever.">cycle</dfn></td><td>A sequence that loops back</td><td>a value seen twice</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Floyd's cycle detection: a slow pointer moves one step, a fast one two steps. If there is a loop they meet. Uses O(1) memory.">fast and slow pointers</dfn></td><td>Tortoise and hare: the hare laps the tortoise on a loop</td><td><code>slow = f(slow); fast = f(f(fast))</code></td></tr>
+    </tbody>
+  </table>
+  <p class="newwords">New words: <span class="chip">main diagonal</span><span class="chip">boundaries</span><span class="chip">marker</span><span class="chip">carry</span><span class="chip">divmod</span><span class="chip">modulo</span><span class="chip">cycle</span><span class="chip">fast and slow pointers</span></p>
+</section>
+
+<section class="step" id="p22-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>A grid you must turn, mirror or walk in a fixed shape; "in place" or "O(1) extra space"; a number process repeated until something happens; numbers too big for an int, given as strings or digit lists.</span></li>
+    <li><b>Ask</b><span>Where does cell (r, c) go, or in which order are cells visited? For numbers: what would I do with pencil and paper, one digit at a time?</span></li>
+    <li><b>Pick</b><span>Choose the trick by the task:</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>rotate or mirror a square grid</i>Transpose plus a mirror or flip, all in place.</li>
+        <li class="is-pick"><i>visit cells in a spiral or ring order</i>Four boundaries that shrink after each side.</li>
+        <li class="is-pick"><i>mark rows and columns, O(1) space</i>Use the first row and column as markers, plus two flags.</li>
+        <li class="is-pick"><i>repeat a step on a number: does it end?</i>Cycle detection: a seen set, or fast and slow pointers.</li>
+        <li class="is-pick"><i>numbers as strings or digit lists</i>Right to left, digit by digit, with a carry.</li>
+        <li><i>count paths across a grid</i>Not this pattern: dynamic programming.</li>
+        <li><i>search a grid sorted by rows</i>Not this pattern: binary search.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Spiral: everything outside the four boundaries is already output. Markers: <code>m[0][c] == 0</code> means "column c must become zero". Digits: <code>pos</code> holds the exact sum so far, one digit per slot.</span></li>
+    <li><b>Steps</b><span>1. Work out the mapping on a 3 x 3 example by hand. 2. Pick the easy moves or the walk order. 3. Write loops with clear limits (<code>j</code> from <code>i + 1</code>, boundaries checked before each side). 4. Test 1 x 1, one row, one column and a non-square grid.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Transpose only above the diagonal. Re-check boundaries before the bottom and left sides. Never zero cells while you are still scanning. Keep the final carry (999 + 1 has four digits). Python's <code>%</code> and <code>//</code> round towards minus infinity for negatives.</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p22-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Five templates cover this pattern</h2>
+  <h3>Template A: rotate a square grid clockwise, in place</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>n = len(m)</code></td><td>The grid is n x n.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(n):</code></td><td>Each row...</td></tr>
+      <tr><td><code><span class="k">for</span> j <span class="k">in</span> range(i + <span class="n">1</span>, n):</code></td><td>...only the cells right of the diagonal. Starting at 0 would swap each pair twice.</td></tr>
+      <tr><td><code>m[i][j], m[j][i] = m[j][i], m[i][j]</code></td><td>Swap across the diagonal: the transpose.</td></tr>
+      <tr><td><code><span class="k">for</span> row <span class="k">in</span> m: row.reverse()</code></td><td>Mirror each row. Transpose plus mirror is a clockwise quarter turn.</td></tr>
+    </tbody>
+  </table>
+  <p>For counter-clockwise, flip the row order instead of mirroring (<code>m.reverse()</code>). You traced this template in section 1.</p>
+
+  <h3>Template B: spiral order with four boundaries</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>top, bottom, left, right = <span class="n">0</span>, len(m) - <span class="n">1</span>, <span class="n">0</span>, len(m[<span class="n">0</span>]) - <span class="n">1</span></code></td><td>The part still to walk is the whole grid.</td></tr>
+      <tr><td><code><span class="k">while</span> top &lt;= bottom <span class="k">and</span> left &lt;= right:</code></td><td>Some cells are left.</td></tr>
+      <tr><td><code><span class="k">for</span> c <span class="k">in</span> range(left, right + <span class="n">1</span>): out.append(m[top][c])</code><br><code>top += <span class="n">1</span></code></td><td>Walk the top row left to right, then that row is done.</td></tr>
+      <tr><td><code><span class="k">for</span> r <span class="k">in</span> range(top, bottom + <span class="n">1</span>): out.append(m[r][right])</code><br><code>right -= <span class="n">1</span></code></td><td>Walk down the right column.</td></tr>
+      <tr><td><code><span class="k">if</span> top &lt;= bottom:</code> walk the bottom row right to left; <code>bottom -= <span class="n">1</span></code></td><td>Check again: the top row may have been the last row.</td></tr>
+      <tr><td><code><span class="k">if</span> left &lt;= right:</code> walk up the left column; <code>left += <span class="n">1</span></code></td><td>Check again: the right column may have been the last column.</td></tr>
+    </tbody>
+  </table>
+  <div id="p22tpC"></div>
+  <p class="caption"><code>measure.py</code> prints the spiral of the 3 x 4 grid: 1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7.</p>
+  <h3>Try it: spiral any shape</h3>
+  <p>Drag the sliders. The line shows the guarded spiral. Cells with a red ring are the ones a version <em>without</em> the two extra checks outputs twice. Which shapes break it?</p>
+  <div class="card">
+    <canvas id="p22cvS" role="img" aria-label="Spiral playground: a grid with the spiral path drawn through it; cells a version without guards visits twice have a red ring"></canvas>
+    <div class="grid2">
+      <div class="control-group"><label for="p22sR">rows: <span id="p22sRv">3</span></label><input type="range" id="p22sR" min="1" max="6" step="1" value="3"></div>
+      <div class="control-group"><label for="p22sC">columns: <span id="p22sCv">4</span></label><input type="range" id="p22sC" min="1" max="6" step="1" value="4"></div>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p22roS1"><span class="lab">cells</span><span class="val">12</span></div>
+      <div class="ro" id="p22roS2"><span class="lab">guarded output</span><span class="val">12</span></div>
+      <div class="ro" id="p22roS3"><span class="lab">no guards output</span><span class="val">13</span></div>
+    </div>
+    <p class="caption">From <code>measure.py</code>: with no guards, 1 x 3 outputs 5 cells, 3 x 1 outputs 4 and 3 x 4 outputs 13. Square grids happen to come out right, which is why the bug survives quick tests.</p>
+  </div>
+
+  <h3>Template C: set matrix zeroes with markers (O(1) space)</h3>
+  <p>If a cell is 0, its whole row and column must become 0. A set of rows and a set of columns would work, but cost O(R + C) memory. Instead, write the notes into row 0 and column 0.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>row0 = any(m[<span class="n">0</span>][c] == <span class="n">0</span> ...)</code><br><code>col0 = any(m[r][<span class="n">0</span>] == <span class="n">0</span> ...)</code></td><td>Remember whether row 0 and column 0 need zeroing themselves, before we write notes into them.</td></tr>
+      <tr><td><code><span class="k">if</span> m[r][c] == <span class="n">0</span>: m[r][<span class="n">0</span>] = <span class="n">0</span>; m[<span class="n">0</span>][c] = <span class="n">0</span></code></td><td>Pass 1 (r, c from 1): leave a note at the start of the row and the top of the column.</td></tr>
+      <tr><td><code><span class="k">if</span> m[r][<span class="n">0</span>] == <span class="n">0</span> <span class="k">or</span> m[<span class="n">0</span>][c] == <span class="n">0</span>: m[r][c] = <span class="n">0</span></code></td><td>Pass 2: read the notes and zero the inner cells.</td></tr>
+      <tr><td><code><span class="k">if</span> row0: ...</code> <code><span class="k">if</span> col0: ...</code></td><td>Last, zero row 0 and column 0 if the flags say so.</td></tr>
+    </tbody>
+  </table>
+  <div id="p22tpD"></div>
+
+  <h3>Template D: does the process loop forever? (happy numbers)</h3>
+  <p>Replace a number by the sum of the squares of its digits. Repeat. A <em>happy</em> number reaches 1. Others fall into a loop. The sum for any number below 1000 is at most 243, so the values stay small and must repeat sooner or later.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">while</span> n: n, d = divmod(n, <span class="n">10</span>); total += d * d</code></td><td><code>next_num</code>: peel digits off the right end.</td></tr>
+      <tr><td><code><span class="k">while</span> n != <span class="n">1</span> <span class="k">and</span> n <span class="k">not in</span> seen:</code></td><td>Stop at 1 (happy) or at a value seen before (a loop).</td></tr>
+      <tr><td><code>seen.add(n); n = next_num(n)</code></td><td>Remember, then step.</td></tr>
+      <tr><td><code>slow = f(slow); fast = f(f(fast))</code></td><td>The O(1) memory version: the same trick as finding a loop in a linked list.</td></tr>
+    </tbody>
+  </table>
+  <div id="p22tpE"></div>
+  <div class="card">
+    <div class="control-group"><label for="p22hIn">your number (1 to 999999)</label><input type="text" id="p22hIn" value="2" autocomplete="off" spellcheck="false"></div>
+    <div class="btn-row"><button class="btn btn-primary btn-sm" type="button" id="p22hGo">Follow the chain</button><button class="btn btn-sm" type="button" data-p22h="19">19</button><button class="btn btn-sm" type="button" data-p22h="7">7</button><button class="btn btn-sm" type="button" data-p22h="4">4</button></div>
+    <p class="sb-error" id="p22hErr" role="alert"></p>
+    <div class="readouts">
+      <div class="ro" id="p22roH1"><span class="lab">happy?</span><span class="val">-</span></div>
+      <div class="ro" id="p22roH2"><span class="lab">seen-set steps</span><span class="val">-</span></div>
+      <div class="ro" id="p22roH3"><span class="lab">fast and slow steps</span><span class="val">-</span></div>
+    </div>
+    <p class="caption" id="p22hChain">chain: -</p>
+    <p class="caption">A step is one call to <code>next_num</code>. <code>measure.py</code> prints 19: happy in 4 steps; 2: a loop after 9 steps with the set, 22 with fast and slow (more steps, but no memory).</p>
+  </div>
+
+  <h3>Template E: digit-by-digit arithmetic with a carry</h3>
+  <p><strong>Plus one</strong> on a digit list: walk from the right. A digit below 9 just goes up by one and you are done. A 9 becomes 0 and the 1 carries left. If every digit was 9, put a 1 in front.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(len(digits) - <span class="n">1</span>, <span class="n">-1</span>, <span class="n">-1</span>):</code></td><td>Right to left, like on paper.</td></tr>
+      <tr><td><code><span class="k">if</span> digits[i] &lt; <span class="n">9</span>: digits[i] += <span class="n">1</span>; <span class="k">return</span> digits</code></td><td>No carry: finished.</td></tr>
+      <tr><td><code>digits[i] = <span class="n">0</span></code></td><td>9 + 1 = 10: write 0, carry 1.</td></tr>
+      <tr><td><code><span class="k">return</span> [<span class="n">1</span>] + digits</code></td><td>The carry fell off the left end: 99 becomes 100.</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Multiply strings</strong> without turning them into ints: digit i of a times digit j of b lands in slot i + j + 1 of the answer, and its carry in slot i + j. That is long multiplication with all the partial rows added as you go.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>pos = [<span class="n">0</span>] * (len(a) + len(b))</code></td><td>An m-digit times n-digit product has at most m + n digits.</td></tr>
+      <tr><td><code>mul = int(a[i]) * int(b[j])</code></td><td>One single-digit product.</td></tr>
+      <tr><td><code>total = mul + pos[i + j + <span class="n">1</span>]</code></td><td>Add what is already in that column.</td></tr>
+      <tr><td><code>pos[i + j + <span class="n">1</span>] = total % <span class="n">10</span></code></td><td>Keep the last digit here.</td></tr>
+      <tr><td><code>pos[i + j] += total // <span class="n">10</span></code></td><td>Carry the rest one column left.</td></tr>
+      <tr><td><code><span class="s">""</span>.join(map(str, pos)).lstrip(<span class="s">"0"</span>)</code></td><td>Drop leading zeros. The <code>"0"</code> case is handled at the top.</td></tr>
+    </tbody>
+  </table>
+  <div id="p22tpF"></div>
+  <p class="caption"><code>measure.py</code>: 123 x 45 = 5535 with 6 digit products; 99 x 99 = 9801 with 4.</p>
+  <p class="newwords">New words: <span class="chip">happy number</span><span class="chip">partial product</span></p>
+</section>
+
+<section class="step" id="p22-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: which trick, if any?</h2>
+  <div class="predict">
+    <h3>A. Mirror a square image along its anti-diagonal (top-right to bottom-left), with no second image.</h3>
+    <textarea aria-label="Which trick for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Grid moves in place.</strong> Write where (r, c) goes: to (n - 1 - c, n - 1 - r). That is a half turn followed by a transpose, so: mirror, flip, transpose.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. Fill an n x n grid with 1, 2, 3, ... going round and round towards the centre.</h3>
+    <textarea aria-label="Which trick for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Spiral boundaries.</strong> Same walk as Template B, but you write a counter into each cell instead of reading it (Spiral Matrix II).</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Keep adding the digits of a number until one digit is left. Return that digit.</h3>
+    <textarea aria-label="Which trick for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Digit loop.</strong> <code>divmod(n, 10)</code> in a loop works. This one never cycles, because the number always shrinks. (There is even a one-line maths shortcut using <code>% 9</code>.)</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Add two numbers given as strings of up to 10,000 digits.</h3>
+    <textarea aria-label="Which trick for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Digit by digit with a carry.</strong> Two indexes from the right ends, a carry, and keep going while either index or the carry is left.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A robot on a grid moves only right or down. How many routes reach the bottom-right cell?</h3>
+    <textarea aria-label="Which trick for task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern.</strong> It is a grid, but it asks to count routes. Each cell's count is the sum of the cell above and the cell to the left: dynamic programming (or the binomial coefficient, if you like maths).</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Each row of a grid is sorted, and each row starts above where the last one ended. Is a value in the grid?</h3>
+    <textarea aria-label="Which trick for task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern.</strong> The signal is "sorted". Treat the grid as one long sorted list (index k is row k // C, column k % C) and binary search it.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Rotate, mirror or spiral a grid; "in place" or "O(1) extra space" on a grid; repeat a step on a number until it stops; numbers stored as strings or digit lists.</div>
+</section>
+
+<section class="step" id="p22-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Five classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: transposing every pair</span>
+<pre><code><span class="k">for</span> i <span class="k">in</span> range(n):
+    <span class="k">for</span> j <span class="k">in</span> range(n):          <span class="c"># wrong: should start at i + 1</span>
+        m[i][j], m[j][i] = m[j][i], m[i][j]
+
+<span class="c"># measure.py on 1..9:</span>
+transpose with j from 0:  1  2  3 |  4  5  6 |  7  8  9  unchanged = True</code></pre>
+    <p>Every pair is swapped twice, so nothing moves. <strong>Fix:</strong> <code>range(i + 1, n)</code>. Also watch the order: mirroring <em>before</em> transposing gives a counter-clockwise turn (3 6 9 | 2 5 8 | 1 4 7).</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: spiral without the second checks</span>
+<pre><code>no guards on [[1, 2, 3]] -> [1, 2, 3, 2, 1]
+guarded   on [[1, 2, 3]] -> [1, 2, 3]</code></pre>
+    <p>After the top row, a one-row grid is already done, but the bottom-row loop walks it again backwards. <strong>Fix:</strong> <code>if top &lt;= bottom</code> before the bottom row and <code>if left &lt;= right</code> before the left column. Always test one row, one column and a non-square grid.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: zeroing while you are still scanning</span>
+<pre><code>zero while scanning  1  0  1 |  1  1  1 |  1  1  1 ->  0  0  0 |  0  0  0 |  0  0  0
+marker version       1  0  1 |  1  1  1 |  1  1  1 ->  0  0  0 |  1  0  1 |  1  0  1</code></pre>
+    <p>The new zeros look like original zeros, so they spread and wipe the whole grid. <strong>Fix:</strong> two passes: first only write notes (markers), then zero. Save the row 0 and column 0 flags before writing any notes into them.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: losing the last carry</span>
+<pre><code>plus_one_buggy([9, 9]) = [0, 0]   fixed = [1, 0, 0]</code></pre>
+    <p>The loop ends with a carry still in hand. <strong>Fix:</strong> after the loop, <code>return [1] + digits</code>. In addition and multiplication, keep looping while a carry is left.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 5: negative numbers with % and //</span>
+<pre><code>-7 % 3 = 2   -7 // 2 = -4   int(-7 / 2) = -3</code></pre>
+    <p>Python rounds <code>//</code> down (towards minus infinity), while C, Java and JavaScript truncate towards zero. In "reverse integer" style problems, work on <code>abs(n)</code> and put the sign back at the end. And a loop like happy numbers needs cycle detection, or it runs forever.</p>
+  </div>
+</section>
+
+<section class="step" id="p22-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Complexity: count the work</h2>
+  <details class="math"><summary>Step 1: grid templates are O(R x C) time</summary><div>
+    <p>Rotation touches each cell a constant number of times. For n x n the swaps are n(n - 1)/2 for the transpose plus n x (n // 2) for the mirrors: 14 for n = 4 and 999,500 for n = 1000. Extra space: O(1). The copy uses O(n<sup>2</sup>) extra: 1,000,000 cells at n = 1000.</p>
+    <p>Spiral outputs every cell once: O(R x C) time, O(1) extra besides the output. Set zeroes reads the grid twice: O(R x C) time; markers make the space O(1) instead of O(R + C).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: happy numbers finish fast</summary><div>
+    <p>One <code>next_num</code> costs one step per digit: O(log n). After the first step a number below 1000 drops to at most 243 (that is 9<sup>2</sup> x 3), and even a 10-digit number drops to at most 810. So the chain is short: over every start from 1 to 1000, <code>measure.py</code> never needs more than <strong>19</strong> steps. The seen set is O(1)-ish in practice; fast and slow is strictly O(1) memory.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: digit arithmetic</summary><div>
+    <p>Plus one is O(n) in the worst case (all 9s), O(1) on average. Multiply strings does one digit product per pair of digits: m x n. For a 50-digit times 40-digit number that is <strong>2000</strong> products, and the answer matches Python's own big integers.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p22-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>The core list comes first in each group; extras are marked.</p>
+  <h3><span class="badge diff-easy">easy</span></h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>202</td><td><a href="https://leetcode.com/problems/happy-number/" target="_blank" rel="noopener">Happy Number</a></td><td>Template D: the loop must be detected, with a set or with fast and slow.</td></tr>
+      <tr><td>66</td><td><a href="https://leetcode.com/problems/plus-one/" target="_blank" rel="noopener">Plus One</a></td><td>Template E: the all-9s case grows the list.</td></tr>
+      <tr><td>1572</td><td><a href="https://leetcode.com/problems/matrix-diagonal-sum/" target="_blank" rel="noopener">Matrix Diagonal Sum</a> (extra)</td><td>Both diagonals, but the centre of an odd grid counts once.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-medium">medium</span></h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>48</td><td><a href="https://leetcode.com/problems/rotate-image/" target="_blank" rel="noopener">Rotate Image</a></td><td>Template A: in place is required, so no copy.</td></tr>
+      <tr><td>54</td><td><a href="https://leetcode.com/problems/spiral-matrix/" target="_blank" rel="noopener">Spiral Matrix</a></td><td>Template B: non-square grids are where the guards matter.</td></tr>
+      <tr><td>73</td><td><a href="https://leetcode.com/problems/set-matrix-zeroes/" target="_blank" rel="noopener">Set Matrix Zeroes</a></td><td>Template C: the O(1) space follow-up needs the marker trick.</td></tr>
+      <tr><td>43</td><td><a href="https://leetcode.com/problems/multiply-strings/" target="_blank" rel="noopener">Multiply Strings</a></td><td>Template E: slots i + j and i + j + 1; no int conversion of the whole string.</td></tr>
+      <tr><td>59</td><td><a href="https://leetcode.com/problems/spiral-matrix-ii/" target="_blank" rel="noopener">Spiral Matrix II</a> (extra)</td><td>Write the spiral instead of reading it.</td></tr>
+      <tr><td>2013</td><td><a href="https://leetcode.com/problems/detect-squares/" target="_blank" rel="noopener">Detect Squares</a> (extra)</td><td>Geometry plus a counter: pick the diagonal corner, the other two are fixed.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-hard">hard</span></h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>149</td><td><a href="https://leetcode.com/problems/max-points-on-a-line/" target="_blank" rel="noopener">Max Points on a Line</a> (extra)</td><td>Count slopes from each point; store a slope as a reduced fraction, not a float.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">No problem pages exist for this pattern yet. They appear in the sidebar as your sessions reach them.</p>
+</section>
+
+<section class="step" id="p22-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Rotate 1 2 3 | 4 5 6 | 7 8 9 clockwise. What is the first row afterwards?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>7 4 1.</strong> The old first column, read bottom to top. The full result is 7 4 1 | 8 5 2 | 9 6 3.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Set matrix zeroes on 1 0 3 | 4 5 6 | 7 8 9. What comes out?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>0 0 0 | 4 0 6 | 7 0 9.</strong> The zero sits in row 0 itself, so the <code>row0</code> flag does the row and the marker at <code>m[0][1]</code> does the column. <code>measure.py</code> prints it.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Is 7 a happy number? How many steps until you know?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, in 5 steps:</strong> 7, 49, 97, 130, 10, 1. Try it in the chain follower above.</p></div>
+  </div>
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>matrix</dt><dd>A grid of numbers; <code>m[r][c]</code> is row r, column c.</dd>
+    <dt>main diagonal</dt><dd>Cells where row equals column.</dd>
+    <dt>transpose</dt><dd>Swap rows and columns: (r, c) goes to (c, r).</dd>
+    <dt>mirror / flip</dt><dd>Reverse each row / reverse the order of the rows.</dd>
+    <dt>in place</dt><dd>Change the input itself; O(1) extra memory.</dd>
+    <dt>boundaries</dt><dd>top, bottom, left, right: the edges of the part not yet walked.</dd>
+    <dt>marker</dt><dd>A note stored inside the input, such as a 0 in row 0.</dd>
+    <dt>carry</dt><dd>The part of a column sum passed to the next column left.</dd>
+    <dt>divmod, modulo</dt><dd><code>divmod(n, 10)</code> gives (n // 10, n % 10); % is the remainder.</dd>
+    <dt>cycle</dt><dd>A sequence that returns to an earlier value and repeats.</dd>
+    <dt>fast and slow pointers</dt><dd>One moves 1 step, one 2; they meet if there is a loop. O(1) memory.</dd>
+    <dt>happy number</dt><dd>A number whose digit-square-sum chain reaches 1.</dd>
+    <dt>partial product</dt><dd>One digit of a times one digit of b in long multiplication.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p22-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> no big data structure, just careful index work. Split hard grid moves into transposes, mirrors and flips; walk with shrinking boundaries; store notes inside the grid; do arithmetic digit by digit.</p>
+    <p><strong>Signals:</strong> rotate, mirror or spiral a grid; "in place" or O(1) space; repeat a step on a number until it stops; numbers as strings or digit lists.</p>
+    <p><strong>Templates:</strong> transpose (j from i + 1) then <code>row.reverse()</code>; spiral with top, bottom, left, right and two re-checks; markers in row 0 and column 0 plus two flags; seen set or fast and slow for loops; right to left with <code>% 10</code> and <code>// 10</code>.</p>
+    <p><strong>Cost:</strong> O(R x C) time and O(1) extra space for the grid tricks; O(m x n) digit products for multiplication.</p>
+    <p><strong>Traps:</strong> transposing every pair; spiral without guards on one row or column; zeroing while scanning; dropping the final carry; Python's <code>%</code> and <code>//</code> on negatives.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own grid and rotate it, spiral it, or set its zeroes. Try one row, one column and a non-square grid.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(22)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

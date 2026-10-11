@@ -1,0 +1,28 @@
+<div class="sandbox-container" id="sandbox12">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Top-k triage</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type whole numbers separated by commas, and k. Run it to watch a heap of size k keep the k largest, and compare its comparisons with sorting everything.</p>
+    <div class="control-group">
+      <label for="s12In">nums (up to 15 numbers)</label>
+      <input type="text" id="s12In" value="4, 9, 2, 7, 1, 8, 3, 6, 5, 0" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s12K">k</label>
+      <input type="text" id="s12K" value="3" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s12ex="4, 9, 2, 7, 1, 8, 3, 6, 5, 0" data-s12k="3">Lesson list</button>
+      <button class="btn btn-sm" type="button" data-s12ex="6, 2, 9, 4, 7" data-s12k="1">k = 1</button>
+      <button class="btn btn-sm" type="button" data-s12ex="5, 5, 1, 5, 2, 5" data-s12k="2">Duplicates</button>
+      <button class="btn btn-sm" type="button" data-s12ex="1, 2, 3, 4, 5, 6, 7, 8" data-s12k="3">Increasing (worst case)</button>
+      <button class="btn btn-sm" type="button" data-s12ex="8, 7, 6, 5, 4, 3, 2, 1" data-s12k="3">Decreasing</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s12Run">Run</button>
+    </div>
+    <p class="sb-error" id="s12Err" role="alert"></p>
+    <div id="s12Tp"></div>
+    <div class="readout" id="s12Out" aria-live="polite"></div>
+    <p class="sidebar-hint">For the five examples, these counts match <code>patterns/heap/measure.py</code> (heap vs sort comparisons): 13 vs 25, 4 vs 7, 5 vs 10, 17 vs 12 and 7 vs 12. On an increasing list every number gets into the heap, so on tiny inputs the sort can win.</p>
+  </div>
+</div>

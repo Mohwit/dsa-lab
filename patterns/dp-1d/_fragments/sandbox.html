@@ -1,0 +1,36 @@
+<div class="sandbox-container" id="sandbox19">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>DP table filler</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type your own input, and run it. The table fills left to right; blue cells are the ones each new cell reads.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s19mode="stairs">Stairs (count ways)</button>
+      <button class="btn btn-sm" type="button" data-s19mode="rob">House robber (take or skip)</button>
+      <button class="btn btn-sm" type="button" data-s19mode="coins">Coin change (fewest coins)</button>
+    </div>
+    <div class="control-group">
+      <label for="s19A" id="s19LabA">n</label>
+      <input type="text" id="s19A" value="7" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group" id="s19GrpB">
+      <label for="s19B" id="s19LabB">steps</label>
+      <input type="text" id="s19B" value="1, 2" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s19ex="stairs|7|1, 2">7 stairs, steps 1 or 2</button>
+      <button class="btn btn-sm" type="button" data-s19ex="stairs|8|1, 3, 5">Steps of 1, 3 or 5</button>
+      <button class="btn btn-sm" type="button" data-s19ex="stairs|25|1, 2">25 stairs</button>
+      <button class="btn btn-sm" type="button" data-s19ex="rob|2, 1, 1, 2">Robber: 2, 1, 1, 2</button>
+      <button class="btn btn-sm" type="button" data-s19ex="coins|1, 3, 4|6">Greedy fails: 1, 3, 4 to 6</button>
+      <button class="btn btn-sm" type="button" data-s19ex="coins|2|3">Impossible: 2s to make 3</button>
+      <button class="btn btn-sm" type="button" data-s19ex="coins|1, 2, 5|11">1, 2, 5 to 11</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s19Run">Run</button>
+    </div>
+    <p class="sb-error" id="s19Err" role="alert"></p>
+    <div id="s19Tp"></div>
+    <div class="readout" id="s19Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These match <code>patterns/dp-1d/measure.py</code> (answer, cells, plain calls): 7 stairs 21, 8, 54; steps 1, 3, 5 to 8 give 19, 9, 52; 25 stairs 121,393, 26, 317,810; robber 2, 1, 1, 2 gives 4, 5, 15; coins 1, 3, 4 to 6 give 2, 7, 24; 2s to make 3 give -1, 4, 2; coins 1, 2, 5 to 11 give 3, 12, 527. The plain recursion stops counting past 1,000,000 calls.</p>
+  </div>
+</div>

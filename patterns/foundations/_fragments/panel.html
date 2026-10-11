@@ -1,0 +1,409 @@
+<div class="lesson-content xp" id="lesson4">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Big-O and Recursion</h1>
+    <p class="lesson-subtitle">Goal: learn the two tools every other lesson leans on. Big-O tells you how the work grows when the input grows. Recursion lets a function hand a smaller copy of the job to itself.</p>
+    <div class="lesson-meta"><span class="badge">Tier 0</span><span class="badge">pattern</span><span class="badge diff-easy">foundations</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Big-O and Recursion lesson"><a href="#p4-s-idea">Dictionary</a><a href="#p4-s-race">Growth race</a><a href="#p4-s-recur">Recursion</a><a href="#p4-s-words">Pattern words</a><a href="#p4-s-map">Mental map</a><a href="#p4-s-template">Templates</a><a href="#p4-s-spot">Spot it</a><a href="#p4-s-traps">Traps</a><a href="#p4-s-cost">Complexity</a><a href="#p4-s-problems">Problems</a><a href="#p4-s-check">Check yourself</a><a href="#p4-recap">Recap</a></nav>
+
+<section class="step" id="p4-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Count how the work grows when the input doubles</h2>
+  <p>"Is my code fast?" is the wrong question. Fast on 10 items says nothing about 10 million items.</p>
+  <p>The useful question is: <strong>if the input doubles, what happens to the work?</strong> Does it stay the same, grow by one step, double, or explode?</p>
+  <div class="card analogy"><strong>Analogy: finding a word in a paper dictionary.</strong> You could flip every page from the front until you hit the word. Or you could open in the middle, see that your word comes later, and throw away the first half. Then open the middle of what is left, and so on. A dictionary twice as thick costs the page-flipper twice the work. It costs the middle-opener just one more look.</div>
+  <h3>Try it: the same sorted list, two ways</h3>
+  <p>The list holds 16 sorted numbers, and we look for <code>97</code>. Press <strong>Step</strong> or <strong>Play</strong> on each player.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: page by page.</strong> Check index 0, then 1, then 2, until the number turns up.</p>
+      <div id="p4tpA"></div>
+    </div>
+    <div>
+      <p><strong>Fast: open in the middle.</strong> Look at the middle. Too small? Throw away the left half. Too big? Throw away the right half.</p>
+      <div id="p4tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p4roA"><span class="lab">page by page</span><span class="val">-</span> <span class="unit">checks</span></div>
+    <div class="ro" id="p4roB"><span class="lab">open in the middle</span><span class="val">-</span> <span class="unit">checks</span></div>
+  </div>
+  <p class="caption">Both counts come from running the code, here and in <code>measure.py</code>: 14 checks against 3. On a sorted list of 1,000,000 numbers the worst case is 1,000,000 checks against 20.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Do not time your code with a stopwatch. Count its steps for an input of size n, and ask how that count grows as n grows.</div>
+  <p class="newwords">New words: <span class="chip">n</span><span class="chip">step</span><span class="chip">halving</span></p>
+</section>
+
+<section class="step" id="p4-s-race">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. The growth race: six shapes of work</h2>
+  <p>Almost every algorithm you will meet has one of six growth shapes. The labels are written in <dfn class="term" tabindex="0" data-def="Big-O notation: a short label for how the number of steps grows with the input size n, ignoring constant factors and small terms. O(n) grows in step with n; O(n^2) grows with n times n.">Big-O</dfn>.</p>
+  <table>
+    <thead><tr><th>Label</th><th>Name</th><th>Typical code</th></tr></thead>
+    <tbody>
+      <tr><td><code>O(1)</code></td><td>constant</td><td>one dict lookup, read <code>a[i]</code></td></tr>
+      <tr><td><code>O(log n)</code></td><td>logarithmic</td><td>halve the range each step (binary search, fast power)</td></tr>
+      <tr><td><code>O(n)</code></td><td>linear</td><td>one loop over the items</td></tr>
+      <tr><td><code>O(n log n)</code></td><td>linearithmic</td><td>sorting; a loop around a halving loop</td></tr>
+      <tr><td><code>O(n<sup>2</sup>)</code></td><td>quadratic</td><td>a loop inside a loop: every pair</td></tr>
+      <tr><td><code>O(2<sup>n</sup>)</code></td><td>exponential</td><td>try keep-or-skip for every item: every subset</td></tr>
+    </tbody>
+  </table>
+  <h3>Try it: drag n and watch the counters</h3>
+  <p>Each lane runs a small loop of that shape and counts its steps. The bars use a <strong>log scale</strong> (each grid line is 10 times the one before), or the 2<sup>n</sup> bar would not fit on your screen.</p>
+  <div class="card">
+    <label class="slider">input size n <output id="p4nOut">10</output><input type="range" id="p4nIn" min="1" max="20" step="1" value="10" aria-label="Input size n"></label>
+    <canvas id="p4cvA" role="img" aria-label="Six bars, one per growth shape, showing how many steps each loop takes for the chosen n"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" id="p4dbl">Double n</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p4go">Race at this n</button>
+    </div>
+    <div class="readouts" id="p4roG"></div>
+    <p class="caption">The race gives every lane the same budget of steps per tick, and the budget grows by the same factor each tick. Watch which lanes finish while the last one is still running.</p>
+  </div>
+  <div class="predict">
+    <h3>Predict: n goes from 10 to 20. By what factor does each lane's step count grow?</h3>
+    <textarea aria-label="How each growth shape changes when n doubles"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p>From <code>measure.py</code>, counting the same loops:</p>
+<pre><code>O(1)            1 ->           1   x1.0
+O(log n)        4 ->           5   x1.2   <span class="c"># one more halving</span>
+O(n)           10 ->          20   x2.0
+O(n log n)     40 ->         100   x2.5
+O(n^2)        100 ->         400   x4.0
+O(2^n)      1,024 ->   1,048,576   x1,024.0</code></pre>
+    <p>Doubling n adds one step to log n, doubles n, quadruples n<sup>2</sup>, and <em>squares</em> 2<sup>n</sup>.</p></div>
+  </div>
+  <h3>What this means for a real limit</h3>
+  <p>A plain Python loop on this laptop (Apple M5, Python 3.10.20) does about <strong>62 million</strong> simple steps per second, measured by <code>measure.py</code>. So:</p>
+<pre><code><span class="c"># == 2b. steps, and seconds at the measured loop speed ==</span>
+n = 10^5, O(n^2)        10,000,000,000 steps ~ 161 s      <span class="c"># too slow</span>
+n = 10^5, O(n log n)         1,700,000 steps ~ 0.027 s    <span class="c"># fine</span>
+n = 20,   O(2^n)             1,048,576 steps ~ 0.017 s    <span class="c"># fine</span>
+n = 40,   O(2^n)     1,099,511,627,776 steps ~ 17,754 s   <span class="c"># about 5 hours</span></code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Read the limit first</span>The input limit in a problem tells you the Big-O you need. n up to 20: 2<sup>n</sup> is fine. n up to a few thousand: n<sup>2</sup> is fine. n up to 10<sup>5</sup> or 10<sup>6</sup>: aim for n log n or n. n up to 10<sup>9</sup>: you need log n, or a formula.</div>
+  <p class="newwords">New words: <span class="chip">Big-O</span><span class="chip">O(1)</span><span class="chip">O(log n)</span><span class="chip">O(n)</span><span class="chip">O(n log n)</span><span class="chip">O(n^2)</span><span class="chip">O(2^n)</span></p>
+</section>
+
+<section class="step" id="p4-s-recur">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Recursion: a function that hands a smaller job to itself</h2>
+  <div class="card analogy"><strong>Analogy: Russian nesting dolls.</strong> To count the dolls, open the outer one and ask: "how many dolls are inside this smaller one?" That is the same question on a smaller doll. You stop at the tiny solid doll that does not open. That solid doll is the <dfn class="term" tabindex="0" data-def="The smallest input that a recursive function answers directly, without calling itself. Without it the calls never stop.">base case</dfn>.</div>
+  <p>Every recursive function has two parts. The base case answers the tiniest input directly. The <dfn class="term" tabindex="0" data-def="The part of a recursive function that calls itself on a smaller input and uses that answer.">recursive case</dfn> shrinks the job, calls itself, and uses the answer.</p>
+  <h3>Watch the call stack grow and shrink</h3>
+  <p>Python keeps one note per unfinished call on the <dfn class="term" tabindex="0" data-def="The pile of unfinished function calls. Each call waits on top of the one that called it, and is removed when it returns.">call stack</dfn>. Each note says "I am waiting for an answer". Step through <code>factorial(4)</code> and watch the pile.</p>
+  <div id="p4tpC"></div>
+  <p class="caption"><code>measure.py</code> agrees: <code>factorial(4)</code> returns 24 after 4 calls, and at most 4 calls wait on the stack at once. Those 4 waiting notes are memory: <strong>recursion depth counts as space</strong>.</p>
+  <h3>Two calls per call: the naive Fibonacci tree</h3>
+  <p>Fibonacci numbers start 0, 1, and each next one is the sum of the two before. So <code>fib(n) = fib(n - 1) + fib(n - 2)</code>. That is two calls inside every call. Each circle below is one call, labelled with its n. Orange circles are calls that repeat work done before.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Naive: recompute everything.</strong> <code>fib(5)</code> asks for <code>fib(4)</code> and <code>fib(3)</code>, and <code>fib(4)</code> asks for <code>fib(3)</code> again.</p>
+      <div id="p4tpD"></div>
+    </div>
+    <div>
+      <p><strong>Memo: write each answer down.</strong> Before computing <code>fib(k)</code>, look in a dict. Found? Use it and stop.</p>
+      <div id="p4tpE"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p4roD"><span class="lab">naive fib(5)</span><span class="val">-</span> <span class="unit">calls</span></div>
+    <div class="ro" id="p4roE"><span class="lab">memo fib(5)</span><span class="val">-</span> <span class="unit">calls</span></div>
+    <div class="ro"><span class="lab">naive fib(30)</span><span class="val">2,692,537</span> <span class="unit">calls</span></div>
+    <div class="ro"><span class="lab">memo fib(30)</span><span class="val">59</span> <span class="unit">calls</span></div>
+  </div>
+  <p class="caption">In naive <code>fib(5)</code>, <code>fib(3)</code> runs 2 times, <code>fib(2)</code> 3 times and <code>fib(1)</code> 5 times (from <code>measure.py</code>). The waste grows fast: at n = 30 it took 0.41 s naive against 9 microseconds with the memo on this laptop.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>The cost of a recursion is <strong>(number of calls) x (work per call)</strong>. Its extra space is <strong>the deepest the stack gets</strong>. One call per call gives a chain; two calls per call gives a tree that doubles each level, unless a memo cuts off the repeats.</div>
+  <p class="newwords">New words: <span class="chip">recursion</span><span class="chip">base case</span><span class="chip">recursive case</span><span class="chip">call stack</span><span class="chip">memo</span></p>
+</section>
+
+<section class="step" id="p4-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>4. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="The size of the input: how many items, characters, or the value of a number argument.">n</dfn></td><td>How big the input is</td><td>length of the list</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="How the number of steps grows with n. Usually given for the worst case, in Big-O.">time complexity</dfn></td><td>How the steps grow with n</td><td>one loop: O(n)</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="How much extra memory an algorithm uses as n grows, not counting the input. The recursion stack counts.">space complexity</dfn></td><td>How the extra memory grows with n</td><td>a set of n items: O(n)</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The input that makes an algorithm do the most work. Big-O usually describes this case.">worst case</dfn></td><td>The input that costs the most</td><td>the word is not in the list</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Logarithm base 2 of n: how many times you can halve n before reaching 1. log2(1,000,000) is about 20.">log n</dfn></td><td>How many halvings until 1 is left</td><td>about 20 for one million</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A function that calls itself on a smaller input.">recursion</dfn></td><td>A function that calls itself on a smaller job</td><td><code>factorial(n - 1)</code></td></tr>
+      <tr><td>base case</td><td>The tiny input answered directly</td><td><code>if n &lt;= 1: return 1</code></td></tr>
+      <tr><td>call stack</td><td>The pile of unfinished calls</td><td>4 notes for <code>factorial(4)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="How many calls are waiting on the call stack at the deepest moment. It is the extra space a recursion uses.">recursion depth</dfn></td><td>The tallest the pile gets</td><td>Python stops at 1000 by default</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Storing the answer of each subproblem so that a repeat call returns it in O(1) instead of recomputing it. Also called caching.">memoization</dfn></td><td>Write each answer down, reuse it</td><td><code>memo[n] = ...</code>, <code>@cache</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Computing x to the power n by squaring the answer for n // 2, so only about log2(n) calls are needed.">fast power</dfn></td><td>Square the half answer</td><td>x<sup>10</sup> = (x<sup>5</sup>)<sup>2</sup></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A diagram with one node per call and an edge from each call to the calls it makes. Its size is the number of calls.">recursion tree</dfn></td><td>One circle per call</td><td>15 circles for naive fib(5)</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Why Big-O drops constants</span><code>3n + 7</code> steps and <code>n</code> steps both double when n doubles, so both are O(n). Big-O keeps only the part that wins for big n: <code>n<sup>2</sup> + 1000n</code> is O(n<sup>2</sup>).</div>
+  <p class="newwords">New words: <span class="chip">time complexity</span><span class="chip">space complexity</span><span class="chip">recursion depth</span><span class="chip">memoization</span><span class="chip">fast power</span><span class="chip">recursion tree</span></p>
+</section>
+
+<section class="step" id="p4-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>5. Mental map: from a blank page to working code</h2>
+  <p>Use this checklist on every problem, not only the recursive ones. It is how you pick an approach before you write a line.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>Look at the limits: n up to 20, 10<sup>3</sup>, 10<sup>5</sup> or 10<sup>9</sup>. For recursion, look for a job that contains a smaller copy of itself: "the answer for n uses the answer for n - 1 or n / 2", nested shapes, trees, "all ways to ...".</span></li>
+    <li><b>Ask</b><span>"If the input doubles, how much more work does my idea do?" and "Can I solve a smaller version and grow it into the full answer?"</span></li>
+    <li><b>Pick</b><span>Choose the shape of recursion by how the job shrinks. The clue for each sits in yellow.</span>
+      <ul class="mm-branches">
+        <li><i>answer(n) uses answer(n - 1)</i>Linear recursion: one call per call, a chain. O(n) calls, O(n) stack. Factorial, sum of a list. Often a loop is simpler.</li>
+        <li><i>shrink from both ends</i>Two-ended recursion: <code>solve(l + 1, r - 1)</code>. n / 2 calls. Reverse a string, palindrome check.</li>
+        <li class="is-pick"><i>answer(n) uses answer(n / 2)</i>Halving recursion: one call on half the input. O(log n) calls. Fast power, binary search.</li>
+        <li><i>two or more calls, same arguments repeat</i>Branching recursion with a memo: O(2<sup>n</sup>) calls without it, one call per distinct argument with it. Fibonacci, climbing stairs.</li>
+        <li><i>"all subsets / all orders"</i>Branching recursion without repeats: the 2<sup>n</sup> is real, so n must be small (about 20). This is backtracking, a later lesson.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Trust the smaller call. Assume <code>solve(smaller)</code> already returns the right answer, and only check that your one step turns it into the right answer for the full input. This "leap of faith" is induction.</span></li>
+    <li><b>Steps</b><span>Write the base case first. Then the recursive case: shrink the input, call once (or twice), combine. Then count: calls x work per call for time, deepest chain for space.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Does every call move towards the base case, for every input, including 0, 1 and negatives?</span></li>
+    <li class="mm-trap"><b>Check</b><span>Is the depth below about 1000? Python stops deeper recursion with a <code>RecursionError</code>. A chain over 10<sup>5</sup> items needs a loop.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Hidden costs: a slice <code>s[1:]</code> copies the list on every call, and calling the same half twice undoes the halving.</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Base case, smaller call, combine. Then count calls x work, and the depth.</div>
+</section>
+
+<section class="step" id="p4-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Templates</h2>
+  <h3>Template 0: read Big-O off the code</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code shape</th><th>Cost and why</th></tr></thead>
+    <tbody>
+      <tr><td><code>x = d[key]</code>; <code>a[i] = 5</code></td><td>O(1): one step, any n.</td></tr>
+      <tr><td><code><span class="k">for</span> x <span class="k">in</span> a: ...</code> (O(1) body)</td><td>O(n): n runs of the body.</td></tr>
+      <tr><td>loop A, then loop B (one after the other)</td><td>Add: O(n) + O(n) = O(n).</td></tr>
+      <tr><td><code><span class="k">for</span> i ...: <span class="k">for</span> j ...:</code></td><td>Multiply: n x n = O(n<sup>2</sup>).</td></tr>
+      <tr><td><code><span class="k">while</span> k &gt;= <span class="n">1</span>: k //= <span class="n">2</span></code></td><td>O(log n): k halves each run.</td></tr>
+      <tr><td><code>a.sort()</code>, <code>sorted(a)</code></td><td>O(n log n).</td></tr>
+      <tr><td><code>x <span class="k">in</span> my_list</code>, <code>a[<span class="n">1</span>:]</code>, <code>s + t</code></td><td>O(n) each, hidden inside one short line.</td></tr>
+      <tr><td>a recursive function</td><td>(number of calls) x (work per call); space = deepest chain.</td></tr>
+    </tbody>
+  </table>
+  <h3>Template A: the recursion skeleton</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> factorial(n):</code></td><td>The job: n x (n - 1) x ... x 1.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">if</span> n &lt;= <span class="n">1</span>:</code></td><td>Base case first: the solid doll. It also catches 0.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> <span class="n">1</span></code></td><td>Answer it directly, no call.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">return</span> n * factorial(n - <span class="n">1</span>)</code></td><td>Shrink (n - 1), trust the smaller call, combine (multiply by n).</td></tr>
+    </tbody>
+  </table>
+  <p>Cost: n calls, O(1) work each, so O(n) time and O(n) stack space.</p>
+  <h3>Template B: halving (fast power)</h3>
+  <p>x<sup>13</sup> = x<sup>6</sup> x x<sup>6</sup> x x. So one call on n // 2 is enough, then square it, and multiply by x once more if n is odd.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> power(x, n):</code></td><td>x to the power n, for any whole n.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">if</span> n &lt; <span class="n">0</span>:</code></td><td>A negative power?</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> <span class="n">1</span> / power(x, -n)</code></td><td>Flip it: 2<sup>-2</sup> = 1 / 2<sup>2</sup>.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">if</span> n == <span class="n">0</span>:</code></td><td>Base case check.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> <span class="n">1</span></code></td><td>Anything to the power 0 is 1.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;half = power(x, n // <span class="n">2</span>)</code></td><td>One call on half the power. Store it: never call it twice.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;result = half * half</code></td><td>Square the half answer.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">if</span> n % <span class="n">2</span> == <span class="n">1</span>:</code></td><td>Odd n lost one x when we floored n / 2 ...</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;result = result * x</code></td><td>... so put it back.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">return</span> result</code></td><td>About log2(n) calls in total.</td></tr>
+    </tbody>
+  </table>
+  <p>Step through <code>power(2, 13)</code>. The stack shows the chain of halvings: 13, 6, 3, 1, 0.</p>
+  <div id="p4tpF"></div>
+  <p class="caption">From <code>measure.py</code>: <code>power(2, 13)</code> = 8192 with 5 calls and 7 multiplications. A plain loop needs 13. For n = 10<sup>9</sup>, <code>power</code> makes 31 calls; the loop makes 1,000,000,000 multiplications.</p>
+  <h3>Template C: memoization</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> fib(n, memo):</code></td><td><code>memo</code> is a dict shared by every call.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">if</span> n <span class="k">in</span> memo:</code></td><td>Already solved?</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> memo[n]</code></td><td>Reuse it. This line cuts every repeat branch.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">if</span> n &lt;= <span class="n">1</span>:</code></td><td>Base cases ...</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> n</code></td><td>... fib(0) = 0, fib(1) = 1.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;memo[n] = fib(n - <span class="n">1</span>, memo) + fib(n - <span class="n">2</span>, memo)</code></td><td>Solve once, write it down.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">return</span> memo[n]</code></td><td>Each n is computed once: 2n - 1 calls, O(n) time and space.</td></tr>
+    </tbody>
+  </table>
+  <p>In Python you can get the same effect with <code>from functools import cache</code> and <code>@cache</code> above a plain <code>def fib(n)</code>.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Halve to get log n. Memo to turn a tree of repeats into one call per distinct argument.</div>
+  <p class="newwords">New words: <span class="chip">@cache</span><span class="chip">n // 2</span></p>
+</section>
+
+<section class="step" id="p4-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>7. Spot the pattern: which shape, which cost?</h2>
+  <p>For each made-up task, say whether recursion is the natural tool, which shape (chain, two ends, halving, tree with memo), and the Big-O. Then reveal.</p>
+  <div class="predict">
+    <h3>A. Compute 3 to the power 1,000,000,000, keeping only the last 9 digits.</h3>
+    <textarea aria-label="Which shape fits task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Halving.</strong> Signal: a power that big, n up to 10<sup>9</sup>. Fast power makes about 31 calls; a loop would make a billion multiplications. Take the remainder after each multiply.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A robot climbs a staircase of n steps, 1 or 2 steps at a time. In how many different ways can it reach the top? n is at most 45.</h3>
+    <textarea aria-label="Which shape fits task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree with a memo.</strong> ways(n) = ways(n - 1) + ways(n - 2), the same shape as Fibonacci. Without a memo the calls grow like 2<sup>n</sup>; with it, O(n).</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Reverse a list of characters in place, using recursion on the two ends.</h3>
+    <textarea aria-label="Which shape fits task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Two ends.</strong> Swap <code>s[l]</code> and <code>s[r]</code>, then recurse on <code>l + 1, r - 1</code>; stop when <code>l &gt;= r</code>. O(n) time, but O(n) stack: about n / 2 waiting calls.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A log file has 2,000,000 lines. Count the lines that contain the word "error".</h3>
+    <textarea aria-label="Which shape fits task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not recursion.</strong> It looks like "count of the rest plus this line", but a chain of 2,000,000 calls blows Python's limit of 1000. A plain loop: O(n) time, O(1) space.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. List every way to choose a team from 12 players (any size, including empty).</h3>
+    <textarea aria-label="Which shape fits task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree, and the 2<sup>n</sup> is real.</strong> Each player is "in" or "out": 2<sup>12</sup> = 4096 teams to list. No memo helps, because every leaf is a different answer. Fine because n is small. (Backtracking, later.)</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A sorted list of prices; many shoppers each ask "what is the total of prices from position 3 to position 900?"</h3>
+    <textarea aria-label="Which shape fits task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not halving.</strong> "Sorted" tempts you to binary search, but the question is about a sum of a stretch, not finding a value. Running totals answer each question in O(1): that is the prefix sums lesson.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>A smaller copy of the same job inside the job; n or a power up to 10<sup>9</sup> (halve); the same arguments asked again and again (memo); and always: the input limit tells you the Big-O you can afford.</div>
+</section>
+
+<section class="step" id="p4-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>8. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: a base case that some inputs skip past</span>
+<pre><code><span class="k">def</span> fact_bad(n):
+    <span class="k">if</span> n == <span class="n">1</span>:          <span class="c"># 0 never equals 1 on the way down</span>
+        <span class="k">return</span> <span class="n">1</span>
+    <span class="k">return</span> n * fact_bad(n - <span class="n">1</span>)
+
+fact_bad(<span class="n">0</span>)  <span class="c"># -> RecursionError: maximum recursion depth exceeded in comparison</span></code></pre>
+    <p><code>fact_bad(0)</code> calls -1, -2, -3 ... and never meets 1. <strong>Fix:</strong> <code>if n &lt;= 1</code>. Test the base case with 0, 1 and a negative.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: forgetting that the stack is memory</span>
+    <p>A recursive reverse of a string swaps the ends and recurses on the middle. It looks like O(1) space. It is not: every call waits on the stack.</p>
+<pre><code><span class="c"># == 5. Trap: recursion depth (limit = 1000) ==</span>
+reverse_rec on 10 chars:   ok, max depth = 6
+reverse_rec on 1500 chars: ok, max depth = 751
+reverse_rec on 5000 chars: RecursionError (needed depth 2501)</code></pre>
+    <p><strong>Fix:</strong> say "O(n) stack space" out loud, and for long inputs use a loop with two pointers. Raising the limit with <code>sys.setrecursionlimit</code> is a patch, not a cure.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: calling the half twice</span>
+<pre><code><span class="k">return</span> power(x, n // <span class="n">2</span>) * power(x, n // <span class="n">2</span>)   <span class="c"># looks the same, costs far more</span></code></pre>
+    <p>Two calls per call rebuild the doubling tree, so the halving buys nothing back.</p>
+<pre><code><span class="c"># == 5. calls: half computed twice vs stored once ==</span>
+n =      10: calls =        31   power calls = 5
+n =    1000: calls =     2,047   power calls = 11
+n = 1000000: calls = 2,097,151   power calls = 21</code></pre>
+    <p><strong>Fix:</strong> <code>half = power(x, n // 2)</code> once, then <code>half * half</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: a slice hidden in every call</span>
+<pre><code><span class="k">def</span> total(nums):
+    <span class="k">if</span> <span class="k">not</span> nums: <span class="k">return</span> <span class="n">0</span>
+    <span class="k">return</span> nums[<span class="n">0</span>] + total(nums[<span class="n">1</span>:])   <span class="c"># nums[1:] copies the rest</span></code></pre>
+    <p>n calls, but each copies up to n items: O(n<sup>2</sup>). <code>measure.py</code> counted <strong>404,550</strong> copied items for a list of 900. <strong>Fix:</strong> pass an index, <code>total(nums, i + 1)</code>, which copies nothing.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Every input must reach the base case. Count the stack as space. Store the half. Pass indices, not slices.</div>
+</section>
+
+<section class="step" id="p4-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>9. Complexity: count it, then name it</h2>
+  <details class="math"><summary>Step 1: counting the six shapes at n = 1000</summary><div>
+    <p>Using the same loops as the race (from <code>measure.py</code>): O(1) is 1 step; O(log n) is 10 halvings; O(n) is 1000; O(n log n) is 1000 x 10 = 10,000; O(n<sup>2</sup>) is 1,000,000. O(2<sup>n</sup>) has 302 digits, so it is never run.</p>
+    <p>Halving counts: 1000, 500, 250, 125, 62, 31, 15, 7, 3, 1. That is 10 halvings, and log2(1000) is about 9.97.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: recursion = calls x work per call</summary><div>
+    <div class="eq">factorial: n calls x O(1) = O(n) time, depth n = O(n) space</div>
+    <div class="eq">power: about log2(n) + 2 calls x O(1) = O(log n) time and space</div>
+    <div class="eq">naive fib: calls(n) = calls(n - 1) + calls(n - 2) + 1</div>
+    <p>That last line makes naive fib's call count grow like the Fibonacci numbers themselves, roughly 1.6<sup>n</sup>: 177 calls at n = 10, 21,891 at n = 20, 2,692,537 at n = 30. Each step of 10 in n multiplies the count by about 123 (123.7 and 123.0). People often say O(2<sup>n</sup>): it is a safe upper bound.</p>
+    <p>The deepest chain is fib(n), fib(n - 1), ..., fib(1): n calls (depth 5 for fib(5) in <code>measure.py</code>). So naive fib is exponential in time but only O(n) in space.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: why the memo makes it O(n)</summary><div>
+    <p>With the memo, each fib(k) for k from 2 to n does real work once and makes 2 calls. Every other call is a quick lookup. So calls = 1 + 2(n - 1) = 2n - 1: 9 at n = 5, 59 at n = 30. Time O(n), space O(n) for the dict plus O(n) for the stack.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p4-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>10. The problems in this pattern, easiest first</h2>
+  <p>Three warm-ups for the tools in this lesson. Links open LeetCode in a new tab; pages here come in later sessions.</p>
+  <table class="approaches">
+    <thead><tr><th>Level</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge diff-easy">easy</span></td><td><a href="https://leetcode.com/problems/fibonacci-number/" target="_blank" rel="noopener">509 Fibonacci Number</a></td><td>Write it naive, count the calls, then add a memo, then a two-variable loop with O(1) space.</td></tr>
+      <tr><td><span class="badge diff-easy">easy</span></td><td><a href="https://leetcode.com/problems/reverse-string/" target="_blank" rel="noopener">344 Reverse String</a></td><td>Two-ended recursion in place; then notice the O(n) stack and say why a loop is better.</td></tr>
+      <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/powx-n/" target="_blank" rel="noopener">50 Pow(x, n)</a></td><td>Fast power with negative n, and n as small as -2<sup>31</sup>. The loop times out; halving makes 34 calls for n = -2<sup>31</sup> (from <code>measure.py</code>).</td></tr>
+      <tr><td><span class="badge diff-hard">hard</span></td><td colspan="2">No hard problems in this tier. These tools come back in every later lesson: binary search, trees, backtracking and dynamic programming.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p4-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>11. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. A sorted list holds 1,000,000 numbers. You search for a number smaller than all of them. How many middle checks does halving make?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>19.</strong> Each check halves what is left, and log2(1,000,000) is about 20. <code>measure.py</code> prints 19 for this search; the worst target needs 20. Page by page would need 1,000,000.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. How many calls does <code>factorial(6)</code> make, and how deep does the stack get? How many calls does naive <code>fib(6)</code> make, and memo <code>fib(6)</code>?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><code>factorial(6)</code>: <strong>6 calls, depth 6</strong>, value 720. Naive <code>fib(6)</code>: <strong>25 calls</strong> (15 for fib(5) + 9 for fib(4) + 1). Memo <code>fib(6)</code>: <strong>11 calls</strong> (2 x 6 - 1). All from <code>measure.py</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Trace <code>power(3, 5)</code> from Template B. How many calls and how many multiplications?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>4 calls</strong> (n = 5, 2, 1, 0) and <strong>5 multiplications</strong>: 1 x 1 x 3 = 3 for n = 1, 3 x 3 = 9 for n = 2, 9 x 9 x 3 = 243 for n = 5. Try it in the sandbox to check.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>n</dt><dd>The size of the input.</dd>
+    <dt>Big-O</dt><dd>A label for how the steps grow as n grows, ignoring constant factors.</dd>
+    <dt>O(1), O(log n), O(n)</dt><dd>Constant, halving, one pass.</dd>
+    <dt>O(n log n), O(n^2), O(2^n)</dt><dd>Sorting, every pair, every subset.</dd>
+    <dt>time / space complexity</dt><dd>How the steps / the extra memory grow with n.</dd>
+    <dt>worst case</dt><dd>The input that costs the most.</dd>
+    <dt>log n</dt><dd>How many halvings take n down to 1; about 20 for a million.</dd>
+    <dt>recursion</dt><dd>A function that calls itself on a smaller input.</dd>
+    <dt>base case</dt><dd>The smallest input, answered directly.</dd>
+    <dt>recursive case</dt><dd>Shrink, call yourself, combine.</dd>
+    <dt>call stack</dt><dd>The pile of unfinished calls; it costs memory.</dd>
+    <dt>recursion depth</dt><dd>The tallest the stack gets; Python stops at 1000 by default.</dd>
+    <dt>recursion tree</dt><dd>One node per call; its size is the number of calls.</dd>
+    <dt>memoization</dt><dd>Store each answer so a repeat call is a lookup.</dd>
+    <dt>fast power</dt><dd>Square the answer for n // 2: about log2(n) calls.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p4-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> count steps, not seconds, and ask what happens when n doubles. Recursion solves a job by trusting a smaller copy of it.</p>
+    <p><strong>Signals:</strong> the input limit (20: 2<sup>n</sup> ok; 10<sup>5</sup>: n log n; 10<sup>9</sup>: log n); a job that contains a smaller copy of itself; the same arguments repeating.</p>
+    <p><strong>Templates:</strong> <code>if base: return answer</code>, then <code>combine(solve(smaller))</code>. Halving: <code>half = power(x, n // 2)</code> once. Memo: <code>if n in memo: return memo[n]</code>.</p>
+    <p><strong>Cost:</strong> calls x work per call; space = deepest chain. factorial: O(n) and O(n). power: O(log n). naive fib: 2,692,537 calls at n = 30; memo fib: 59.</p>
+    <p><strong>Traps:</strong> a base case some inputs skip; the stack is memory (limit 1000); calling the half twice; slicing in every call.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, run each recursion on your own n. Watch the stack height and the call count, and find the n where naive fib needs more than 100 calls.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(4)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

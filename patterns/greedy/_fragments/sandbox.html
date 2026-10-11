@@ -1,0 +1,32 @@
+<div class="sandbox-container" id="sandbox16">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Greedy scanner</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type a list of whole numbers separated by commas, and run it. The trace shows each greedy choice; the readout races it against brute force.</p>
+    <div class="btn-row" role="group" aria-label="Template">
+      <button class="btn btn-sm" type="button" data-s16mode="max">Max subarray (Template A)</button>
+      <button class="btn btn-sm" type="button" data-s16mode="jump">Can I reach the end? (Template B)</button>
+    </div>
+    <div class="control-group" style="margin-top:12px">
+      <label for="s16In" id="s16Lab">nums</label>
+      <input type="text" id="s16In" value="2, -3, 4, -1, 2, -5, 3" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s16m="max" data-s16ex="-4, -2, -7, -1">All negative</button>
+      <button class="btn btn-sm" type="button" data-s16m="max" data-s16ex="3, 1, 4, 1, 5">All positive</button>
+      <button class="btn btn-sm" type="button" data-s16m="max" data-s16ex="5, -9, 6, -2, 3">Dip then climb</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s16m="jump" data-s16ex="2, 1, 0, 3, 1">Stuck on a zero</button>
+      <button class="btn btn-sm" type="button" data-s16m="jump" data-s16ex="0">One spot</button>
+      <button class="btn btn-sm" type="button" data-s16m="jump" data-s16ex="6, 0, 0, 0, 0, 0, 0">Big first jump</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s16Run">Run</button>
+    </div>
+    <p class="sb-error" id="s16Err" role="alert"></p>
+    <div id="s16Tp"></div>
+    <div class="readout" id="s16Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These example counts match <code>patterns/greedy/measure.py</code>. Max subarray: all negative gives -1 (4 steps vs 10 run totals), all positive 14 (5 vs 15), dip then climb 7 (5 vs 15). Jumps: stuck on a zero is False at check 4, one spot is True after 1 check, big first jump is True after 7 checks. For jumps the brute force here is cheap on short lists; its cost grows with the jump lengths, up to about n<sup>2</sup> / 2 marks.</p>
+  </div>
+</div>

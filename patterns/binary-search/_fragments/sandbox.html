@@ -1,0 +1,28 @@
+<div class="sandbox-container" id="sandbox9">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Binary search playground</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type your own input, and watch lo, mid and hi close in. Dimmed cells have been thrown away.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s9mode="exact">Exact match</button>
+      <button class="btn btn-sm" type="button" data-s9mode="lower">Lower bound</button>
+      <button class="btn btn-sm" type="button" data-s9mode="speed">Search on the answer</button>
+    </div>
+    <div class="control-group">
+      <label for="s9In" id="s9Lab">nums (sorted, up to 40 whole numbers)</label>
+      <input type="text" id="s9In" value="" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s9In2" id="s9Lab2">target</label>
+      <input type="text" id="s9In2" value="" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row" id="s9Ex"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s9Run">Run</button>
+    </div>
+    <p class="sb-error" id="s9Err" role="alert"></p>
+    <div id="s9Tp"></div>
+    <div class="readout" id="s9Out" aria-live="polite"></div>
+    <p class="sidebar-hint">The example results match <code>patterns/binary-search/measure.py</code>. Exact match, probes vs linear checks: 4 vs 12, 4 vs 12, 3 vs 1, 1 vs 1, 0 vs 0. Lower bound: 1, 4, 7 and 0, each in 3 probes. Speeds: 5 (4 calls), 12 (3 calls), 23 (5 calls), 1 (0 calls). On "first item" the linear scan wins: binary search wins on the worst case, not on every case.</p>
+  </div>
+</div>

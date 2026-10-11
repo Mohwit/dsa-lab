@@ -1,0 +1,402 @@
+<div class="lesson-content xp" id="lesson14">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Tries</h1>
+    <p class="lesson-subtitle">Goal: answer "which words start with this?" without reading every word. Store words as paths of letters, so words that share a start share a path. Then learn the wildcard search and the one-line bug that breaks most first tries.</p>
+    <div class="lesson-meta"><span class="badge">Tier 3</span><span class="badge">pattern</span><span class="badge diff-medium">medium</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Tries lesson"><a href="#p14-s-idea">Autocomplete</a><a href="#p14-s-words">Pattern words</a><a href="#p14-s-map">Mental map</a><a href="#p14-s-template">Templates</a><a href="#p14-s-spot">Spot it</a><a href="#p14-s-traps">Traps</a><a href="#p14-s-cost">Complexity</a><a href="#p14-s-problems">Problems</a><a href="#p14-s-check">Check yourself</a><a href="#p14-recap">Recap</a></nav>
+
+<section class="step" id="p14-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Words as paths of letters</h2>
+  <p>You have a list of words. Someone types a few letters. You want every word that starts with them.</p>
+  <p>The slow way reads every word in the list, every time. The trie way stores the words as a tree of letters. You walk down one letter per keystroke, and everything below you is a match.</p>
+  <div class="card analogy"><strong>Analogy: your phone's autocomplete.</strong> Type "c" and the phone has already ruled out every word that does not start with c. Type "a", then "r": each letter takes one step down a path, and the suggestions are whatever hangs below that point. The phone never re-reads its whole dictionary for each key you press.</div>
+  <p>The dictionary on this page: <code>cat, car, card, care, cart, dog, dot, door, deer, can</code>. The question: which words start with <code>car</code>?</p>
+  <div class="predict">
+    <h3>Before you press play: how many letter comparisons does reading every word cost? (Stop reading a word at its first letter that differs.)</h3>
+    <textarea aria-label="Your guess for the number of comparisons"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>22 comparisons.</strong> Each c-word costs 3 (cat and can fail on the third letter, the four car-words pass all three). Each d-word fails at once: 1 each. 6 x 3 + 4 x 1 = 22.</p></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <p><strong>Trie: walk, then collect.</strong> Walk c, a, r (3 steps), then visit the 3 nodes hanging below r. Blue fill marks the end of a word.</p>
+      <div id="p14tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: read every word.</strong> Compare each word with "car" letter by letter, stopping at the first mismatch. All 10 words, every time.</p>
+      <div id="p14tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p14roA"><span class="lab">trie walk + collect</span><span class="val">-</span> <span class="unit">steps</span></div>
+    <div class="ro" id="p14roB"><span class="lab">read every word</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods, in the page and in <code>measure.py</code> (6 steps against 22 comparisons). Building the trie cost 35 letter steps once; so it pays for itself from the third question like this one (35 + 3 x 6 = 53 against 3 x 22 = 66).</p>
+
+  <h3>Try it: type a prefix</h3>
+  <p>Type letters and watch the walk. Then try <code>x</code> (no word starts with it) and <code>cars</code> (a dead end one letter too late).</p>
+  <div class="card">
+    <div class="control-group"><label for="p14Pre">prefix</label><input type="text" id="p14Pre" value="ca" autocomplete="off" spellcheck="false" maxlength="6" style="width:100%;max-width:240px;font-family:var(--mono);font-size:13px;padding:7px 9px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-bright)"></div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p14pre="c">c</button>
+      <button class="btn btn-sm" type="button" data-p14pre="ca">ca</button>
+      <button class="btn btn-sm" type="button" data-p14pre="car">car</button>
+      <button class="btn btn-sm" type="button" data-p14pre="do">do</button>
+      <button class="btn btn-sm" type="button" data-p14pre="x">x</button>
+      <button class="btn btn-sm" type="button" data-p14pre="cars">cars</button>
+    </div>
+    <p class="sb-error" id="p14PreErr" role="alert"></p>
+    <div id="p14tpP"></div>
+    <div class="readouts">
+      <div class="ro" id="p14roP1"><span class="lab">suggestions</span><span class="val">-</span></div>
+      <div class="ro" id="p14roP2"><span class="lab">trie steps</span><span class="val">-</span></div>
+      <div class="ro" id="p14roP3"><span class="lab">scan comparisons</span><span class="val">-</span></div>
+    </div>
+  </div>
+
+  <h3>Race: the dictionary grows</h3>
+  <p>The page makes a list of random words from the letters a to h (the same list <code>measure.py</code> makes), then asks for every word starting with <code>bad</code>. Pick a size and race.</p>
+  <div class="card">
+    <canvas id="p14cvA" role="img" aria-label="Race between the trie lookup and reading every word: two bars that fill as each method counts its steps"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p14n="100">100 words</button>
+      <button class="btn btn-sm" type="button" data-p14n="1000">1000 words</button>
+      <button class="btn btn-sm" type="button" data-p14n="10000">10000 words</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p14raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p14roN"><span class="lab">words, matches</span><span class="val">100, 1</span></div>
+      <div class="ro" id="p14roT"><span class="lab">trie steps</span><span class="val">5</span></div>
+      <div class="ro" id="p14roS"><span class="lab">scan comparisons</span><span class="val">116</span></div>
+      <div class="ro" id="p14roBd"><span class="lab">build once</span><span class="val">447</span></div>
+    </div>
+<pre><code><span class="c"># measure.py, prefix 'bad'</span>
+n =   100: scan   116  trie 3 + 2  =  5  build   447  23.2x  (1 matches)
+n =  1000: scan  1161  trie 3 + 5  =  8  build  4488  145.1x  (3 matches)
+n = 10000: scan 11374  trie 3 + 27 = 30  build 44885  379.1x  (20 matches)</code></pre>
+    <p class="caption">The trie's cost depends on the prefix length and the number of matches, not on the dictionary size. The build cost is paid once, so a trie wins when you ask many questions of one fixed word list.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>A trie turns "check every word" into "walk one letter at a time". A lookup costs the length of the word you look up, not the size of the dictionary.</div>
+  <p class="newwords">New words: <span class="chip">trie</span><span class="chip">prefix</span><span class="chip">end-of-word mark</span></p>
+</section>
+
+<section class="step" id="p14-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use for tries</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Autocomplete</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A tree where each edge is a letter, so each node stands for the prefix spelled on the way down from the root. Said 'try', from retrieval. Also called a prefix tree.">trie</dfn></td><td>A tree of letters</td><td>The phone's word list, stored as paths</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The start of a word: 'ca' is a prefix of 'cat' and 'card'. Every word is also a prefix of itself.">prefix</dfn></td><td>The first few letters</td><td>What you have typed so far</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The node at the top of a trie. It holds no letter and stands for the empty prefix.">root</dfn></td><td>The empty start, before any letter</td><td>An empty search box</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A dict from a letter to the next node. Using a dict means only letters that appear take memory. An array of 26 slots is the other common choice.">children</dfn></td><td>Which letters can come next</td><td>The next keys that still lead somewhere</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A flag on a node (is_end) saying a whole word ends here. Without it you cannot tell 'car' from the first three letters of 'card'.">end-of-word mark</dfn></td><td>"A real word stops here"</td><td>Whether to suggest exactly what you typed</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A pattern letter, often '.', that matches any single letter. In a trie it means: try every child.">wildcard</dfn></td><td>A letter that can be anything</td><td>"c?t": cat, cot, cut</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Search that follows one path all the way down before trying the next. Collecting matches and wildcard search are DFS on the trie.">DFS</dfn></td><td>Go deep first, then back up</td><td>List every word under the current letter</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Cutting off a branch of a search early because it cannot lead to an answer. A trie prunes a grid search the moment the letters so far are not a prefix of any word.">pruning</dfn></td><td>Stop early when a path is hopeless</td><td>No word starts with "qz", so stop</td></tr>
+    </tbody>
+  </table>
+  <p class="newwords">New words: <span class="chip">trie</span><span class="chip">prefix</span><span class="chip">children</span><span class="chip">end-of-word mark</span><span class="chip">wildcard</span><span class="chip">pruning</span></p>
+</section>
+
+<section class="step" id="p14-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The word "prefix" or "starts with". Many words checked at once. Autocomplete or suggestions. A wildcard letter. "Find all dictionary words in this grid".</span></li>
+    <li><b>Ask</b><span>"Am I asking many prefix questions about one fixed set of words?" If you only ask "is this exact word here?", a set is simpler and just as fast.</span></li>
+    <li><b>Pick the variant</b><span>Four shapes:</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>insert, search, starts with</i>The plain trie: a walk down one letter at a time.</li>
+        <li><i>"." matches any letter</i>Wildcard search: DFS that tries every child at a dot.</li>
+        <li><i>many words hidden in a grid</i>Trie plus grid DFS: walk the board and the trie together, stop when no word continues.</li>
+        <li><i>"how many start with", "top 3 suggestions"</i>Store a count or a short list on each node as you insert.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Each node stands for exactly one prefix: the letters on the path from the root. A node exists if and only if some inserted word starts with that prefix.</span></li>
+    <li><b>Steps</b><span>1. A node class with <code>children = {}</code> and <code>is_end = False</code>. 2. Insert: walk, creating missing children, mark the end. 3. A shared <code>_walk(s)</code> that returns the node for s or None. 4. Search checks <code>is_end</code>; starts with only checks the node exists. 5. For more, add DFS below the node.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Did you set and check <code>is_end</code>? Does search avoid creating nodes? Is <code>children</code> created fresh in <code>__init__</code>, not as a default argument? At a wildcard, do you try every child before giving up?</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p14-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Templates</h2>
+  <h3>Template A: the node and insert</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">class</span> TrieNode:</code></td><td>One node per prefix.</td></tr>
+      <tr><td><code><span class="k">def</span> __init__(self):</code></td><td>Runs for every new node.</td></tr>
+      <tr><td><code>self.children = {}</code></td><td>Letter to next node. A fresh dict for every node.</td></tr>
+      <tr><td><code>self.is_end = <span class="k">False</span></code></td><td>No word ends here yet.</td></tr>
+      <tr><td><code><span class="k">def</span> insert(self, word):</code></td><td>A method of the Trie class, which holds <code>self.root = TrieNode()</code>.</td></tr>
+      <tr><td><code>node = self.root</code></td><td>Start at the empty prefix.</td></tr>
+      <tr><td><code><span class="k">for</span> ch <span class="k">in</span> word:</code></td><td>One step per letter.</td></tr>
+      <tr><td><code><span class="k">if</span> ch <span class="k">not in</span> node.children:</code></td><td>No word so far continued this way...</td></tr>
+      <tr><td><code>node.children[ch] = TrieNode()</code></td><td>...so open a new branch.</td></tr>
+      <tr><td><code>node = node.children[ch]</code></td><td>Step down, whether the node is old or new.</td></tr>
+      <tr><td><code>node.is_end = <span class="k">True</span></code></td><td>Mark the last node: a whole word ends here.</td></tr>
+    </tbody>
+  </table>
+  <p>Watch <code>cat, car, card, care, dog</code> go in. 17 letters create only 9 nodes, because the words share their starts (counts from <code>measure.py</code>). Orange ring: the path so far. Blue fill: a word ends here.</p>
+  <div id="p14tpC"></div>
+
+  <h3>Template B: search and starts with share one walk</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> _walk(self, s):</code></td><td>Follow s from the root. Return the node it ends on, or None.</td></tr>
+      <tr><td><code><span class="k">if</span> ch <span class="k">not in</span> node.children: <span class="k">return</span> <span class="k">None</span></code></td><td>Dead end: no word continues this way. Do not create anything.</td></tr>
+      <tr><td><code><span class="k">def</span> search(self, word):</code></td><td>Is this exact word stored?</td></tr>
+      <tr><td><code><span class="k">return</span> node <span class="k">is not</span> <span class="k">None</span> <span class="k">and</span> node.is_end</code></td><td>The path exists <em>and</em> a word ends on it.</td></tr>
+      <tr><td><code><span class="k">def</span> starts_with(self, prefix):</code></td><td>Does any stored word start like this?</td></tr>
+      <tr><td><code><span class="k">return</span> self._walk(prefix) <span class="k">is not</span> <span class="k">None</span></code></td><td>The path existing is enough.</td></tr>
+    </tbody>
+  </table>
+  <div class="predict">
+    <h3>The trie holds cat, car, card, care, dog. Predict search("ca") and starts_with("ca").</h3>
+    <textarea aria-label="Your guess for search and starts with"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>search("ca") is False, starts_with("ca") is True.</strong> The path c, a exists, but no word ends at a. Both walks take 2 steps.</p></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p14q="search:car">search("car")</button>
+    <button class="btn btn-sm" type="button" data-p14q="search:ca">search("ca")</button>
+    <button class="btn btn-sm" type="button" data-p14q="starts:ca">starts_with("ca")</button>
+    <button class="btn btn-sm" type="button" data-p14q="search:cards">search("cards")</button>
+  </div>
+  <div id="p14tpD"></div>
+
+  <h3>Template C: wildcard search (a dot matches any letter)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> dfs(node, i):</code></td><td>Can <code>word[i:]</code> be matched starting at this node?</td></tr>
+      <tr><td><code><span class="k">if</span> i == len(word): <span class="k">return</span> node.is_end</code></td><td>Used every letter: a match only if a word ends here.</td></tr>
+      <tr><td><code><span class="k">if</span> ch == <span class="s">'.'</span>:</code></td><td>A dot: any letter will do.</td></tr>
+      <tr><td><code><span class="k">for</span> child <span class="k">in</span> node.children.values():</code></td><td>Branch: try every child in turn.</td></tr>
+      <tr><td><code><span class="k">if</span> dfs(child, i + <span class="n">1</span>): <span class="k">return</span> <span class="k">True</span></code></td><td>Stop at the first branch that works. A failure only means "try the next".</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">False</span></code></td><td>Every branch failed.</td></tr>
+      <tr><td><code><span class="k">if</span> ch <span class="k">not in</span> node.children: <span class="k">return</span> <span class="k">False</span></code></td><td>A normal letter: one way to go, or none.</td></tr>
+      <tr><td><code><span class="k">return</span> dfs(node.children[ch], i + <span class="n">1</span>)</code></td><td>Step down and keep matching.</td></tr>
+    </tbody>
+  </table>
+  <p>The trie holds <code>cat, cot, cut, cup, dog</code>. Pick a pattern and count the calls. <code>c.p</code> has to back out of two branches before it finds cup.</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p14w="c.t">c.t</button>
+    <button class="btn btn-sm" type="button" data-p14w="c.p">c.p</button>
+    <button class="btn btn-sm" type="button" data-p14w="..g">..g</button>
+    <button class="btn btn-sm" type="button" data-p14w="d.t">d.t</button>
+  </div>
+  <div id="p14tpE"></div>
+  <p class="caption"><code>measure.py</code> counts dfs calls: c.t 4 (found), c.p 6 (found), ..g 8 (found), d.t 3 (not found).</p>
+
+  <h3>Template D: many words in a grid (Word Search II)</h3>
+  <p>Searching the grid once per word repeats the same work. Put all the words in a trie, then run one DFS from each cell that walks the grid and the trie together.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> dfs(r, c, node):</code></td><td>At cell (r, c) with the trie node for the letters so far.</td></tr>
+      <tr><td><code>ch = board[r][c]</code></td><td>The letter under us.</td></tr>
+      <tr><td><code><span class="k">if</span> ch <span class="k">not in</span> node.children: <span class="k">return</span></code></td><td>Pruning: no word continues with this letter. Stop the whole branch.</td></tr>
+      <tr><td><code>node = node.children[ch]</code></td><td>Step down the trie with the grid.</td></tr>
+      <tr><td><code><span class="k">if</span> node.word: found.add(node.word); node.word = <span class="k">None</span></code></td><td>Store the whole word on its end node. Clear it so it is reported once.</td></tr>
+      <tr><td><code>board[r][c] = <span class="s">'#'</span></code></td><td>Mark the cell used on this path.</td></tr>
+      <tr><td><code><span class="k">for</span> dr, dc <span class="k">in</span> moves: ... dfs(r + dr, c + dc, node)</code></td><td>Try the four neighbours that are inside the board.</td></tr>
+      <tr><td><code>board[r][c] = ch</code></td><td>Undo the mark on the way back (backtracking).</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Search asks "is there a word ending here?"; starts with asks "is there a path here?". Keep them apart with <code>is_end</code>, and let one shared walk do the stepping.</div>
+</section>
+
+<section class="step" id="p14-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: does a trie help?</h2>
+  <div class="predict">
+    <h3>A. A search box shows the three alphabetically first product names that start with what the user typed, after every key press.</h3>
+    <textarea aria-label="Does a trie help for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, plain trie (plus a stored short list).</strong> Signal: prefix after every key. Walk one letter per key press, and keep the best three words on each node. Sorting plus binary search also works here.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A word game lets players type patterns like "b..k". Answer whether any dictionary word matches, many times a second.</h3>
+    <textarea aria-label="Does a trie help for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, wildcard search.</strong> A dot means "try every child". Words of the wrong length or wrong fixed letters are skipped as whole branches.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Given a letter board and 3000 words, list every word you can trace through neighbouring cells.</h3>
+    <textarea aria-label="Does a trie help for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, trie plus grid DFS.</strong> One board walk checks all 3000 words at once, and stops as soon as the letters so far start no word.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Replace each word in a sentence by its shortest root from a list (for example "cattle" becomes "cat" if "cat" is a root).</h3>
+    <textarea aria-label="Does a trie help for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, plain trie.</strong> Put the roots in a trie. Walk each word and stop at the first node with <code>is_end</code>. That is Replace Words.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A spell checker answers one question: is this exact word in the dictionary?</h3>
+    <textarea aria-label="Does a trie help for task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not needed.</strong> No prefixes, no wildcards: a Python <code>set</code> answers exact lookups in O(L) time (hashing the word) with much less code. Reach for a trie only when the question is about starts.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Find the longest stretch of letters that two long strings share, in the same order with no gaps.</h3>
+    <textarea aria-label="Does a trie help for task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern.</strong> It sounds like prefixes, but it compares two strings at every pair of positions. That is 2D dynamic programming (a grid of match lengths).</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>"Prefix", "starts with", autocomplete, wildcard letters, many words searched at once (often in a grid). One exact lookup is a set, not a trie.</div>
+</section>
+
+<section class="step" id="p14-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: no end-of-word mark</span>
+<pre><code><span class="k">def</span> search(self, word):
+    <span class="k">return</span> self._walk(word) <span class="k">is not</span> <span class="k">None</span>     <span class="c"># this is starts_with, not search</span>
+
+<span class="c"># measure.py, only 'card' inserted:</span>
+search('car') without the end check: True     <span class="c"># wrong</span>
+search('car') with it:               False</code></pre>
+    <p><strong>Fix:</strong> set <code>node.is_end = True</code> at the end of insert, and return <code>node is not None and node.is_end</code> in search.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: a shared default dict</span>
+<pre><code><span class="k">class</span> TrieNode:
+    <span class="k">def</span> __init__(self, children={}):   <span class="c"># made once, shared by every node</span>
+        self.children = children
+
+<span class="c"># measure.py: insert 'ab', then search('b'):</span>
+True     <span class="c"># root.children holds both 'a' and 'b'</span></code></pre>
+    <p><strong>Fix:</strong> Python builds a default value once, when the function is defined. Write <code>self.children = {}</code> inside <code>__init__</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: a search that builds nodes</span>
+<pre><code>node = node.children.setdefault(ch, TrieNode())   <span class="c"># inside search</span>
+
+<span class="c"># measure.py, trie holds 'car':</span>
+search('cab') = False, nodes 3 -&gt; 4, starts_with('cab') now = True   <span class="c"># wrong</span></code></pre>
+    <p><strong>Fix:</strong> only insert creates nodes. Lookups return as soon as a letter is missing.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: giving up after the first branch</span>
+<pre><code><span class="k">for</span> child <span class="k">in</span> node.children.values():
+    <span class="k">return</span> dfs(child, i + <span class="n">1</span>)        <span class="c"># returns the first child's answer, even False</span>
+
+<span class="c"># measure.py, words cat and dog, pattern '.og':</span>
+buggy False    fixed True</code></pre>
+    <p><strong>Fix:</strong> <code>if dfs(child, i + 1): return True</code> inside the loop, and <code>return False</code> after it.</p>
+  </div>
+</section>
+
+<section class="step" id="p14-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Complexity: letters, not words</h2>
+  <details class="math"><summary>Step 1: insert, search and starts with cost the word's length</summary><div>
+    <p>Each operation does one dict lookup per letter. For a word of length L that is <strong>O(L)</strong>, whether the trie holds 10 words or 10 million.</p>
+    <p>The race in section 1: the trie took 3 walk steps for <code>bad</code> at every size; only the collect part grew with the number of matches (2, 5, 27).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: memory is at most the total letters, often much less</summary><div>
+    <p>Each inserted letter creates at most one node. Shared starts create none.</p>
+    <div class="eq">10 lesson words: 35 letters, 17 nodes</div>
+    <div class="eq">10000 random words: 44,885 letters, 11,091 nodes</div>
+    <p>A set of every prefix would also hold 11,091 strings, but it stores 53,155 letters, and each lookup must hash the whole prefix. The trie stores one letter per node and reuses the walk. Space is <strong>O(total letters)</strong>; a node with a 26-slot array instead of a dict costs 26 slots per node.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: wildcards branch</summary><div>
+    <p>A dot tries every child, so a pattern with d dots can visit up to 26<sup>d</sup> paths in the worst case. In practice it stops at the first match: on the 10,000 random words, <code>...</code> found a word after 4 calls and <code>......</code> after 7 (<code>measure.py</code>). The worst case is a pattern that almost matches everywhere and fails at the last letter.</p>
+  </div></details>
+  <table class="approaches">
+    <tr><th>Approach to "words starting with p"</th><th>Per query</th><th>Build</th><th>Choose it when</th></tr>
+    <tr><td>Read every word</td><td>O(n x |p|)</td><td>none</td><td>One query, tiny list</td></tr>
+    <tr><td>Sort once, binary search the range</td><td>O(|p| log n + matches)</td><td>O(n log n) compares</td><td>Fixed list, prefix only, no wildcards</td></tr>
+    <tr class="is-best"><td>Trie</td><td>O(|p| + size below p)</td><td>O(total letters)</td><td>Many queries, inserts mixed in, wildcards, grids</td></tr>
+  </table>
+</section>
+
+<section class="step" id="p14-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <h3>Easy</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td>14</td><td><a href="https://leetcode.com/problems/longest-common-prefix/" target="_blank" rel="noopener">Longest Common Prefix</a> (warm-up, also good)</td><td>Walk down while a node has exactly one child and no word ends there. A plain scan works too.</td></tr>
+    </tbody>
+  </table>
+  <h3>Medium</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td>208</td><td><a href="https://leetcode.com/problems/implement-trie-prefix-tree/" target="_blank" rel="noopener">Implement Trie (Prefix Tree)</a></td><td>Templates A and B exactly: insert, search, starts with.</td></tr>
+      <tr><td>211</td><td><a href="https://leetcode.com/problems/design-add-and-search-words-data-structure/" target="_blank" rel="noopener">Design Add and Search Words Data Structure</a></td><td>Template C: a dot branches into every child.</td></tr>
+      <tr><td>648</td><td><a href="https://leetcode.com/problems/replace-words/" target="_blank" rel="noopener">Replace Words</a> (also good)</td><td>Stop at the first <code>is_end</code> on the way down.</td></tr>
+      <tr><td>1268</td><td><a href="https://leetcode.com/problems/search-suggestions-system/" target="_blank" rel="noopener">Search Suggestions System</a> (also good)</td><td>Autocomplete for real: top three per prefix.</td></tr>
+    </tbody>
+  </table>
+  <h3>Hard (optional)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td>212</td><td><a href="https://leetcode.com/problems/word-search-ii/" target="_blank" rel="noopener">Word Search II</a></td><td>Template D: grid DFS guided by the trie, with pruning and found words cleared.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">Problem pages for this pattern are built in later sessions; the links open LeetCode in a new tab. The "also good" rows go beyond the core list.</p>
+</section>
+
+<section class="step" id="p14-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Insert app, apple, apply, apt into an empty trie. How many nodes are created (not counting the root)?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>7 nodes</strong> for 16 letters: a, p, p, l, e, y, t. The words share "ap", and apple and apply share "appl". <code>measure.py</code> prints 7 and 16.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Only "apple" is stored. What do search("app") and starts_with("app") return?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>False and True.</strong> The path exists, but no word ends at the second p. This is exactly the case the end-of-word mark is for.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. The trie holds cat, cot, cut, cup, dog. Why does the pattern "..g" need 8 calls when "c.t" needs 4?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p>The first dot tries c first. Under c, the second dot tries a, o and u, and none has a g child: 3 dead ends. Only then does it back out and try d, o, g. Calls: root, c, a, o, u, d, o, g = 8. "c.t" finds cat on its first branch: root, c, a, t = 4.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>trie (prefix tree)</dt><dd>A tree whose edges are letters; each node stands for one prefix.</dd>
+    <dt>prefix</dt><dd>The first few letters of a word.</dd>
+    <dt>root</dt><dd>The top node, standing for the empty prefix.</dd>
+    <dt>children</dt><dd>A dict from the next letter to the next node.</dd>
+    <dt>end-of-word mark</dt><dd>The <code>is_end</code> flag: a whole word stops at this node.</dd>
+    <dt>wildcard</dt><dd>A pattern letter that matches any one letter; in a trie, try every child.</dd>
+    <dt>DFS</dt><dd>Follow one path all the way down, then back up and try the next.</dd>
+    <dt>pruning</dt><dd>Stopping a search branch early because it cannot lead to an answer.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p14-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> store words as paths of letters. Words with the same start share a path, so a prefix question is one walk down.</p>
+    <p><strong>Signals:</strong> prefix, starts with, autocomplete, wildcard letters, many words searched at once (often in a grid). One exact lookup is a set.</p>
+    <p><strong>Template:</strong> <code>children = {}</code>, <code>is_end = False</code>; insert walks and creates; a shared <code>_walk</code>; search checks <code>is_end</code>, starts with does not; wildcard DFS tries every child at a dot.</p>
+    <p><strong>Cost:</strong> O(L) per operation, O(total letters) memory. On 10,000 words: 30 trie steps against 11,374 scan comparisons for "bad".</p>
+    <p><strong>Traps:</strong> no end mark; a shared default dict; search that creates nodes; returning after the first wildcard branch.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own words and watch the trie grow. Then try a search, a starts with and a wildcard pattern on it.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(14)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

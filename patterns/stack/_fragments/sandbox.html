@@ -1,0 +1,23 @@
+<div class="sandbox-container" id="sandbox7">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Stack playground</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type your own input, and step through the stack. The monotonic stack also counts how many comparisons the nested scan would need.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s7mode="ng">Next greater</button>
+      <button class="btn btn-sm" type="button" data-s7mode="br">Bracket check</button>
+    </div>
+    <div class="control-group">
+      <label for="s7In" id="s7Lab">heights (up to 20 whole numbers, commas between)</label>
+      <input type="text" id="s7In" value="6, 2, 5, 1, 3, 4, 0, 8" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row" id="s7Ex"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s7Run">Run</button>
+    </div>
+    <p class="sb-error" id="s7Err" role="alert"></p>
+    <div id="s7Tp"></div>
+    <div class="readout" id="s7Out" aria-live="polite"></div>
+    <p class="sidebar-hint">The example counts match <code>patterns/stack/measure.py</code> (stack vs nested comparisons): mixed 13 vs 18, falling 4 vs 10, rising 4 vs 4, giant last 9 vs 15, ties 5 vs 6. On a rising line both are fast; the stack's promise is that it never gets worse than about 2n.</p>
+  </div>
+</div>

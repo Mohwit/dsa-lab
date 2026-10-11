@@ -1,0 +1,391 @@
+<div class="lesson-content xp" id="lesson13">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Backtracking</h1>
+    <p class="lesson-subtitle">Goal: list every answer that follows the rules, one choice at a time. Make a choice, go deeper, and undo it when you come back. Cut off any branch that can no longer work.</p>
+    <div class="lesson-meta"><span class="badge">Tier 3</span><span class="badge">pattern</span><span class="badge diff-medium">medium</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Backtracking lesson"><a href="#p13-s-idea">Chalk in a maze</a><a href="#p13-s-race">Pruning race</a><a href="#p13-s-words">Pattern words</a><a href="#p13-s-map">Mental map</a><a href="#p13-s-template">Templates</a><a href="#p13-s-spot">Spot it</a><a href="#p13-s-traps">Traps</a><a href="#p13-s-cost">Cost</a><a href="#p13-s-problems">Problems</a><a href="#p13-s-check">Check yourself</a><a href="#p13-recap">Recap</a></nav>
+
+<section class="step" id="p13-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Make a choice, go deeper, undo it on the way back</h2>
+  <p>Some problems ask for <em>every</em> answer: every group, every order, every way to split. There is no clever formula. You have to build the answers.</p>
+  <p>Backtracking builds them one choice at a time. When a choice leads nowhere, you step back and try the next one.</p>
+  <div class="card analogy"><strong>Analogy: walking a maze with chalk.</strong> At each fork you pick a tunnel and draw a chalk line behind you. At a dead end you walk back to the last fork, rubbing the chalk out as you go. Then you try the next tunnel. The chalk line is always exactly the route from the entrance to where you stand.</div>
+  <p>Here is a small job. From the numbers <code>[2, 3, 4, 5]</code>, pick some (each at most once) that add up to <strong>7</strong>.</p>
+  <p>Every set of picks is a <dfn class="term" tabindex="0" data-def="A drawing of all the choices: the root is 'nothing chosen yet', and each step down adds one more choice. Every node is a partial answer.">decision tree</dfn> node. The slow way visits every node and tests it. The pattern way walks the same tree but cuts a branch the moment it is too big.</p>
+  <h3>Try it: the same tree, two ways</h3>
+  <p>Press <strong>Step</strong> or <strong>Play</strong> on each player. Teal is where you are, a ring marks an answer, and a faded node is a branch that was cut without being walked.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: build every subset, then test it.</strong> It walks all 16 nodes, even after the sum has passed 7.</p>
+      <div id="p13tpA"></div>
+    </div>
+    <div>
+      <p><strong>Pattern: backtrack with pruning.</strong> The numbers are sorted. As soon as the next number is bigger than what is left, stop that loop.</p>
+      <div id="p13tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p13roA"><span class="lab">build every subset</span><span class="val">-</span> <span class="unit">nodes visited</span></div>
+    <div class="ro" id="p13roB"><span class="lab">backtrack with pruning</span><span class="val">-</span> <span class="unit">nodes visited</span></div>
+    <div class="ro" id="p13roC"><span class="lab">branches cut</span><span class="val">-</span> <span class="unit">cuts</span></div>
+  </div>
+  <p class="caption">A node visited is one call of the helper <code>bt</code>. Both players find the same two answers, [2, 5] and [3, 4]. <code>measure.py</code> prints 16 nodes for the slow way and 9 nodes with 4 cuts for the pattern way.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Choose, explore, un-choose. And the moment a partial answer cannot possibly work, do not go any deeper.</div>
+  <p class="newwords">New words: <span class="chip">decision tree</span><span class="chip">choose / explore / un-choose</span><span class="chip">prune</span></p>
+</section>
+
+<section class="step" id="p13-s-race">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. The pruning race: how much tree do you skip?</h2>
+  <p>Take the numbers 1, 2, 3, ... n and a target T. Find every set of different numbers that adds up to T. The slow racer builds every subset. The fast racer cuts a branch as soon as the next number is too big.</p>
+  <p>Pick a size, move the target, then start the race. Both racers visit one node per tick.</p>
+  <div class="card">
+    <canvas id="p13cvR" role="img" aria-label="Race between building every subset and backtracking with pruning: two bars that fill as each method visits nodes"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p13n="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p13n="15">n = 15</button>
+      <button class="btn btn-sm" type="button" data-p13n="20">n = 20</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p13raceGo">Start the race</button>
+    </div>
+    <label class="slider">target T <output id="p13TgOut">10</output><input type="range" id="p13Tg" min="1" max="30" step="1" value="10" aria-label="Target sum T"></label>
+    <div class="readouts">
+      <div class="ro" id="p13roN"><span class="lab">numbers 1 to n</span><span class="val">10</span></div>
+      <div class="ro" id="p13roTt"><span class="lab">target T</span><span class="val">10</span></div>
+      <div class="ro" id="p13roF"><span class="lab">answers found</span><span class="val">-</span></div>
+      <div class="ro" id="p13roE"><span class="lab">every subset (nodes)</span><span class="val">-</span></div>
+      <div class="ro" id="p13roP"><span class="lab">with pruning (nodes)</span><span class="val">-</span></div>
+      <div class="ro" id="p13roX"><span class="lab">nodes saved</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">The page runs both searches with a counter every time you change n or T. The bar scale is the slow count, so at n = 20 the teal bar is a sliver.</p>
+  </div>
+  <p><code>measure.py</code> counts the same thing in Python:</p>
+<pre><code><span class="c"># == 2. Pruning race: nums = 1..n, target T ==</span>
+n = 10, T = 10: answers =  10  every subset =     1,024  pruned =    43  ratio = 24x
+n = 15, T = 10: answers =  10  every subset =    32,768  pruned =    43  ratio = 762x
+n = 20, T = 10: answers =  10  every subset = 1,048,576  pruned =    43  ratio = 24,385x
+n = 20, T = 20: answers =  64  every subset = 1,048,576  pruned =   371  ratio = 2,826x</code></pre>
+  <p>Look at T = 10. Going from n = 10 to n = 20 doubles the slow count ten times over, but the pruned count stays at 43. The numbers above 10 are cut at the very first test, so they cost almost nothing.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Pruning does not change the worst case, but it decides whether your search finishes. Sort first when you can, so one failed test lets you <code>break</code> instead of <code>continue</code>.</div>
+</section>
+
+<section class="step" id="p13-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words interviewers use for chalk in a maze</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Maze</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="The answer built so far: the list of choices made on the way from the root to the current node.">path</dfn> (or state)</td><td>The choices made so far</td><td>The chalk line</td><td><code>path = []</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="One option you can take at the current node, such as 'add 3' or 'put 2 in the next seat'.">choice</dfn></td><td>One option at this step</td><td>One tunnel at a fork</td><td>the <code>for</code> loop</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The three moves of backtracking: add a choice to the path, recurse to go deeper, then remove the same choice so the path is as it was.">choose / explore / un-choose</dfn></td><td>Add it, go deeper, take it back</td><td>Draw, walk on, rub out</td><td><code>append</code>, <code>bt(...)</code>, <code>pop</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The test at the top of the helper that says 'this path is complete': record a copy and return.">base case</dfn></td><td>When the path is a full answer</td><td>Reaching the exit</td><td><code>if remain == 0:</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="To prune is to stop exploring a branch because no answer can be below it. It saves the whole subtree.">prune</dfn></td><td>Stop early: nothing good is down there</td><td>A tunnel you can see is blocked</td><td><code>break</code> or <code>continue</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="An index that says where the next choices may start. Choices before it were already tried, so passing it down stops the same group being built in another order.">start index</dfn></td><td>Only pick from here onwards</td><td>Never go back into an earlier tunnel</td><td><code>bt(i + 1)</code> or <code>bt(i)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A list of True or False per item that marks what is already on the path. Permutations use it because order matters and any unused item may come next.">used set</dfn></td><td>Which items are already in the answer</td><td>Doors already marked with chalk</td><td><code>used[i] = True</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A new list with the same items. path[:] or list(path). Without it, every saved answer is the same list object, which is empty at the end.">copy</dfn></td><td>A snapshot of the path</td><td>A photo of the chalk line</td><td><code>path[:]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="How deep the recursion goes: the longest path. It costs memory on the call stack. Python stops at about 1000 by default.">recursion depth</dfn></td><td>How many calls are open at once</td><td>How far you are from the entrance</td><td>at most n here</td></tr>
+    </tbody>
+  </table>
+  <p>An answer is often called a <dfn class="term" tabindex="0" data-def="A node of the decision tree with no children: here the path is complete or no choice is left.">leaf</dfn> when it sits at the bottom of the tree. In subsets every node is an answer, not only the leaves.</p>
+  <p class="newwords">New words: <span class="chip">path</span><span class="chip">choice</span><span class="chip">base case</span><span class="chip">start index</span><span class="chip">used set</span><span class="chip">copy</span><span class="chip">recursion depth</span><span class="chip">leaf</span></p>
+</section>
+
+<section class="step" id="p13-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: from a blank page to working code</h2>
+  <p>Read this when a new problem looks like it might be backtracking.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The task says "all", "every", "list each", or "generate". Or it is a puzzle with rules (queens, sudoku, words on a board). And n is small: about 20 or less for groups, about 10 or less for orders.</span></li>
+    <li><b>Ask</b><span>"Can I build one answer by making one choice at a time? What are the choices at each step? When is a half-built answer already hopeless?"</span></li>
+    <li><b>Pick</b><span>Which kind of choice is it?</span>
+      <ul class="mm-branches">
+        <li><i>any size, order does not matter</i>Subsets: start index, record at every node.</li>
+        <li><i>pick to a target or a size k</i>Combinations: start index, record only when complete. Reuse allowed means <code>bt(i)</code>, else <code>bt(i + 1)</code>.</li>
+        <li><i>every order or arrangement</i>Permutations: a used set, every unused item may come next.</li>
+        <li><i>a path on a grid or board</i>Board search: mark the cell, explore the neighbours, unmark it.</li>
+        <li><i>cut a string into pieces</i>Partition: the choice is where the next piece ends.</li>
+        <li><i>repeated items in the input</i>Any of the above plus: sort first, then skip an equal item at the same level.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span><code>path</code> holds exactly the choices from the root to the current node. When <code>bt</code> returns, <code>path</code> (and <code>used</code>, and the board) is exactly as it was before the call.</span></li>
+    <li><b>Steps</b><span>1. Base case: if the path is complete, save <code>path[:]</code> and return. 2. Loop over the choices. 3. Skip or break on choices that cannot work. 4. Choose, call <code>bt</code>, un-choose.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Did you save a copy? Does every append have a pop? Do duplicates in the input give duplicate answers? Is the next start <code>i</code> or <code>i + 1</code>? Does the empty input work?</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Not backtracking</span>If the task wants only a <em>count</em> or a <em>best value</em>, and the same smaller question keeps coming back, it is dynamic programming. If it wants the <em>shortest</em> route on a grid, it is breadth-first search.</div>
+</section>
+
+<section class="step" id="p13-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Three templates, one shape</h2>
+  <p>All three share the same skeleton: a helper <code>bt</code>, a shared <code>path</code>, a base case, and a loop of choose, explore, un-choose. Only the choice rule changes.</p>
+  <h3>Template A: subsets (start index, every node is an answer)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> subsets(nums):</code></td><td>Return every group of the numbers, of any size.</td></tr>
+      <tr><td><code>out, path = [], []</code></td><td>All answers, and the chalk line.</td></tr>
+      <tr><td><code><span class="k">def</span> bt(start):</code></td><td>The helper. <code>start</code> is the first index we may still pick.</td></tr>
+      <tr><td><code>out.append(path[:])</code></td><td>Every node is a subset, so save a <em>copy</em> right away.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(start, len(nums)):</code></td><td>The choices: only items after the last one picked. That stops [2, 1] after [1, 2].</td></tr>
+      <tr><td><code>path.append(nums[i])</code></td><td>Choose.</td></tr>
+      <tr><td><code>bt(i + <span class="n">1</span>)</code></td><td>Explore. The next pick must come after <code>i</code>.</td></tr>
+      <tr><td><code>path.pop()</code></td><td>Un-choose: the path is back to what it was.</td></tr>
+      <tr><td><code>bt(<span class="n">0</span>); <span class="k">return</span> out</code></td><td>Start at the root with an empty path.</td></tr>
+    </tbody>
+  </table>
+  <h3>Template B: permutations (used set, record when full)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>used = [<span class="k">False</span>] * len(nums)</code></td><td>Which items are on the path right now.</td></tr>
+      <tr><td><code><span class="k">if</span> len(path) == len(nums):</code></td><td>Base case: every item is placed.</td></tr>
+      <tr><td><code>out.append(path[:]); <span class="k">return</span></code></td><td>Save a copy and go back up.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(len(nums)):</code></td><td>Any item may come next, from the start: order matters.</td></tr>
+      <tr><td><code><span class="k">if</span> used[i]: <span class="k">continue</span></code></td><td>Already placed: skip it.</td></tr>
+      <tr><td><code>used[i] = <span class="k">True</span>; path.append(nums[i])</code></td><td>Choose: mark and add.</td></tr>
+      <tr><td><code>bt()</code></td><td>Explore the next seat.</td></tr>
+      <tr><td><code>path.pop(); used[i] = <span class="k">False</span></code></td><td>Un-choose <em>both</em> things you changed.</td></tr>
+    </tbody>
+  </table>
+  <h3>Template C: combinations to a target (start index, prune, reuse)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>cands = sorted(cands)</code></td><td>Sorting is what makes the <code>break</code> below safe.</td></tr>
+      <tr><td><code><span class="k">def</span> bt(start, remain):</code></td><td><code>remain</code> is how much of the target is still missing.</td></tr>
+      <tr><td><code><span class="k">if</span> remain == <span class="n">0</span>: out.append(path[:]); <span class="k">return</span></code></td><td>Base case: the target is hit exactly.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(start, len(cands)):</code></td><td>Choices from <code>start</code> on, so each group comes out in one order only.</td></tr>
+      <tr><td><code><span class="k">if</span> cands[i] &gt; remain: <span class="k">break</span></code></td><td>Prune. This one is too big, and every later one is bigger.</td></tr>
+      <tr><td><code>path.append(cands[i])</code></td><td>Choose.</td></tr>
+      <tr><td><code>bt(i, remain - cands[i])</code></td><td>Explore. <code>i</code>, not <code>i + 1</code>: the same number may be used again. Use <code>i + 1</code> when each may be used once.</td></tr>
+      <tr><td><code>path.pop()</code></td><td>Un-choose.</td></tr>
+    </tbody>
+  </table>
+  <h3>Watch them run</h3>
+  <p>Pick a template. The player shows the code, the tree as it grows, the path, and the counters.</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p13v="sub">A. Subsets of [1, 2, 3]</button>
+    <button class="btn btn-sm" type="button" data-p13v="perm">B. Permutations of [1, 2, 3]</button>
+    <button class="btn btn-sm" type="button" data-p13v="comb">C. Combination sum: [2, 3, 5] to 8</button>
+  </div>
+  <div id="p13tpT"></div>
+  <div class="readouts">
+    <div class="ro" id="p13roTa"><span class="lab">answers</span><span class="val">-</span></div>
+    <div class="ro" id="p13roTn"><span class="lab">nodes visited</span><span class="val">-</span></div>
+    <div class="ro" id="p13roTc"><span class="lab">cuts</span><span class="val">-</span></div>
+  </div>
+  <p>The real output from <code>measure.py</code>:</p>
+<pre><code><span class="c"># == 3. Templates on [1, 2, 3] ==</span>
+subsets       -> [[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]  (8 answers, 8 nodes)
+permutations  -> [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]  (6 answers, 16 nodes)
+combination_sum([2, 3, 5], 8) -> [[2, 2, 2, 2], [2, 3, 3], [3, 5]]  (3 answers, 13 nodes, 7 cuts)</code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Start index when order does not matter. Used set when it does. Record at every node for subsets, only at complete nodes for the rest.</div>
+</section>
+
+<section class="step" id="p13-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>6. Spot the pattern: is this backtracking?</h2>
+  <p>Read each made-up task. Decide yes or no, name the variant, and name the clue. Then reveal.</p>
+  <div class="predict">
+    <h3>A. Four friends go to the cinema. List every way they can sit in a row of four seats.</h3>
+    <textarea aria-label="Is task A backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: permutations.</strong> Clue: "every way", and order matters (who sits where). Use a used set. There are 4! = 24 answers.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A bakery has trays of different weights. List every set of trays (each used at most once) that fills a van to exactly 20 kg.</h3>
+    <textarea aria-label="Is task B backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: combinations to a target.</strong> Clue: "every set" that hits a total, order does not matter. Start index with <code>bt(i + 1)</code>, sort, and <code>break</code> when a tray is heavier than what is left.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. How many different ways can you climb 30 steps if each move is 1 or 2 steps?</h3>
+    <textarea aria-label="Is task C backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> It asks for a <em>count</em>, not the list. Backtracking would walk every single way, and their number grows like the Fibonacci numbers. The same question ("ways from step k") repeats, so it is 1D dynamic programming: one loop.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A grid of letters is printed on a card. Can a given word be traced through side-by-side cells without using a cell twice?</h3>
+    <textarea aria-label="Is task D backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: board search.</strong> Clue: a path with a "no reuse" rule. Mark the cell, try the four neighbours, unmark it on the way back. Prune as soon as a letter does not match.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A robot is in a maze of walls. Find the fewest moves from the entrance to the exit.</h3>
+    <textarea aria-label="Is task E backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> It looks like the chalk maze, but it asks for the <em>shortest</em> route, not every route. Backtracking would try path after path. Breadth-first search finds the shortest one by exploring in rings (a later pattern).</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Cut a word into pieces so that every piece reads the same forwards and backwards. List every way to cut it.</h3>
+    <textarea aria-label="Is task F backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: partition.</strong> Clue: "list every way to cut". The choice at each step is where the next piece ends. Prune any piece that is not a palindrome before going deeper.</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. Each digit on an old phone stands for three or four letters. List every word a digit string could spell.</h3>
+    <textarea aria-label="Is task G backtracking?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: one choice per position.</strong> Depth = position in the digit string, choices = that digit's letters. Nothing to prune; the answer count is the product of the letter counts. Watch the empty input.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>"All", "every", "list each", "generate"; puzzles with rules; small n. Count or best value only: think dynamic programming. Shortest: think breadth-first search.</div>
+</section>
+
+<section class="step" id="p13-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>7. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: saving the path, not a copy</span>
+    <p><code>out.append(path)</code> saves the same list object every time. The search keeps changing it and leaves it empty at the end, so every saved answer is empty.</p>
+<pre><code><span class="c"># == 4. Traps ==</span>
+no copy  subsets([1, 2, 3]) = [[], [], [], [], [], [], [], []]</code></pre>
+    <p><strong>Fix:</strong> <code>out.append(path[:])</code> (or <code>list(path)</code>).</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: forgetting to un-choose</span>
+    <p>Without <code>path.pop()</code> the chalk is never rubbed out. Each new branch starts from the old branch's leftovers.</p>
+<pre><code>no pop   subsets([1, 2, 3]) = [[], [1], [1, 2], [1, 2, 3], [1, 2, 3, 3], [1, 2, 3, 3, 2], [1, 2, 3, 3, 2, 3], [1, 2, 3, 3, 2, 3, 3]]</code></pre>
+    <p><strong>Fix:</strong> every change before the call is undone after it. In permutations that is two lines: <code>path.pop()</code> and <code>used[i] = False</code>. On a board, unmark the cell.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: repeated items give repeated answers</span>
+    <p>With <code>[1, 2, 2]</code> the two 2s look different to the loop, so [1, 2] and [2] appear twice.</p>
+<pre><code>plain subsets([1, 2, 2]) = [[], [1], [1, 2], [1, 2, 2], [1, 2], [2], [2, 2], [2]]  (8 lists)
+sort + skip  ([1, 2, 2]) = [[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]  (6 lists)</code></pre>
+    <p><strong>Fix:</strong> sort, then in the loop <code>if i &gt; start and nums[i] == nums[i - 1]: continue</code>. It skips an equal number at the <em>same level</em> only, so [1, 2, 2] is still allowed. Using a set of tuples at the end also works, but it builds every duplicate first.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: the wrong next start</span>
+    <p>In combination sum, restarting the loop at 0 on every level lets the same group come out in several orders.</p>
+<pre><code>restart at 0: combination_sum([2, 3, 5], 8) = [[2, 2, 2, 2], [2, 3, 3], [3, 2, 3], [3, 3, 2], [3, 5], [5, 3]]
+start at i  : combination_sum([2, 3, 5], 8) = [[2, 2, 2, 2], [2, 3, 3], [3, 5]]</code></pre>
+    <p><strong>Fix:</strong> pass the start index down. <code>bt(i, ...)</code> when a number may be reused, <code>bt(i + 1, ...)</code> when each is used once.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Copy when you save. Undo everything you changed. Sort and skip for repeated items. Decide <code>i</code> or <code>i + 1</code> on purpose.</div>
+</section>
+
+<section class="step" id="p13-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>8. What it costs, and why n must be small</h2>
+  <p>Backtracking is a <dfn class="term" tabindex="0" data-def="Trying every candidate answer. It is correct but slow; backtracking is a careful version that builds candidates step by step and drops hopeless ones early.">brute force</dfn> with good manners. The number of answers itself is huge, so the cost is huge too.</p>
+<pre><code><span class="c"># == 5. Growth: answers and tree nodes ==</span>
+n =  3: subsets 2^n =         8  permutations n! =             6  permutation tree nodes =            16
+n =  4: subsets 2^n =        16  permutations n! =            24  permutation tree nodes =            65
+n =  5: subsets 2^n =        32  permutations n! =           120  permutation tree nodes =           326
+n =  8: subsets 2^n =       256  permutations n! =        40,320  permutation tree nodes =       109,601
+n = 10: subsets 2^n =     1,024  permutations n! =     3,628,800  permutation tree nodes =     9,864,101
+n = 12: subsets 2^n =     4,096  permutations n! =   479,001,600  permutation tree nodes = 1,302,061,345
+n = 20: subsets 2^n = 1,048,576  permutations n! = 2,432,902,008,176,640,000  permutation tree nodes = 6,613,313,319,248,080,001</code></pre>
+  <details class="math"><summary>Step 1: subsets cost O(n x 2<sup>n</sup>)</summary><div>
+    <p>Each number is either in or out: 2 x 2 x ... x 2 = 2<sup>n</sup> subsets, and the tree has exactly one node per subset (checked by running it for n = 3 to 6).</p>
+    <p>Saving each one copies up to n items. For n = 10, <code>measure.py</code> counts 1,024 subsets and 5,120 items copied in total, which is n x 2<sup>n</sup> / 2. So the time is O(n x 2<sup>n</sup>).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: permutations cost O(n x n!)</summary><div>
+    <p>n choices for the first seat, n - 1 for the second, and so on: n! orders. The tree has a bit more than that in nodes (65 for n = 4, against 24 answers), and each answer is a copy of n items.</p>
+    <div class="eq">nodes = 1 + n + n(n-1) + ... + n!   (about e x n! for big n)</div>
+  </div></details>
+  <details class="math"><summary>Step 3: memory</summary><div>
+    <p>Not counting the output, the extra memory is the path plus the open calls: O(n). The recursion is at most n deep, far below Python's default limit of about 1000.</p>
+    <p>The output itself can be huge: all subsets of 20 numbers hold over a million lists.</p>
+  </div></details>
+  <details class="math"><summary>Step 4: what the limit on n tells you</summary><div>
+    <p>About a million nodes is fine in an interview. 2<sup>20</sup> is 1,048,576, so subsets work up to n = 20. 10! is 3,628,800, but 12! is already 479,001,600, so permutations stop around n = 10. If a problem allows n = 10<sup>5</sup>, it is not backtracking.</p>
+    <p>Pruning helps a lot in practice (24,385 times fewer nodes in the race), but the worst case Big-O stays the same.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p13-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>9. The problems in this pattern, easiest first</h2>
+  <p>Each one is the same skeleton with a different choice rule. None has its own page yet; they come in later sessions. Links open LeetCode in a new tab.</p>
+  <h3><span class="badge diff-easy">easy</span> Warm-up</h3>
+  <table>
+    <thead><tr><th style="width:9%">#</th><th style="width:36%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>257</td><td><a href="https://leetcode.com/problems/binary-tree-paths/" target="_blank" rel="noopener">Binary Tree Paths</a> (extra)</td><td>The tree is the decision tree. Push a node, record at each leaf, pop on the way up.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-medium">medium</span> The core set</h3>
+  <table>
+    <thead><tr><th style="width:9%">#</th><th style="width:36%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>78</td><td><a href="https://leetcode.com/problems/subsets/" target="_blank" rel="noopener">Subsets</a></td><td>Template A as it stands: record at every node.</td></tr>
+      <tr><td>39</td><td><a href="https://leetcode.com/problems/combination-sum/" target="_blank" rel="noopener">Combination Sum</a></td><td>Template C: reuse allowed, so recurse with <code>i</code>; sort and break.</td></tr>
+      <tr><td>46</td><td><a href="https://leetcode.com/problems/permutations/" target="_blank" rel="noopener">Permutations</a></td><td>Template B with a used set.</td></tr>
+      <tr><td>90</td><td><a href="https://leetcode.com/problems/subsets-ii/" target="_blank" rel="noopener">Subsets II</a></td><td>Repeated numbers: sort, then skip an equal number at the same level.</td></tr>
+      <tr><td>40</td><td><a href="https://leetcode.com/problems/combination-sum-ii/" target="_blank" rel="noopener">Combination Sum II</a></td><td>Each number once (<code>i + 1</code>) and repeats in the input: both fixes at once.</td></tr>
+      <tr><td>79</td><td><a href="https://leetcode.com/problems/word-search/" target="_blank" rel="noopener">Word Search</a></td><td>Board search: mark a cell on the way in, unmark it on the way out.</td></tr>
+      <tr><td>131</td><td><a href="https://leetcode.com/problems/palindrome-partitioning/" target="_blank" rel="noopener">Palindrome Partitioning</a></td><td>The choice is where the next piece ends; prune pieces that are not palindromes.</td></tr>
+      <tr><td>17</td><td><a href="https://leetcode.com/problems/letter-combinations-of-a-phone-number/" target="_blank" rel="noopener">Letter Combinations of a Phone Number</a></td><td>One level per digit; an empty digit string gives an empty list, not [""].</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-hard">hard</span> Stretch</h3>
+  <table>
+    <thead><tr><th style="width:9%">#</th><th style="width:36%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>51</td><td><a href="https://leetcode.com/problems/n-queens/" target="_blank" rel="noopener">N-Queens</a></td><td>One row per level; three sets (columns and both diagonals) make every safety test O(1).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p13-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>10. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Template A runs on [1, 2, 3, 4]. How many times is <code>bt</code> called?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>16 times</strong>, one per subset: 2<sup>4</sup> = 16. <code>measure.py</code> prints <code>subsets([1, 2, 3, 4]) nodes = 16</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Template B runs on [1, 2, 3, 4]. How many answers, and how many nodes?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>24 answers and 65 nodes.</strong> 1 root + 4 + 4 x 3 + 4 x 3 x 2 + 24 = 65. The sandbox shows the same counts.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. The sort-and-skip subsets runs on [2, 1, 2]. What does it return?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>[[], [1], [1, 2], [1, 2, 2], [2], [2, 2]]</strong>. Sorting gives [1, 2, 2] first, so the order of the input does not matter. Six lists, no repeats.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q4. Combination sum with candidates [3, 5] and target 4. How many nodes, and what is the answer?</h3>
+    <textarea aria-label="Answer to question 4"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>2 nodes, no answers: [].</strong> The root picks 3 (remain 1), and at that node 3 &gt; 1 cuts at once. Back at the root, 5 &gt; 4 cuts too. <code>measure.py</code> prints 2 nodes and 2 cuts.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>backtracking</dt><dd>Building answers one choice at a time, undoing the last choice to try the next one.</dd>
+    <dt>decision tree</dt><dd>All possible choices drawn as a tree. The root is "nothing chosen", each step down adds a choice.</dd>
+    <dt>path</dt><dd>The choices made so far, from the root to the current node.</dd>
+    <dt>choose / explore / un-choose</dt><dd>Append a choice, recurse, then pop the same choice.</dd>
+    <dt>base case</dt><dd>The test that says the path is complete: save a copy and return.</dd>
+    <dt>prune</dt><dd>Stop exploring a branch because no answer can be below it.</dd>
+    <dt>start index</dt><dd>Where the next choices begin. Keeps each group in one order only.</dd>
+    <dt>used set</dt><dd>Marks which items are on the path; used for permutations.</dd>
+    <dt>copy</dt><dd><code>path[:]</code>: a new list with the same items, safe to keep.</dd>
+    <dt>leaf</dt><dd>A node with no children.</dd>
+    <dt>recursion depth</dt><dd>How many calls are open at once; at most n in these templates.</dd>
+    <dt>brute force</dt><dd>Trying every candidate. Backtracking is a brute force that drops hopeless candidates early.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p13-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> build answers one choice at a time on a shared <strong>path</strong>. Choose, explore, un-choose. Cut any branch that cannot work.</p>
+    <p><strong>Signals:</strong> "all", "every", "generate", "list each"; rule puzzles (queens, word on a board); small n (about 20 for groups, about 10 for orders).</p>
+    <p><strong>Template:</strong> a helper <code>bt(start)</code>. Base case: <code>out.append(path[:])</code> and return. Then for each choice <code>i</code> from <code>start</code>: <code>path.append(x)</code>, <code>bt(i + 1)</code>, <code>path.pop()</code>. Start index for groups, used set for orders, sort and <code>break</code> to prune.</p>
+    <p><strong>Cost:</strong> O(n x 2<sup>n</sup>) for subsets, O(n x n!) for permutations, O(n) extra space plus the output. In the race, pruning visited 43 nodes instead of 1,048,576.</p>
+    <p><strong>Traps:</strong> saving <code>path</code> instead of <code>path[:]</code>; a missing pop; duplicates (sort and skip at the same level); <code>i</code> versus <code>i + 1</code>.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, pick a template and type your own numbers. Try [1, 2, 2] with and without the duplicate skip, and a combination sum with no answer.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(13)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

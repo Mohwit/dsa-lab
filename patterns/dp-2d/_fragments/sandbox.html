@@ -1,0 +1,35 @@
+<div class="sandbox-container" id="sandbox20">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Two-strings table</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type two words, and run it. Each new cell (teal) reads its source cells (blue). Row and column labels are the letters; <code>""</code> is the empty prefix.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s20mode="lcs">Longest common subsequence</button>
+      <button class="btn btn-sm" type="button" data-s20mode="edit">Edit distance</button>
+    </div>
+    <div class="control-group">
+      <label for="s20A">word a (rows, up to 10 letters or digits)</label>
+      <input type="text" id="s20A" value="stone" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s20B">word b (columns, may be empty)</label>
+      <input type="text" id="s20B" value="tones" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s20ex="lcs|stone|tones">stone / tones</button>
+      <button class="btn btn-sm" type="button" data-s20ex="lcs|abc|xyz">Nothing in common</button>
+      <button class="btn btn-sm" type="button" data-s20ex="lcs|banana|atana">banana / atana</button>
+      <button class="btn btn-sm" type="button" data-s20ex="lcs||abc">Empty word</button>
+      <button class="btn btn-sm" type="button" data-s20ex="edit|flaw|lawn">Edit: flaw to lawn</button>
+      <button class="btn btn-sm" type="button" data-s20ex="edit|kitten|sitting">Edit: kitten to sitting</button>
+      <button class="btn btn-sm" type="button" data-s20ex="edit|intention|attention">Edit: 9 letters each</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s20Run">Run</button>
+    </div>
+    <p class="sb-error" id="s20Err" role="alert"></p>
+    <div id="s20Tp"></div>
+    <div class="readout" id="s20Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These match <code>patterns/dp-2d/measure.py</code> (answer, cells, plain calls): stone / tones 4, 36, 136; abc / xyz 0, 16, 39; banana / atana 4, 42, 74; empty / abc 0, 4, 1; flaw to lawn 2, 25, 194; kitten to sitting 3, 56, 2,763; intention to attention 2, 100, 81,487. The plain recursion stops counting past 1,000,000 calls, and the trace stops drawing after 60 steps.</p>
+  </div>
+</div>

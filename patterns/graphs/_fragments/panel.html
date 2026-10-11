@@ -1,0 +1,444 @@
+<div class="lesson-content xp" id="lesson17">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Graphs: BFS, DFS, topological sort, union-find</h1>
+    <p class="lesson-subtitle">Goal: see any "things and connections" problem as a graph, then pick one of four small tools. A ripple for fewest steps, a cave walk for exploring, a to-do order for prerequisites, and a group merger for "are these connected?".</p>
+    <div class="lesson-meta"><span class="badge">Tier 4</span><span class="badge">pattern</span><span class="badge diff-medium">medium</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Graphs lesson"><a href="#p17-s-idea">Ripple</a><a href="#p17-s-words">Pattern words</a><a href="#p17-s-map">Mental map</a><a href="#p17-s-template">Templates</a><a href="#p17-s-spot">Spot it</a><a href="#p17-s-traps">Traps</a><a href="#p17-s-cost">Complexity</a><a href="#p17-s-problems">Problems</a><a href="#p17-s-check">Check yourself</a><a href="#p17-recap">Recap</a></nav>
+
+<section class="step" id="p17-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Explore in rings, and the shortest route falls out for free</h2>
+  <p>A graph is just things and the links between them. Cities and roads. People and friendships. Cells in a grid and the cells next to them.</p>
+  <p>The most common question is "what is the fewest number of steps from here to there?". The slow way tries every route. The pattern way spreads out in rings, one step further each time.</p>
+  <div class="card analogy"><strong>Analogy: a stone in a pond.</strong> Drop a stone at the start. The first ring touches everything one step away. The next ring touches everything two steps away. The first ring that reaches the goal tells you the shortest distance. No ring ever needs to come back.</div>
+  <p>Both players below answer the same question on the same seven places: fewest hops from <strong>A</strong> to <strong>G</strong>. Each link is a road you can walk both ways.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: BFS ripple.</strong> A queue holds the ring being explored. Orange rings are waiting in the queue; blue ones are done.</p>
+      <div id="p17tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: try every route.</strong> Walk each path that never repeats a place, and keep the shortest one that reaches G.</p>
+      <div id="p17tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p17roA"><span class="lab">BFS ripple</span><span class="val">-</span> <span class="unit">neighbour checks</span></div>
+    <div class="ro" id="p17roB"><span class="lab">every route</span><span class="val">-</span> <span class="unit">neighbour checks</span></div>
+  </div>
+  <p class="caption">A neighbour check is one look along one link. Both counts come from running the code (in the page and in <code>measure.py</code>, which prints 16 and 42). Both find 3 hops. The slow way walked 6 complete routes to be sure.</p>
+
+  <h3>Try it: race on a bigger map</h3>
+  <p>Seven places is tiny. Now the map is an open n x n grid, from the top-left corner to the bottom-right. Pick a size and race. Guess first: how much worse does "every route" get from 4 x 4 to 5 x 5?</p>
+  <div class="card">
+    <canvas id="p17cvA" role="img" aria-label="Race between BFS and trying every route: two bars that fill as each method counts its neighbour checks"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p17n="2">2 x 2</button>
+      <button class="btn btn-sm" type="button" data-p17n="3">3 x 3</button>
+      <button class="btn btn-sm" type="button" data-p17n="4">4 x 4</button>
+      <button class="btn btn-sm" type="button" data-p17n="5">5 x 5</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p17raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p17roN"><span class="lab">grid</span><span class="val">3 x 3</span></div>
+      <div class="ro" id="p17roS"><span class="lab">BFS checks</span><span class="val">22</span></div>
+      <div class="ro" id="p17roP"><span class="lab">every-route checks</span><span class="val">108</span></div>
+      <div class="ro" id="p17roQ"><span class="lab">routes walked</span><span class="val">12</span></div>
+    </div>
+    <p class="caption">The page runs both searches live. <code>measure.py</code> prints the same numbers: 5 x 5 needs 78 BFS checks against 264,860 for every route (8,512 routes), about 3,396 times more work.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Visit each place once. Mark it when you first see it, and never walk into a marked place again. That one rule turns an explosion of routes into work that grows with the size of the map.</div>
+  <p class="newwords">New words: <span class="chip">graph</span><span class="chip">BFS</span><span class="chip">queue</span><span class="chip">neighbour</span></p>
+</section>
+
+<section class="step" id="p17-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A set of things (nodes) and links between pairs of them (edges).">graph</dfn></td><td>Things plus the links between them</td><td>a dict of lists</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="One thing in a graph: a city, a person, a grid cell, a course. Also called a vertex.">node</dfn> (vertex)</td><td>One thing</td><td><code>"A"</code>, <code>3</code>, <code>(r, c)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A link between two nodes. V is the number of nodes, E the number of edges.">edge</dfn></td><td>One link between two things</td><td><code>("A", "B")</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A node joined to the current node by an edge.">neighbour</dfn></td><td>A thing one link away</td><td><code>adj[node]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A dict mapping each node to the list of its neighbours. The standard way to store a graph for BFS and DFS.">adjacency list</dfn></td><td>For each thing, the list of its neighbours</td><td><code>adj = {"A": ["B", "C"]}</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Edges with a direction: A to B does not mean B to A. Prerequisites and one-way streets are directed. Friendships are undirected.">directed</dfn> / undirected</td><td>One-way links / two-way links</td><td>add the edge once / both ways</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The set of nodes already discovered. Checking it before entering a node is what stops a search from looping forever.">visited set</dfn></td><td>Places already discovered</td><td><code>seen = {start}</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Nodes discovered but not yet explored. In BFS the frontier is exactly what sits in the queue.">frontier</dfn></td><td>Found but not yet explored</td><td>the queue contents</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Breadth-first search: explore all nodes 1 step away, then 2 steps, and so on, using a first-in first-out queue. Finds fewest steps in an unweighted graph.">BFS</dfn></td><td>Ripple: nearest ring first</td><td><code>deque</code>, <code>popleft()</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Depth-first search: follow one path as far as it goes, then back up and try the next branch. Uses recursion or an explicit stack.">DFS</dfn></td><td>Cave walk: one tunnel to its end, then back up</td><td>recursion, or a list as a stack</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A first-in first-out line. collections.deque gives O(1) append and popleft. list.pop(0) is O(n), so avoid it.">queue</dfn> / <dfn class="term" tabindex="0" data-def="A last-in first-out pile: you take from the top. A Python list with append and pop is a stack.">stack</dfn></td><td>Line at a shop / pile of plates</td><td><code>deque</code> / <code>list</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A group of nodes that can all reach each other, with no edge leaving the group. An island in a grid is one component.">connected component</dfn></td><td>One separate group, like one island</td><td>count DFS starts</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A path that comes back to where it started. A directed graph with a cycle has no valid task order.">cycle</dfn></td><td>A loop of links back to the start</td><td>Kahn leaves nodes behind</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="For a directed graph, the number of edges pointing into a node: how many prerequisites it still waits on.">in-degree</dfn></td><td>How many things must come before me</td><td><code>indeg[b] += 1</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="An order of the nodes of a directed graph where every edge points forward: each task comes after all its prerequisites. Exists only if there is no cycle.">topological order</dfn></td><td>A to-do order that respects every "before"</td><td>Kahn's algorithm</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Union-find (disjoint set union, DSU): keeps groups, with find(x) giving x's group leader and union(a, b) merging two groups. Nearly O(1) per call with both tricks.">union-find</dfn> (DSU)</td><td>A club register: who leads my group? merge two groups</td><td><code>parent</code> list</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The node that stands for a whole group in union-find: the one whose parent is itself.">root</dfn> (leader)</td><td>The member that names the group</td><td><code>parent[x] == x</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="While walking up to the root in find, re-point nodes closer to the root so later finds are short. Path halving points each node at its grandparent.">path compression</dfn></td><td>Shortcut the chain on the way up</td><td><code>parent[x] = parent[parent[x]]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="In union, hang the smaller group under the bigger group's root, so trees stay shallow. Union by rank is the same idea using tree height.">union by size</dfn> (rank)</td><td>Small group joins big group</td><td><code>size</code> list</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">A grid is a graph in disguise</span>Every cell is a node. Its up, down, left and right cells are its neighbours. You never build the adjacency list; you compute the neighbours with four <code>(dr, dc)</code> moves.</div>
+  <p class="newwords">New words: <span class="chip">node</span><span class="chip">edge</span><span class="chip">adjacency list</span><span class="chip">directed</span><span class="chip">visited set</span><span class="chip">frontier</span><span class="chip">DFS</span><span class="chip">stack</span><span class="chip">connected component</span><span class="chip">cycle</span><span class="chip">in-degree</span><span class="chip">topological order</span><span class="chip">union-find</span><span class="chip">root</span><span class="chip">path compression</span><span class="chip">union by size</span></p>
+</section>
+
+<section class="step" id="p17-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <p>Use this checklist when a new problem smells like a graph. It is the order to think in, not the order to type in.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>Things that link to other things: a grid of cells, islands, friends, courses with prerequisites, words that differ by one letter, "fewest steps", "can every X reach Y", "is there a cycle", "how many groups".</span></li>
+    <li><b>Ask</b><span>What is a node? What is an edge? Are edges one-way or two-way? Do edges have different costs? Write the answers down before any code.</span></li>
+    <li><b>Pick</b><span>Choose the tool by what the question asks for:</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>fewest steps, every move costs the same</i>BFS with a queue. The first time you reach the goal is the shortest.</li>
+        <li class="is-pick"><i>count or measure regions, fill an area</i>DFS (or BFS) from every unvisited cell. Each start is one component.</li>
+        <li class="is-pick"><i>prerequisites, an order, a cycle in one-way links</i>Topological sort with Kahn's in-degree queue.</li>
+        <li class="is-pick"><i>links arrive one at a time, "connected yet?"</i>Union-find with path compression and union by size.</li>
+        <li><i>links have different costs</i>Not this pattern: Dijkstra (shortest paths lesson).</li>
+        <li><i>grid where you only move right or down and count ways</i>Not a search: that is dynamic programming.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>A node enters the visited set exactly once, at the moment it is first discovered. So each node is handled once and each edge is looked at once per direction: O(V + E).</span></li>
+    <li><b>Steps</b><span>1. Build the adjacency list (or write the four grid moves). 2. Put the start in the visited set and the queue or stack. 3. Loop: take one node, look at each neighbour, skip visited ones, mark and push the rest. 4. Read the answer from what you recorded: distances, counts, an order, or the number of groups.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Mark visited on push, not on pop. Add undirected edges both ways. Disconnected graphs need an outer loop over every node. Deep grids can blow Python's recursion limit: use an explicit stack. Topological sort: if the order is shorter than the number of nodes, there is a cycle.</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p17-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Four templates cover this pattern</h2>
+  <h3>Ripple vs cave: the same graph, two visit orders</h3>
+  <p>BFS takes the oldest discovery first (a queue). DFS takes the newest (the call stack). Step both and watch the visit order.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>BFS: ring by ring.</strong> A, then all of A's neighbours, then theirs.</p>
+      <div id="p17tpC"></div>
+    </div>
+    <div>
+      <p><strong>DFS: one tunnel at a time.</strong> A, then dive into B as deep as it goes, then back up.</p>
+      <div id="p17tpD"></div>
+    </div>
+  </div>
+  <p class="caption"><code>measure.py</code> prints BFS order A B C D E F G and DFS order A B E C F D G. Both look along 18 links: each of the 9 edges once from each end.</p>
+
+  <h3>Template A: BFS for fewest steps</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">from</span> collections <span class="k">import</span> deque</code></td><td>A queue with O(1) adds at the back and takes from the front.</td></tr>
+      <tr><td><code><span class="k">def</span> fewest_hops(adj, start, goal):</code></td><td><code>adj</code> maps each node to its neighbours.</td></tr>
+      <tr><td><code>dist = {start: <span class="n">0</span>}</code></td><td>Distance so far. Being in <code>dist</code> also means "visited".</td></tr>
+      <tr><td><code>q = deque([start])</code></td><td>The frontier: discovered, not yet explored.</td></tr>
+      <tr><td><code><span class="k">while</span> q:</code></td><td>Keep going until no discovered node is left.</td></tr>
+      <tr><td><code>node = q.popleft()</code></td><td>Oldest first. This is what makes it a ripple.</td></tr>
+      <tr><td><code><span class="k">if</span> node == goal: <span class="k">return</span> dist[node]</code></td><td>The first time the goal comes out, its distance is the smallest.</td></tr>
+      <tr><td><code><span class="k">for</span> nb <span class="k">in</span> adj[node]:</code></td><td>One neighbour check per link.</td></tr>
+      <tr><td><code><span class="k">if</span> nb <span class="k">not in</span> dist:</code></td><td>Skip anything already discovered.</td></tr>
+      <tr><td><code>dist[nb] = dist[node] + <span class="n">1</span></code></td><td>Mark it now, on push, with one more step.</td></tr>
+      <tr><td><code>q.append(nb)</code></td><td>Join the back of the line.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="n">-1</span></code></td><td>The ripple died out: the goal cannot be reached.</td></tr>
+    </tbody>
+  </table>
+  <p>For a grid, swap <code>adj[node]</code> for the four moves <code>(1, 0), (-1, 0), (0, 1), (0, -1)</code> plus a bounds check. For "many sources at once" (every rotten orange starts rotting together), put all of them in the queue at distance 0.</p>
+
+  <h3>Your turn: draw walls, then ripple or dive</h3>
+  <p>Click cells to add or remove walls. <strong>S</strong> is the start, <strong>G</strong> the goal. BFS paints each open cell with its distance. DFS dives down first and shows the first path it finds. Before you press anything: will DFS find the 9-step route?</p>
+  <div class="card">
+    <canvas id="p17cvM" role="img" aria-label="Maze playground: a 5 by 10 grid of cells. Click a cell to toggle a wall. BFS shows distances, DFS shows its first path."></canvas>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="p17mzB">Ripple (BFS)</button>
+      <button class="btn btn-sm" type="button" id="p17mzD">Dive (DFS)</button>
+      <button class="btn btn-sm" type="button" id="p17mzR">Reset walls</button>
+      <button class="btn btn-sm" type="button" id="p17mzC">Clear walls</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p17roM1"><span class="lab">BFS shortest</span><span class="val">-</span> <span class="unit">steps</span></div>
+      <div class="ro" id="p17roM2"><span class="lab">DFS first path</span><span class="val">-</span> <span class="unit">steps</span></div>
+      <div class="ro" id="p17roM3"><span class="lab">cells explored</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">With the starting walls, <code>measure.py</code> prints BFS 9 steps and DFS 33 steps. DFS finds <em>a</em> path, not the shortest one. Neighbour order is down, up, right, left in both.</p>
+  </div>
+
+  <h3>Template B: DFS flood fill (count islands)</h3>
+  <p>A <strong>1</strong> is land, a <strong>0</strong> is water. Every time the scan meets fresh land, that is a new island; the DFS then sinks the whole island so it is never counted again.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> sink(r, c):</code></td><td>Paint every land cell joined to (r, c).</td></tr>
+      <tr><td><code><span class="k">if</span> r &lt; <span class="n">0</span> <span class="k">or</span> ... <span class="k">or</span> grid[r][c] != <span class="s">"1"</span>: <span class="k">return</span></code></td><td>Off the map, water, or already painted: stop this tunnel.</td></tr>
+      <tr><td><code>grid[r][c] = <span class="s">"#"</span></code></td><td>Mark first, then explore. Painting the grid is the visited set.</td></tr>
+      <tr><td><code>sink(r + <span class="n">1</span>, c); sink(r - <span class="n">1</span>, c); ...</code></td><td>Dive down, up, right, left.</td></tr>
+      <tr><td><code><span class="k">for</span> r ...: <span class="k">for</span> c ...:</code></td><td>The outer scan visits every cell once.</td></tr>
+      <tr><td><code><span class="k">if</span> grid[r][c] == <span class="s">"1"</span>: count += <span class="n">1</span>; sink(r, c)</code></td><td>Fresh land: one more island, then sink all of it.</td></tr>
+    </tbody>
+  </table>
+  <div id="p17tpE"></div>
+  <p class="caption">Letters show which island painted a cell. <code>measure.py</code> prints 5 islands with sizes 3, 3, 3, 2 and 3: all 14 land cells painted once.</p>
+
+  <h3>Template C: topological sort (Kahn's algorithm)</h3>
+  <p>Getting dressed has rules: underwear before pants, pants and socks before shoes, shirt before tie. The <dfn class="term" tabindex="0" data-def="For a directed graph, the number of edges pointing into a node: how many prerequisites it still waits on.">in-degree</dfn> of an item is how many items must come first. Anything at zero is free to put on now.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">for</span> a, b <span class="k">in</span> edges: adj[a].append(b); indeg[b] += <span class="n">1</span></code></td><td>One-way edges: a must come before b. Count b's waits.</td></tr>
+      <tr><td><code>q = deque(v <span class="k">for</span> v <span class="k">in</span> nodes <span class="k">if</span> indeg[v] == <span class="n">0</span>)</code></td><td>Everything with no prerequisites can start now.</td></tr>
+      <tr><td><code>v = q.popleft(); order.append(v)</code></td><td>Do one free task.</td></tr>
+      <tr><td><code><span class="k">for</span> w <span class="k">in</span> adj[v]: indeg[w] -= <span class="n">1</span></code></td><td>Each task after v has one less thing to wait for.</td></tr>
+      <tr><td><code><span class="k">if</span> indeg[w] == <span class="n">0</span>: q.append(w)</code></td><td>Its last prerequisite is done: it is free now.</td></tr>
+      <tr><td><code><span class="k">return</span> order <span class="k">if</span> len(order) == len(nodes) <span class="k">else</span> <span class="k">None</span></code></td><td>Nodes on a cycle never reach zero. A short order means a cycle.</td></tr>
+    </tbody>
+  </table>
+  <div id="p17tpF"></div>
+  <p class="caption"><code>measure.py</code> prints: under, socks, shirt, pants, tie, shoes, belt, coat. Other orders are valid too; this is the one a first-in first-out queue gives.</p>
+
+  <h3>Template D: union-find for merging groups</h3>
+  <p>Think of friend groups. Each group has a leader. <code>find(x)</code> walks up "who do you follow?" until it reaches someone who follows themselves. <code>union(a, b)</code> makes one leader follow the other.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>self.parent = list(range(n))</code></td><td>Everyone starts as their own leader: n groups.</td></tr>
+      <tr><td><code>self.size = [<span class="n">1</span>] * n</code></td><td>Group sizes, kept on the leaders.</td></tr>
+      <tr><td><code><span class="k">while</span> self.parent[x] != x:</code></td><td>Not a leader yet: keep walking up. Each loop is one hop.</td></tr>
+      <tr><td><code>self.parent[x] = self.parent[self.parent[x]]</code></td><td>Path compression (halving form): skip to your grandparent, so the next walk is shorter.</td></tr>
+      <tr><td><code>ra, rb = self.find(a), self.find(b)</code></td><td>Find both leaders.</td></tr>
+      <tr><td><code><span class="k">if</span> ra == rb: <span class="k">return</span> <span class="k">False</span></code></td><td>Already one group. In "redundant connection" this edge is the extra one.</td></tr>
+      <tr><td><code><span class="k">if</span> self.size[ra] &lt; self.size[rb]: ra, rb = rb, ra</code></td><td>Union by size: the smaller group joins the bigger one.</td></tr>
+      <tr><td><code>self.parent[rb] = ra; self.size[ra] += self.size[rb]</code></td><td>Merge: one leader now follows the other.</td></tr>
+    </tbody>
+  </table>
+  <div id="p17tpG"></div>
+  <h3>Try it: everyone asks "who is my leader?"</h3>
+  <p>Link friends in a line with <code>union(i, i + 1)</code>, then every person calls <code>find</code>. Count the hops. Guess first: with no tricks at all, how many hops for 1000 people?</p>
+  <div class="card">
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p17u="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p17u="100">n = 100</button>
+      <button class="btn btn-sm" type="button" data-p17u="1000">n = 1000</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p17roU0"><span class="lab">people</span><span class="val">10</span></div>
+      <div class="ro" id="p17roU1"><span class="lab">no tricks</span><span class="val">-</span> <span class="unit">hops</span></div>
+      <div class="ro" id="p17roU2"><span class="lab">compression only</span><span class="val">-</span> <span class="unit">hops</span></div>
+      <div class="ro" id="p17roU3"><span class="lab">size + compression</span><span class="val">-</span> <span class="unit">hops</span></div>
+    </div>
+    <p class="caption">"No tricks" builds one long chain, so the hops add up like comparing every pair. <code>measure.py</code> prints 499,500 against 2,452 and 1,997 for n = 1000.</p>
+  </div>
+  <p class="newwords">New words: <span class="chip">deque</span><span class="chip">flood fill</span><span class="chip">Kahn's algorithm</span><span class="chip">find</span><span class="chip">union</span></p>
+</section>
+
+<section class="step" id="p17-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: which graph tool, if any?</h2>
+  <p>Read each made-up task. Name the nodes, the edges, and the tool. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A knight sits on a chessboard. What is the fewest number of moves to reach a given square?</h3>
+    <textarea aria-label="Which tool for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>BFS.</strong> Nodes are squares, edges are the 8 knight jumps, every jump costs 1. "Fewest moves" with equal costs is the BFS signal.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A school lists which classes need which other classes first. Can a student take all of them?</h3>
+    <textarea aria-label="Which tool for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Topological sort.</strong> One-way edges from a prerequisite to the class. Run Kahn; if the order has fewer classes than the list, there is a cycle and the answer is no.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A map gives each road a driving time. Find the quickest drive from home to the airport.</h3>
+    <textarea aria-label="Which tool for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not plain BFS.</strong> Roads have different costs, so the first time BFS reaches the airport may not be the quickest. Use Dijkstra with a heap (the shortest paths lesson).</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A photo is a grid of colours. Tapping a pixel repaints it and every same-coloured pixel touching it.</h3>
+    <textarea aria-label="Which tool for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>DFS or BFS flood fill.</strong> Nodes are pixels, edges join same-coloured neighbours. One fill from the tapped pixel. Careful: if the new colour equals the old one, return at once or you loop forever.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Network cables are plugged in one by one. After each cable, report how many separate networks there are.</h3>
+    <textarea aria-label="Which tool for task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Union-find.</strong> Links arrive over time and you need the group count after each. Start at n groups; each <code>union</code> that returns True removes one. Re-running DFS after every cable would be far slower.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A robot moves only right or down on a grid. How many different routes reach the far corner?</h3>
+    <textarea aria-label="Which tool for task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not a graph search.</strong> It looks like a grid problem, but it asks to <em>count routes</em>, not to reach or measure. Each cell's count is the sum of the cell above and the cell to the left: dynamic programming.</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. Words in a list are linked if they differ by one letter. How few changes turn "cold" into "warm"?</h3>
+    <textarea aria-label="Which tool for task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>BFS on a hidden graph.</strong> Nodes are words; edges are one-letter changes. You build neighbours on the fly (try each position and each letter). This is Word Ladder.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Grids of cells, islands and regions, "fewest steps" with equal costs, prerequisites and orders, cycles in one-way links, "how many groups" and "are these connected", and any list of pairs that link things.</div>
+</section>
+
+<section class="step" id="p17-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: marking visited when you pop, not when you push</span>
+    <p>If you only mark a node when it leaves the queue, two neighbours can both push the same node before it comes out. The answer is still right, but the queue fills with copies.</p>
+<pre><code><span class="c"># wrong: mark on pop</span>
+node = q.popleft()
+<span class="k">if</span> node <span class="k">in</span> seen: <span class="k">continue</span>
+seen.add(node)
+<span class="k">for</span> nb <span class="k">in</span> adj[node]:
+    <span class="k">if</span> nb <span class="k">not in</span> seen: q.append(nb)
+
+<span class="c"># == 6a. measure.py: pushes onto the queue, whole graph ==</span>
+7-node graph: mark on pop = 10 pushes   mark on push = 7 pushes
+10x10 grid:   mark on pop = 181 pushes  mark on push = 100 pushes
+50x50 grid:   mark on pop = 4901 pushes mark on push = 2500 pushes</code></pre>
+    <p><strong>Fix:</strong> add to <code>seen</code> right before <code>q.append(nb)</code>, and put the start in <code>seen</code> at the beginning. Worse versions without the <code>continue</code> explore copies again and can time out.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: recursion depth on big grids</span>
+    <p>Recursive DFS on a grid that is all land goes one call deeper per cell. Python stops at 1000 calls by default.</p>
+<pre><code><span class="c"># == 6b. measure.py ==</span>
+recursion limit = 1000
+20x20 all land, recursive DFS -> 1 island
+40x40 all land, recursive DFS -> RecursionError: maximum recursion depth exceeded in comparison
+40x40 all land, stack DFS -> 1 island</code></pre>
+    <p><strong>Fix:</strong> use an explicit stack (<code>stack = [(r, c)]</code>, <code>while stack: stack.pop()</code>, mark on push) or BFS. Raising the limit with <code>sys.setrecursionlimit</code> helps a little, but very deep recursion can still crash the program.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: an undirected edge added only one way</span>
+    <p>Friendship goes both ways. If you only store <code>adj[a].append(b)</code>, a search from b never finds a.</p>
+<pre><code>n = 3, edges = [(1, 0), (2, 1)]
+one-way adjacency -> 3 components   <span class="c"># wrong: 0 cannot see 1</span>
+both ways         -> 1 component</code></pre>
+    <p><strong>Fix:</strong> for undirected input, add <code>adj[a].append(b)</code> <em>and</em> <code>adj[b].append(a)</code>. For directed input (prerequisites), add one way only, in the right direction.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: finding a "cycle" with a plain visited set in a directed graph</span>
+    <p>In a diamond A to B, A to C, B to D, C to D, DFS reaches D twice. A plain visited set calls that a cycle. It is not: you cannot get back to A.</p>
+<pre><code>diamond: plain visited says cycle = True   three colours say cycle = False
+kahn on diamond: ['A', 'B', 'C', 'D']</code></pre>
+    <p><strong>Fix:</strong> use Kahn (a short order means a cycle) or three states in DFS: new, on the current path, finished. Only meeting a node that is <em>on the current path</em> is a cycle.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Mark on push. Use a stack, not recursion, when the map can be thousands of cells deep. Two-way edges go in twice. In one-way graphs, a cycle means "back to a node still on my path".</div>
+</section>
+
+<section class="step" id="p17-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Complexity: count the work</h2>
+  <details class="math"><summary>Step 1: BFS and DFS are O(V + E)</summary><div>
+    <p>Each node is put in the visited set once, so it is popped once: V pops. Each node looks at its own neighbour list once. Added over all nodes, that is every edge once from each end: 2E checks.</p>
+    <p>The 7-node graph has 9 edges, and both searches did exactly 18 neighbour checks. A 100 x 100 grid has 10,000 cells; <code>measure.py</code> counts <strong>39,600</strong> checks for a full BFS, which is exactly 2 x (number of edges).</p>
+    <div class="eq">time O(V + E), extra space O(V) for the visited set and the queue or stack</div>
+  </div></details>
+  <details class="math"><summary>Step 2: why trying every route explodes</summary><div>
+    <p>The number of routes that never repeat a cell grows faster than any power of n. On open grids <code>measure.py</code> finds 2, 12, 184 and 8,512 routes for 2 x 2 up to 5 x 5. BFS only grows with the number of cells: 6, 22, 46, 78 checks.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: topological sort and union-find</summary><div>
+    <p>Kahn builds in-degrees (E steps), pops each node once (V) and lowers each in-degree once (E): <strong>O(V + E)</strong>.</p>
+    <p>Union-find with union by size and path compression costs about <strong>O(&alpha;(n))</strong> per call on average, where &alpha; is the inverse Ackermann function. It is at most 4 for any input you could store. Treat it as O(1). Without either trick, a chain makes each <code>find</code> O(n): 499,500 hops for 1000 people in section 4.</p>
+  </div></details>
+  <details class="math"><summary>Step 4: hidden costs</summary><div>
+    <p><code>list.pop(0)</code> shifts every item: O(n) per pop, which makes "BFS" O(V<sup>2</sup>). Use <code>deque.popleft()</code>. Building the adjacency list costs O(V + E) memory. Recursive DFS also uses O(depth) call stack, up to V frames.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p17-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each is one of the four templates in a new costume. Warm-ups are extra; the medium list is the core.</p>
+  <h3><span class="badge diff-easy">easy</span> Warm-ups</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>733</td><td><a href="https://leetcode.com/problems/flood-fill/" target="_blank" rel="noopener">Flood Fill</a></td><td>Template B on one start cell. Return at once if the new colour equals the old one.</td></tr>
+      <tr><td>1971</td><td><a href="https://leetcode.com/problems/find-if-path-exists-in-graph/" target="_blank" rel="noopener">Find if Path Exists in Graph</a></td><td>Build the adjacency list both ways, then any search. Also a clean union-find drill.</td></tr>
+      <tr><td>997</td><td><a href="https://leetcode.com/problems/find-the-town-judge/" target="_blank" rel="noopener">Find the Town Judge</a></td><td>No search at all: count in-degree and out-degree per person.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-medium">medium</span> Core list</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>200</td><td><a href="https://leetcode.com/problems/number-of-islands/" target="_blank" rel="noopener">Number of Islands</a></td><td>Template B exactly: count DFS starts.</td></tr>
+      <tr><td>133</td><td><a href="https://leetcode.com/problems/clone-graph/" target="_blank" rel="noopener">Clone Graph</a></td><td>The visited set becomes a dict from old node to its copy.</td></tr>
+      <tr><td>695</td><td><a href="https://leetcode.com/problems/max-area-of-island/" target="_blank" rel="noopener">Max Area of Island</a></td><td>DFS returns the size it painted; keep the biggest.</td></tr>
+      <tr><td>417</td><td><a href="https://leetcode.com/problems/pacific-atlantic-water-flow/" target="_blank" rel="noopener">Pacific Atlantic Water Flow</a></td><td>Search backwards, uphill from each ocean's edge; answer is where both reach.</td></tr>
+      <tr><td>130</td><td><a href="https://leetcode.com/problems/surrounded-regions/" target="_blank" rel="noopener">Surrounded Regions</a></td><td>Mark the safe cells from the border first, then flip everything else.</td></tr>
+      <tr><td>994</td><td><a href="https://leetcode.com/problems/rotting-oranges/" target="_blank" rel="noopener">Rotting Oranges</a></td><td>Multi-source BFS: all rotten oranges start in the queue at minute 0.</td></tr>
+      <tr><td>207</td><td><a href="https://leetcode.com/problems/course-schedule/" target="_blank" rel="noopener">Course Schedule</a></td><td>Kahn: is the order as long as the number of courses?</td></tr>
+      <tr><td>210</td><td><a href="https://leetcode.com/problems/course-schedule-ii/" target="_blank" rel="noopener">Course Schedule II</a></td><td>Same, but return the order itself (or empty on a cycle).</td></tr>
+      <tr><td>684</td><td><a href="https://leetcode.com/problems/redundant-connection/" target="_blank" rel="noopener">Redundant Connection</a></td><td>Union-find: the first edge whose ends already share a leader.</td></tr>
+      <tr><td>547</td><td><a href="https://leetcode.com/problems/number-of-provinces/" target="_blank" rel="noopener">Number of Provinces</a> (free twin of premium 323, Number of Connected Components)</td><td>Count components; the input is a matrix, not an edge list.</td></tr>
+      <tr><td>261</td><td><a href="https://leetcode.com/problems/graph-valid-tree/" target="_blank" rel="noopener">Graph Valid Tree</a> (premium)</td><td>A tree has exactly n - 1 edges and no union that returns False.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-hard">hard</span> Stretch</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>127</td><td><a href="https://leetcode.com/problems/word-ladder/" target="_blank" rel="noopener">Word Ladder</a></td><td>BFS on a graph you never build: neighbours are generated by changing one letter.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">No problem pages exist for this pattern yet. They appear in the sidebar as your sessions reach them.</p>
+</section>
+
+<section class="step" id="p17-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. A path graph A - B - C - D - E. Start at C, neighbours listed in alphabetical order. Write the BFS order and the DFS order.</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>BFS: C B D A E. DFS: C B A D E.</strong> BFS takes both one-step neighbours before any two-step one. DFS runs to the end of the B side before coming back for D. <code>measure.py</code> prints both.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Kahn's algorithm on nodes a, b, c with edges a to b, a to c, c to b. What order comes out?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>a, c, b.</strong> Only a starts at in-degree 0. Popping a lowers b to 1 and c to 0, so c joins the queue. Popping c lowers b to 0. <code>measure.py</code> prints <code>['a', 'c', 'b']</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Union-find on 5 people: union(0, 1), union(1, 2), union(3, 4), union(2, 0). Which call returns False, and how many groups remain?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>union(2, 0) returns False</strong>, because 0 and 2 already share a leader. <strong>2 groups</strong> remain: {0, 1, 2} and {3, 4}. That False is exactly how Redundant Connection finds the extra edge.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>graph, node, edge</dt><dd>Things (nodes) and the links between them (edges). V nodes, E edges.</dd>
+    <dt>neighbour</dt><dd>A node one edge away.</dd>
+    <dt>adjacency list</dt><dd>A dict from each node to the list of its neighbours.</dd>
+    <dt>directed / undirected</dt><dd>One-way links / two-way links. Undirected edges are stored both ways.</dd>
+    <dt>visited set</dt><dd>Nodes already discovered. Mark on push so nothing is queued twice.</dd>
+    <dt>frontier</dt><dd>Discovered but not yet explored: the queue in BFS.</dd>
+    <dt>BFS</dt><dd>Breadth-first search: ring by ring with a queue. Fewest steps when every step costs the same.</dd>
+    <dt>DFS</dt><dd>Depth-first search: one path to its end, then back up. Recursion or a stack.</dd>
+    <dt>queue / stack / deque</dt><dd>First in first out / last in first out / Python's double-ended queue with O(1) popleft.</dd>
+    <dt>connected component</dt><dd>A group of nodes that reach each other and nothing else.</dd>
+    <dt>flood fill</dt><dd>Painting every cell joined to a start cell; used to count and measure regions.</dd>
+    <dt>cycle</dt><dd>A path that returns to its start.</dd>
+    <dt>in-degree</dt><dd>Number of edges pointing into a node: prerequisites still waiting.</dd>
+    <dt>topological order, Kahn's algorithm</dt><dd>An order where every edge points forward; built by repeatedly taking a node with in-degree 0.</dd>
+    <dt>union-find (DSU), find, union, root</dt><dd>Groups with a leader each; find gives the leader, union merges two groups.</dd>
+    <dt>path compression, union by size</dt><dd>The two tricks that keep union-find trees flat, so each call is nearly O(1).</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p17-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> name the nodes and edges, then pick a tool. BFS spreads in rings (fewest equal-cost steps). DFS dives (regions, reachability). Kahn peels off tasks with in-degree 0 (orders, cycles). Union-find merges groups (connectivity as links arrive).</p>
+    <p><strong>Signals:</strong> grids, islands, "fewest steps", prerequisites, "is there a cycle", "how many groups", lists of pairs.</p>
+    <p><strong>Template:</strong> <code>seen = {start}</code>, <code>q = deque([start])</code>; pop, look at each neighbour, skip seen, mark and push. Kahn: in-degree counts, queue of zeros, a short order means a cycle. DSU: <code>parent</code>, <code>size</code>, find with halving, union small into big.</p>
+    <p><strong>Cost:</strong> O(V + E) time and O(V) space for BFS, DFS and Kahn; about O(1) per union-find call. Trying every route instead: 264,860 checks against 78 on a 5 x 5 grid.</p>
+    <p><strong>Traps:</strong> mark on push, not pop; recursion depth on big grids; undirected edges both ways; directed cycles need "on my current path", not just "visited".</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own edges and run BFS, DFS or a topological sort. Try a ring, two separate groups, and a one-way cycle.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(17)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

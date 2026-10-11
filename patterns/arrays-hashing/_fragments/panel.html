@@ -1,0 +1,332 @@
+<div class="lesson-content xp" id="lesson1">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Arrays and Hashing</h1>
+    <p class="lesson-subtitle">Goal: learn the most common trick in coding interviews. Remember what you have already seen, so each new question is answered with one glance instead of a search. You will also learn how to measure "fast" and "slow".</p>
+    <div class="lesson-meta"><span class="badge">Tier 1</span><span class="badge">pattern</span><span class="badge diff-easy">start here</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Arrays and Hashing lesson"><a href="#p1-s-idea">Coat check</a><a href="#p1-s-bigo">Counting work</a><a href="#p1-s-words">Pattern words</a><a href="#p1-s-map">Mental map</a><a href="#p1-s-template">Templates</a><a href="#p1-s-spot">Spot it</a><a href="#p1-s-traps">Traps</a><a href="#p1-s-problems">Problems</a><a href="#p1-s-check">Check yourself</a><a href="#p1-recap">Recap</a></nav>
+
+<section class="step" id="p1-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Remember what you have seen, so you never search twice</h2>
+  <p>Many problems hide the same small question: "have I seen this before?" You ask it once for every item in a list.</p>
+  <p>The slow way answers it by looking back through everything again. The fast way keeps a memory that answers it in one glance.</p>
+  <div class="card analogy"><strong>Analogy: a coat check.</strong> You hand over your coat and get a ticket. Later, the attendant does not walk the whole rack to find it. The ticket number says exactly which hook to look at. Asking "is my coat here?" takes one glance, no matter how many coats hang there.</div>
+  <p>Here is the question in its simplest costume. You get a list of numbers. Does any number appear twice?</p>
+  <h3>Try it: the same list, two ways</h3>
+  <p>Press <strong>Step</strong> or <strong>Play</strong> on each player. The list is <code>[5, 2, 8, 1, 9, 2]</code>.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Fast: the seen-it scan.</strong> Walk the list once. For each number, glance at the memory (the chips). Not there? Add it.</p>
+      <div id="p1tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: compare every pair.</strong> Take each number and compare it with every number after it. The grid lights one cell per comparison.</p>
+      <div id="p1tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p1roA"><span class="lab">seen-it scan</span><span class="val">-</span> <span class="unit">steps</span></div>
+    <div class="ro" id="p1roB"><span class="lab">compare every pair</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this list (in the page and in <code>measure.py</code>, which prints 6 steps and 9 comparisons). On six numbers the gap is small. The next section shows what happens when the list grows.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Spend a little memory to save a lot of time. Keep what you have seen in a set or a dictionary, and every later question is one lookup.</div>
+  <p class="newwords">New words: <span class="chip">set</span><span class="chip">brute force</span></p>
+</section>
+
+<section class="step" id="p1-s-bigo">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. How to measure "fast": count the work as the list grows</h2>
+  <p>A stopwatch depends on your laptop. So instead we count steps: how many basic actions does the method do for a list of n items?</p>
+  <p>What matters is how that count grows when n grows. That growth is called <dfn class="term" tabindex="0" data-def="Big-O notation: a short label for how the work grows with the input size n, ignoring constant factors. O(n) grows in step with n; O(n^2) grows with n times n.">Big-O</dfn>.</p>
+  <div class="grid2">
+    <div class="card"><span class="callout-title" style="color:var(--teal)">O(n): linear</span>The seen-it scan looks at each item once. Ten times more items means ten times more steps.</div>
+    <div class="card"><span class="callout-title" style="color:var(--orange)">O(n<sup>2</sup>): quadratic</span>Comparing every pair does about n x n / 2 comparisons. Ten times more items means about a hundred times more work.</div>
+  </div>
+  <h3>Try it: an operation race</h3>
+  <p>Both racers do one operation per tick, at the same speed. The lists have no repeats, so both must check everything (the <dfn class="term" tabindex="0" data-def="The input that makes a method do the most work. Big-O usually describes this case.">worst case</dfn>). Pick a size, then start the race.</p>
+  <div class="card">
+    <canvas id="p1cvA" role="img" aria-label="Race between the seen-it scan and compare every pair: two bars that fill as each method counts its operations"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p1n="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p1n="100">n = 100</button>
+      <button class="btn btn-sm" type="button" data-p1n="1000">n = 1000</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p1raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p1roN"><span class="lab">list size n</span><span class="val">10</span></div>
+      <div class="ro" id="p1roS"><span class="lab">seen-it steps</span><span class="val">10</span></div>
+      <div class="ro" id="p1roP"><span class="lab">pair comparisons</span><span class="val">45</span></div>
+      <div class="ro" id="p1roR"><span class="lab">pairs / steps</span><span class="val">4.5x</span></div>
+    </div>
+    <p class="caption">The page runs both methods with a counter on lists of 0, 1, 2, ... n-1. The bar scale is the pair count, so at n = 1000 the teal bar is almost invisible.</p>
+  </div>
+  <p><code>measure.py</code> counts the same thing in Python:</p>
+<pre><code><span class="c"># == 2. Operation race, no repeats (worst case: both scan everything) ==</span>
+n =   10: set scan steps =    10   pair comparisons =      45   ratio = 4.5x
+n =  100: set scan steps =   100   pair comparisons =    4950   ratio = 49.5x
+n = 1000: set scan steps =  1000   pair comparisons =  499500   ratio = 499.5x</code></pre>
+  <details class="math"><summary>Step 1: where 45, 4950 and 499500 come from</summary><div>
+    <p>The first number is compared with the n - 1 after it. The second with n - 2. The last with none. Add them up:</p>
+    <div class="eq">(n - 1) + (n - 2) + ... + 1 + 0 = n x (n - 1) / 2</div>
+    <p>For n = 10 that is 10 x 9 / 2 = 45. For n = 1000 it is 1000 x 999 / 2 = 499500. The "/ 2" does not change the shape of the growth, so Big-O drops it: O(n<sup>2</sup>).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: why a lookup in a set counts as one step</summary><div>
+    <p>A set does not search its items. It turns the item into a number (the <em>hash</em>) and jumps straight to one slot, like the coat ticket. So "is x in the set?" costs about the same for 10 items or 100000 items.</p>
+    <p>On this laptop (Apple M5, Python 3.10.20) <code>measure.py</code> timed one set lookup at <strong>25.3 ns</strong> with 10<sup>4</sup> items and <strong>26.8 ns</strong> with 10<sup>5</sup> items: ten times more items, almost the same time. That is <dfn class="term" tabindex="0" data-def="Constant time: the cost does not grow with n. For hash maps and sets it holds on average; rare unlucky cases can be slower.">O(1)</dfn> on average.</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Inputs of 10<sup>5</sup> items rule out O(n<sup>2</sup>): that is about 5 billion comparisons. When a problem's limit is that big, look for an O(n) idea, and a set or dictionary is the first thing to try.</div>
+  <p class="newwords">New words: <span class="chip">Big-O</span><span class="chip">O(n)</span><span class="chip">O(n^2)</span><span class="chip">O(1)</span><span class="chip">worst case</span></p>
+</section>
+
+<section class="step" id="p1-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words interviewers use for the coat check</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Coat check</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A structure that stores items by their hash, so adding and finding an item takes O(1) time on average. Python's dict is one.">hash map</dfn></td><td>A memory that finds things by jumping, not searching</td><td>The whole coat check</td><td><code>dict</code>: <code>seen = {}</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The thing you look up by. It must be hashable: numbers, strings and tuples work; lists and sets do not.">key</dfn></td><td>What you look things up by</td><td>The ticket number</td><td><code>seen[key]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The data stored under a key in a dict, such as an index or a count.">value</dfn></td><td>What is stored under that key</td><td>The coat on the hook</td><td><code>seen[key] = value</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A hash map with keys only and no values. It answers 'is x here?' in O(1) on average. Python's set.">set</dfn></td><td>Keys only: just "is it here?"</td><td>A list of tickets handed out</td><td><code>seen = set()</code>, <code>x in seen</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A number computed from a key that tells the hash map which slot to use. Equal keys always get equal hashes.">hash</dfn></td><td>The slot number made from the key</td><td>Printing the ticket</td><td><code>hash("cat")</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Two different keys landing on the same slot. Python then tries another slot, which is why lookups are O(1) on average, not always.">collision</dfn></td><td>Two keys want the same slot, so Python tries another one</td><td>Two coats on one hook</td><td>handled for you</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="collections.Counter: a dict that counts how many times each item appears. Counter('banana') gives a: 3, n: 2, b: 1.">Counter</dfn></td><td>A dict that counts things for you</td><td>A tally of coats per colour</td><td><code>from collections import Counter</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Usable as a dict key or set item: its value cannot change. int, str and tuple are hashable; list, dict and set are not.">hashable</dfn></td><td>Safe to use as a key, because it cannot change</td><td>A ticket that never gets rewritten</td><td>int, str, tuple: yes. list: no</td></tr>
+    </tbody>
+  </table>
+  <p>A <dfn class="term" tabindex="0" data-def="The plain, obvious method that tries every possibility, such as comparing every pair. Correct but often too slow.">brute force</dfn> is the first idea that tries everything. Always say it out loud in an interview, then improve it.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">One sentence on collisions</span>Sometimes two keys get the same slot; Python quietly tries another slot, so lookups are O(1) on <em>average</em>, not in every single case.</div>
+  <p class="newwords">New words: <span class="chip">hash map / dict</span><span class="chip">key</span><span class="chip">value</span><span class="chip">set</span><span class="chip">hash</span><span class="chip">collision</span><span class="chip">Counter</span><span class="chip">hashable</span></p>
+</section>
+
+<section class="step" id="p1-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: from a blank page to working code</h2>
+  <p>Read this list top to bottom when a new problem lands in front of you. It is the "how do I start" checklist for the whole pattern.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The statement asks "is there a repeat?", "how many of each?", "which items belong together?" or "is there a partner that adds up to a target?". Or the input is up to 10<sup>5</sup> items and the obvious idea compares every pair.</span></li>
+    <li><b>Ask</b><span>"For each item, what single question do I keep asking about the items before it?" If that question is a lookup (seen it? how many? which group? where is my partner?), a hash map answers it in one glance.</span></li>
+    <li><b>Pick</b><span>Choose the variant by what the lookup must return. The clue for each sits in yellow.</span>
+      <ul class="mm-branches">
+        <li><i>only "seen it before?"</i>Seen-set membership: <code>seen = set()</code>, ask <code>x in seen</code>, then <code>seen.add(x)</code>. Contains Duplicate.</li>
+        <li><i>"how many of each?"</i>Counting: <code>Counter(items)</code>, then compare counts or read <code>most_common</code>. Valid Anagram.</li>
+        <li><i>"same in some way" groups</i>Grouping by a canonical key: build one label that is equal for every member, such as <code>"".join(sorted(w))</code>, then <code>groups[key].append(w)</code>. Group Anagrams.</li>
+        <li><i>a partner that completes me</i>Complement lookup in a dict: store <code>value : index</code>, ask for <code>target - x</code> before storing <code>x</code>. Two Sum.</li>
+        <li><i>values fit in 0..n, or counts are at most n</i>Index-as-hash or buckets: the array position is the key. Mark <code>nums[v - 1]</code> to say "v was seen", or put items in <code>buckets[count]</code> to sort by frequency in O(n). Top K Frequent, First Missing Positive.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Before you look at item <code>i</code>, everything before <code>i</code> is in the map, and nothing from <code>i</code> onwards is. So one lookup answers a question about the whole prefix.</span></li>
+    <li><b>Steps</b><span>Make the empty map. Loop once over the items. For each item, build its key, ask the map, answer or stop if the lookup says so, then store the item. After the loop, return the "not found" answer or read the map.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Did you ask before you stored? Otherwise an item can pair with itself, as in Trap 1.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Is every lookup on a set or dict, not a list? <code>x in my_list</code> quietly makes the loop O(n<sup>2</sup>).</span></li>
+    <li class="mm-trap"><b>Check</b><span>Is the key hashable and truly the same for every member of a group? Use a tuple or a sorted string, never a list.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Edge inputs: an empty list, one item, all items equal, negative numbers, and a repeat at the very last position.</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Name the lookup first, then the key, then the variant. The code is almost always the same five lines.</div>
+</section>
+
+<section class="step" id="p1-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Two templates cover most of this pattern</h2>
+  <h3>Template A: the one-pass "seen" scan</h3>
+  <p>Use it for "have I seen this?" and "is there a partner for this item?". This is the scan you watched in section 1.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> has_repeat(nums):</code></td><td>Answer: does any number appear twice?</td></tr>
+      <tr><td><code>seen = set()</code></td><td>An empty coat check. Use <code>{}</code> instead when you need a value per key, such as an index.</td></tr>
+      <tr><td><code><span class="k">for</span> x <span class="k">in</span> nums:</code></td><td>One pass, left to right. Each item is visited once: O(n).</td></tr>
+      <tr><td><code><span class="k">if</span> x <span class="k">in</span> seen:</code></td><td>Ask first: "is x already here?" One glance, O(1) on average.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">True</span></code></td><td>Found an earlier copy. Stop right away.</td></tr>
+      <tr><td><code>seen.add(x)</code></td><td>Then remember x, so later items can find it.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">False</span></code></td><td>Reached the end with no repeat.</td></tr>
+    </tbody>
+  </table>
+  <p>Cost: O(n) time, O(n) extra memory for <code>seen</code>.</p>
+  <h3>Template B: count or group with a key</h3>
+  <p>Use it for "how many of each?" and "put things that are the same in some way together".</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">from</span> collections <span class="k">import</span> Counter, defaultdict</code></td><td>Two helpers from Python's standard library.</td></tr>
+      <tr><td><code>counts = Counter(<span class="s">"banana"</span>)</code></td><td>One pass that tallies each letter: key = letter, value = how many.</td></tr>
+      <tr><td><code>counts.most_common(<span class="n">1</span>)</code></td><td>The most frequent item and its count.</td></tr>
+      <tr><td><code>groups = defaultdict(list)</code></td><td>A dict whose missing keys start as an empty list.</td></tr>
+      <tr><td><code><span class="k">for</span> w <span class="k">in</span> words:</code></td><td>One pass over the words.</td></tr>
+      <tr><td><code>key = <span class="s">""</span>.join(sorted(w))</code></td><td>Make a label that is the same for every word in a group: its letters in order.</td></tr>
+      <tr><td><code>groups[key].append(w)</code></td><td>Drop the word into its group's bucket.</td></tr>
+    </tbody>
+  </table>
+  <p>The real output from <code>measure.py</code> on small inputs:</p>
+<pre><code><span class="c"># == 5. Templates on small inputs ==</span>
+Counter('banana') = Counter({'a': 3, 'n': 2, 'b': 1})
+most_common(1)    = [('a', 3)]
+groups            = {'opst': ['stop', 'pots', 'tops'], 'act': ['cat', 'act'], 'dgo': ['dog']}   <span class="c"># words = stop, pots, cat, tops, act, dog</span></code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>The art of this pattern is choosing the key. Same key means "the same thing" for your problem: the number itself, a partner you need, or a sorted label.</div>
+  <p class="newwords">New words: <span class="chip">defaultdict</span><span class="chip">most_common</span></p>
+</section>
+
+<section class="step" id="p1-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>6. Spot the pattern: does a hash map help here?</h2>
+  <p>Read each made-up task. Decide yes or no, and name the clue. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A library logs book IDs as books come back. Report the first ID that comes back twice.</h3>
+    <textarea aria-label="Does a hash map help for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes.</strong> Signal: "have I seen this before?" Template A with a set.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. Count how often each word appears in a speech, and return the most used word.</h3>
+    <textarea aria-label="Does a hash map help for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes.</strong> Signal: counting things. <code>Counter(words).most_common(1)</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Prices are sorted from low to high. Find two prices that add up to exactly 50, using only O(1) extra memory.</h3>
+    <textarea aria-label="Does a hash map help for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> Signals: the input is <em>sorted</em>, and the memory limit forbids a big dict. That points to two pointers, one at each end (a later pattern). A dict would work, but it breaks the memory rule.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Shoppers list their basket items in any order. Put shoppers with exactly the same items into the same group.</h3>
+    <textarea aria-label="Does a hash map help for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes.</strong> Signal: grouping things that are "the same" in some way. Key = <code>tuple(sorted(basket))</code>, then Template B.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Daily temperatures are in a list. Find the longest run of back-to-back days above 20 degrees.</h3>
+    <textarea aria-label="Does a hash map help for task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> Signal: a <em>contiguous</em> run (back-to-back days). Nothing needs looking up; a single scan with a running length works. Runs like this are the sliding window family.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Two friends each list their favourite films. List the films both of them chose.</h3>
+    <textarea aria-label="Does a hash map help for task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes.</strong> Signal: "is this item in the other list?" Put one list in a set, then check each film of the other. Comparing every pair would be O(n<sup>2</sup>).</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>"Seen before?", counting, grouping by "same in some way", finding a partner that adds up to a target, and an O(n) goal where O(n<sup>2</sup>) is the obvious idea.</div>
+</section>
+
+<section class="step" id="p1-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>7. Three classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: remembering before asking</span>
+    <p>Say you look for two numbers that add up to 10. If you store x <em>before</em> you ask "is 10 - x stored?", then 5 finds itself. Ask first, then store.</p>
+<pre><code><span class="c"># == 6. Trap: check after insert (pair target 10) ==</span>
+buggy([5, 3], 10) = [0, 0]   <span class="c"># 5 paired with itself</span>
+fixed([5, 3], 10) = None</code></pre>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: a list where a set was needed</span>
+    <p><code>x in my_list</code> walks the whole list: O(n). Inside a loop that makes the whole thing O(n<sup>2</sup>), even though the code looks short. <code>x in my_set</code> is one jump. Timed with <code>timeit</code>, looking for a value that is not there (us = microseconds, ns = nanoseconds, per lookup):</p>
+<pre><code><span class="c"># == 7. Trap: `in` on a list vs a set (value not present = worst case) ==</span>
+machine: Apple M5, Darwin arm64, Python 3.10.20
+n =  10000: list   31.5 us   set 25.3 ns   list/set = 1,247x
+n = 100000: list  320.4 us   set 26.8 ns   list/set = 11,950x</code></pre>
+    <p>Ten times more items made the list about ten times slower. The set did not change. Your own laptop gives different numbers, but the same shape.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: a key that can change</span>
+    <p>A list can change after you store it, so Python refuses it as a key. Turn it into a tuple, or into a sorted string for words.</p>
+<pre><code><span class="c"># == 8. Trap: unhashable key ==</span>
+{[1, 2]: 'x'} -> TypeError: unhashable type: 'list'
+{(1, 2): 'x'} -> {(1, 2): 'x'}
+''.join(sorted('pots')) -> 'opst'</code></pre>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Ask, then store. Use a set or dict for lookups, never a list. Keys are numbers, strings or tuples.</div>
+</section>
+
+<section class="step" id="p1-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each problem is this pattern in a new costume. The twist column says what makes it worth doing. Open the ready ones now; the rest come in later sessions.</p>
+  <h3>Easy</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>217</td><td><a href="https://leetcode.com/problems/contains-duplicate/" target="_blank" rel="noopener">Contains Duplicate</a></td><td>The plainest seen-set scan: stop at the first repeat.</td><td><button class="btn btn-sm" type="button" onclick="switchLesson(2)">Open</button></td></tr>
+      <tr><td>242</td><td><a href="https://leetcode.com/problems/valid-anagram/" target="_blank" rel="noopener">Valid Anagram</a></td><td>Counting: two words match when their letter tallies match.</td><td>coming up</td></tr>
+      <tr><td>1</td><td><a href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">Two Sum</a></td><td>Complement lookup: the dict stores indices, and you ask before you store.</td><td><button class="btn btn-sm" type="button" onclick="switchLesson(3)">Open</button></td></tr>
+    </tbody>
+  </table>
+  <h3>Medium</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>49</td><td><a href="https://leetcode.com/problems/group-anagrams/" target="_blank" rel="noopener">Group Anagrams</a></td><td>Grouping: the whole trick is choosing a canonical key.</td><td>coming up</td></tr>
+      <tr><td>347</td><td><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank" rel="noopener">Top K Frequent Elements</a></td><td>Count, then bucket by frequency to beat sorting.</td><td>coming up</td></tr>
+      <tr><td>238</td><td><a href="https://leetcode.com/problems/product-of-array-except-self/" target="_blank" rel="noopener">Product of Array Except Self</a></td><td>No hash at all: two running products, one from each side.</td><td>coming up</td></tr>
+      <tr><td>36</td><td><a href="https://leetcode.com/problems/valid-sudoku/" target="_blank" rel="noopener">Valid Sudoku</a></td><td>Many seen-sets at once: one per row, column and box.</td><td>coming up</td></tr>
+      <tr><td>128</td><td><a href="https://leetcode.com/problems/longest-consecutive-sequence/" target="_blank" rel="noopener">Longest Consecutive Sequence</a></td><td>A set lets you start counting only at the first number of each run.</td><td>coming up</td></tr>
+      <tr><td>271</td><td><a href="https://leetcode.com/problems/encode-and-decode-strings/" target="_blank" rel="noopener">Encode and Decode Strings</a> (premium)</td><td>Length prefixes so any character can appear inside a word.</td><td>extra</td></tr>
+    </tbody>
+  </table>
+  <h3>Hard</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>41</td><td><a href="https://leetcode.com/problems/first-missing-positive/" target="_blank" rel="noopener">First Missing Positive</a></td><td>Index-as-hash: use the array itself as the seen-set, with O(1) extra memory.</td><td>optional extra</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p1-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. The seen-it scan runs on [2, 7, 2]. How many times does <code>if x in seen</code> run before it returns True?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>3 times.</strong> 2 is new, 7 is new, then the second 2 is found. <code>measure.py</code> prints <code>(True, 3)</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. A list of 2000 numbers has no repeats. How many pair comparisons does the brute force make? How many steps does the seen-it scan make?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>1,999,000 comparisons</strong> (2000 x 1999 / 2) against <strong>2000 steps</strong>: about 1000 times more work. Double n from 1000 and the pair count goes up 4 times (from 499,500); the scan only doubles. Both numbers are printed by <code>measure.py</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. You want to group words that use the same letters. Why does <code>groups[list(w)]</code> fail, and what key works?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p>A list is not <strong>hashable</strong> (it can change), so Python raises <code>TypeError: unhashable type: 'list'</code>. It is also the wrong label: <code>list("tops")</code> and <code>list("stop")</code> differ. Use <code>"".join(sorted(w))</code> or <code>tuple(sorted(w))</code>, which is the same for every word in a group.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>brute force</dt><dd>The obvious method that tries everything, such as comparing every pair. Correct, often too slow.</dd>
+    <dt>Big-O</dt><dd>A label for how the work grows as the input size n grows, ignoring constant factors.</dd>
+    <dt>O(1), O(n), O(n^2)</dt><dd>Constant (does not grow), linear (grows with n), quadratic (grows with n x n).</dd>
+    <dt>worst case</dt><dd>The input that makes a method work hardest; Big-O usually describes it.</dd>
+    <dt>hash map / dict</dt><dd>Stores values under keys and finds them by jumping to a slot: O(1) on average.</dd>
+    <dt>set</dt><dd>A hash map with keys only. Answers "is x here?" in O(1) on average.</dd>
+    <dt>key / value</dt><dd>What you look things up by / what is stored under it.</dd>
+    <dt>hash</dt><dd>A number made from a key that picks the slot.</dd>
+    <dt>collision</dt><dd>Two keys land on one slot; Python tries another, so O(1) holds on average, not always.</dd>
+    <dt>Counter</dt><dd>A dict that counts how many times each item appears.</dd>
+    <dt>defaultdict</dt><dd>A dict whose missing keys start with a default, such as an empty list.</dd>
+    <dt>hashable</dt><dd>Usable as a key because it cannot change: int, str, tuple. Not list, dict or set.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p1-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> trade memory for time. Keep what you have seen in a <strong>set</strong> or <strong>dict</strong>, so each later question is one O(1) average lookup instead of an O(n) search.</p>
+    <p><strong>Signals:</strong> "seen before?", counting, grouping things that are the same in some way, a partner that adds up to a target, and O(n) wanted where O(n<sup>2</sup>) is obvious.</p>
+    <p><strong>Template A:</strong> <code>seen = set()</code>; for each x: <code>if x in seen</code> answer; then <code>seen.add(x)</code>. Ask first, store second. <strong>Template B:</strong> <code>Counter(items)</code> to count; <code>groups[key].append(x)</code> with a hashable key to group.</p>
+    <p><strong>Cost:</strong> O(n) time and O(n) extra memory. Brute force pair checking is O(n<sup>2</sup>): 499,500 comparisons against 1000 steps at n = 1000.</p>
+    <p><strong>Traps:</strong> storing before asking; <code>in</code> on a list (O(n)); lists as keys (use a tuple or a sorted string).</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own list, run the seen-it scanner, and compare its steps with the pair comparisons. Try a list where the repeat sits at the very end.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(1)">Mark lesson complete</button>
+      <button class="btn btn-sm" type="button" onclick="switchLesson(2)">Next: Contains Duplicate</button>
+    </div>
+  </div>
+</section>
+</div>

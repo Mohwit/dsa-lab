@@ -1,0 +1,408 @@
+<div class="lesson-content xp" id="lesson10">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Linked List</h1>
+    <p class="lesson-subtitle">Goal: stop thinking of a list as boxes in a row. A linked list is a chain of nodes, each holding one arrow to the next. You will learn to re-point arrows safely, and to send two walkers down the chain at different speeds.</p>
+    <div class="lesson-meta"><span class="badge">Tier 2</span><span class="badge">pattern</span><span class="badge diff-medium">pointer work</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Linked List lesson"><a href="#p10-s-idea">Treasure hunt</a><a href="#p10-s-words">Pattern words</a><a href="#p10-s-map">Mental map</a><a href="#p10-s-template">Templates</a><a href="#p10-s-spot">Spot it</a><a href="#p10-s-traps">Traps</a><a href="#p10-s-cost">Cost</a><a href="#p10-s-problems">Problems</a><a href="#p10-s-check">Check yourself</a><a href="#p10-recap">Recap</a></nav>
+
+<section class="step" id="p10-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Move the arrows, not the items</h2>
+  <p>An array keeps its items side by side, so <code>a[3]</code> is one jump. A linked list does not. Each item lives in a <dfn class="term" tabindex="0" data-def="One link of the chain: a small object holding a value (val) and a reference to the next node (next).">node</dfn>, and each node only knows where the next one is.</p>
+  <div class="card analogy"><strong>Analogy: a treasure hunt.</strong> The first clue is taped to the front door. It says "look under the mat". Under the mat, the next clue says "look in the shed". You cannot jump to clue 4; you must follow clues 1, 2 and 3. But changing the route is cheap: rewrite one clue and the hunt takes a new path, without moving a single box.</div>
+  <p>That gives the two big rules of this pattern. Getting to a node costs a walk. Changing the shape of the list costs only a few arrow changes, with O(1) extra memory.</p>
+  <h3>Try it: reverse the hunt, two ways</h3>
+  <p>The list is <code>1 → 2 → 3 → 4 → 5</code>. Press <strong>Step</strong> or <strong>Play</strong> on each player and watch the counter of <dfn class="term" tabindex="0" data-def="One move of a walking pointer from a node to the next node, such as cur = cur.next.">hops</dfn>.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: flip each arrow once.</strong> Walk the list one time. At each node, turn its arrow round to point back. The circles under and over the nodes are the pointers <code>prev</code>, <code>cur</code> and <code>nxt</code>.</p>
+      <div id="p10tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: walk to the end, again and again.</strong> You cannot step backwards in a chain. So to take the last node, this way walks from the head every round. Blue nodes are already in the new list.</p>
+      <div id="p10tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p10roA"><span class="lab">flip each arrow</span><span class="val">-</span> <span class="unit">hops</span></div>
+    <div class="ro" id="p10roB"><span class="lab">walk to the end</span><span class="val">-</span> <span class="unit">hops</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this list, in the page and in <code>measure.py</code> (5 hops and 10 hops). Section 7 lets you grow the list and race them.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>In a linked list you never move values around. You walk with a few pointers and re-point arrows. Every arrow change is O(1).</div>
+  <p class="newwords">New words: <span class="chip">node</span><span class="chip">hop</span></p>
+</section>
+
+<section class="step" id="p10-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use for the chain</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Treasure hunt</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="The first node of the list. If you lose the head, you lose the whole list.">head</dfn></td><td>The first node; your only way in</td><td>The clue on the front door</td><td><code>head</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The reference stored in a node that says which node comes after it. None at the last node.">next pointer</dfn></td><td>The arrow out of a node</td><td>"Look in the shed"</td><td><code>node.next</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The last node of a list. Its next pointer is None.">tail</dfn></td><td>The last node; its arrow points to None</td><td>The clue that says "you found it"</td><td><code>node.next is None</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Python's 'nothing' value. In a linked list it marks the end, and a pointer that is None points at no node.">None</dfn></td><td>Nothing there: the end of the chain</td><td>No more clues</td><td><code>None</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Each node has only a next pointer, so you can walk forwards but never backwards. LeetCode lists are singly linked unless they say otherwise.">singly linked</dfn></td><td>Arrows go one way only</td><td>Clues only say where to go next</td><td><code>val, next</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Each node has next and prev pointers, so you can walk both ways and unlink a node in O(1) if you hold it. Used inside an LRU cache.">doubly linked</dfn></td><td>Arrows both ways</td><td>Each clue also says where you came from</td><td><code>val, prev, next</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A fake node placed before the real head, so code that adds or removes the first node needs no special case. Return dummy.next at the end. Also called a sentinel.">dummy head</dfn></td><td>A fake first node so the real head is never special</td><td>A blank card taped before clue 1</td><td><code>dummy = ListNode(0, head)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Two pointers that walk the same list at different speeds, usually 1 and 2 nodes per round. Used to find the middle and to detect a loop. Also called the tortoise and the hare.">fast and slow pointers</dfn></td><td>Two walkers, one twice as fast</td><td>A runner and a walker on the same route</td><td><code>slow = slow.next</code>, <code>fast = fast.next.next</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A list whose tail points back to an earlier node, so walking it never reaches None.">cycle</dfn></td><td>The arrows loop back; the walk never ends</td><td>A clue that sends you back to the shed</td><td><code>tail.next = some_node</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Changing the data structure you were given, using only O(1) extra memory, instead of building a copy.">in place</dfn></td><td>Rewire the given nodes, no copy</td><td>Rewrite the clues, no new boxes</td><td>O(1) extra memory</td></tr>
+    </tbody>
+  </table>
+  <p>The node class LeetCode gives you looks like this: <code>class ListNode: def __init__(self, val=0, next=None): self.val = val; self.next = next</code>.</p>
+  <p class="newwords">New words: <span class="chip">head</span><span class="chip">next pointer</span><span class="chip">tail</span><span class="chip">None</span><span class="chip">singly linked</span><span class="chip">doubly linked</span><span class="chip">dummy head</span><span class="chip">fast and slow</span><span class="chip">cycle</span><span class="chip">in place</span></p>
+</section>
+
+<section class="step" id="p10-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <p>Read this top to bottom when a linked list problem lands in front of you. It is the "how do I start" checklist.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The input is a <code>ListNode</code>. The task says reverse, merge, reorder, remove, find the middle, find the k-th from the end, or "is there a loop?". Or it asks for O(1) extra memory on a chain.</span></li>
+    <li><b>Ask</b><span>"Can I get there by walking once with a few pointers, and changing arrows as I go?" Then: "Could the head itself change?" and "Do I need to know where the end is before I reach it?"</span></li>
+    <li><b>Pick</b><span>Choose the variant by its clue in yellow. Many problems chain two or three of them.</span>
+      <ul class="mm-branches">
+        <li><i>reverse, palindrome, reorder</i>In-place reversal with <code>prev, cur, nxt</code>. Reverse Linked List, Reorder List, Reverse Nodes in k-Group.</li>
+        <li><i>the head may change</i>Dummy head: build or edit after a fake node, return <code>dummy.next</code>. Merge Two Sorted Lists, Remove Nth Node, Add Two Numbers.</li>
+        <li><i>middle, loop, "repeats in 1..n"</i>Fast and slow pointers. Linked List Cycle, the middle step of Reorder List, Find the Duplicate Number.</li>
+        <li><i>"k-th from the end", one pass</i>Gap pointers: give <code>fast</code> a head start of k nodes, then move both until <code>fast</code> runs off. Remove Nth Node From End.</li>
+        <li><i>extra links, or O(1) lookups by key</i>Hash map of nodes next to the list: old node to new node for a deep copy, key to node for a cache. Copy List with Random Pointer, LRU Cache.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>For reversal: everything up to <code>prev</code> is already reversed, and <code>cur</code> onwards is untouched. For fast and slow: after r rounds, slow has walked r nodes and fast 2r.</span></li>
+    <li><b>Steps</b><span>Draw three or four boxes with arrows on paper. Name every pointer. For each loop round, write the moves in order and check no node becomes unreachable. Decide the loop condition from what the last move touches (<code>cur</code>, or <code>fast and fast.next</code>). Return the right head.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Did you save <code>cur.next</code> before you overwrote it? If not, the rest of the list is gone (Trap 1).</span></li>
+    <li class="mm-trap"><b>Check</b><span>Every <code>x.next</code> needs <code>x</code> to be a node. With two hops, test <code>fast and fast.next</code> (Trap 2).</span></li>
+    <li class="mm-trap"><b>Check</b><span>Edge lists: empty (<code>head is None</code>), one node, two nodes, removing the head, and an odd vs even length.</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Draw it before you code it. Three boxes and some arrows catch nearly every linked list bug.</div>
+</section>
+
+<section class="step" id="p10-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Four templates cover most of this pattern</h2>
+  <h3>Template A: reverse in place</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> reverse(head):</code></td><td>Turn every arrow round; return the new head.</td></tr>
+      <tr><td><code>prev, cur = <span class="k">None</span>, head</code></td><td>Nothing is reversed yet, so <code>prev</code> is None. The old head will become the tail, pointing at None.</td></tr>
+      <tr><td><code><span class="k">while</span> cur:</code></td><td>One round per node, until <code>cur</code> walks off the end.</td></tr>
+      <tr><td><code>nxt = cur.next</code></td><td>Save the rest of the list. The next line destroys this arrow.</td></tr>
+      <tr><td><code>cur.next = prev</code></td><td>Flip: this node now points back.</td></tr>
+      <tr><td><code>prev = cur</code></td><td>The reversed part grows by one node.</td></tr>
+      <tr><td><code>cur = nxt</code></td><td>Step forward using the saved arrow.</td></tr>
+      <tr><td><code><span class="k">return</span> prev</code></td><td>When <code>cur</code> is None, <code>prev</code> stands on the old tail, which is the new head.</td></tr>
+    </tbody>
+  </table>
+  <div id="p10tpC"></div>
+  <h3>Your turn: drive the four moves</h3>
+  <p>Reverse <code>1 → 2 → 3 → 4</code> yourself by pressing the moves in any order. The page runs exactly what you press. Faded nodes are lost: no pointer can reach them. Can you return <code>[4, 3, 2, 1]</code> in 17 presses?</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p10op="save">nxt = cur.next</button>
+    <button class="btn btn-sm" type="button" data-p10op="flip">cur.next = prev</button>
+    <button class="btn btn-sm" type="button" data-p10op="prev">prev = cur</button>
+    <button class="btn btn-sm" type="button" data-p10op="cur">cur = nxt</button>
+    <button class="btn btn-sm" type="button" data-p10op="ret">return prev</button>
+    <button class="btn btn-primary btn-sm" type="button" id="p10gmReset">Start again</button>
+  </div>
+  <p class="caption" id="p10gmMsg" aria-live="polite"></p>
+  <div id="p10tpH"></div>
+
+  <h3>Template B: dummy head (merge two sorted lists)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>dummy = tail = ListNode(<span class="n">0</span>)</code></td><td>A fake first node. <code>tail</code> always stands on the last node of the answer.</td></tr>
+      <tr><td><code><span class="k">while</span> a <span class="k">and</span> b:</code></td><td>While both lists still have nodes, there is a choice to make.</td></tr>
+      <tr><td><code><span class="k">if</span> a.val &lt;= b.val:</code></td><td>Take the smaller front node. <code>&lt;=</code> keeps equal values in their original order.</td></tr>
+      <tr><td><code>tail.next, a = a, a.next</code></td><td>Hang it after <code>tail</code>, and move <code>a</code> on.</td></tr>
+      <tr><td><code>tail = tail.next</code></td><td>The answer grew by one node.</td></tr>
+      <tr><td><code>tail.next = a <span class="k">or</span> b</code></td><td>One list is empty; hang the other one's rest in a single move.</td></tr>
+      <tr><td><code><span class="k">return</span> dummy.next</code></td><td>Skip the fake node. No "is this the first node?" check anywhere.</td></tr>
+    </tbody>
+  </table>
+  <div id="p10tpD"></div>
+
+  <h3>Template C: fast and slow pointers</h3>
+  <p>Fast moves two nodes per round, slow moves one. When fast falls off the end, slow is in the middle. If there is a loop, fast can never fall off; it comes round from behind and lands on slow. This is <dfn class="term" tabindex="0" data-def="Floyd's cycle detection: run a slow pointer (1 step) and a fast pointer (2 steps). They meet if and only if the list has a loop. O(n) time, O(1) memory.">Floyd's algorithm</dfn>, also called the tortoise and the hare.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>slow = fast = head</code></td><td>Both walkers start at the head.</td></tr>
+      <tr><td><code><span class="k">while</span> fast <span class="k">and</span> fast.next:</code></td><td>Fast is about to read <code>fast.next.next</code>, so both <code>fast</code> and <code>fast.next</code> must be real nodes.</td></tr>
+      <tr><td><code>slow = slow.next</code></td><td>One step.</td></tr>
+      <tr><td><code>fast = fast.next.next</code></td><td>Two steps.</td></tr>
+      <tr><td><code><span class="k">if</span> slow <span class="k">is</span> fast: <span class="k">return</span> <span class="k">True</span></code></td><td>(Loop check only.) Compare the nodes with <code>is</code>, not their values: two nodes can hold the same value.</td></tr>
+      <tr><td><code><span class="k">return</span> slow</code> / <code><span class="k">False</span></code></td><td>Middle: slow. Loop check: fast found the end, so no loop.</td></tr>
+    </tbody>
+  </table>
+  <div class="grid2">
+    <div>
+      <p><strong>Middle of 1 to 6.</strong> Fast runs off the end after 3 rounds; slow stands on the second middle, 4.</p>
+      <div id="p10tpE"></div>
+    </div>
+    <div>
+      <p><strong>Loop check.</strong> The tail (6) links back to node 3. Teal ring is slow, orange ring is fast.</p>
+      <div id="p10tpF"></div>
+    </div>
+  </div>
+  <p>Where does the loop start? After they meet, put one pointer back at the head and move both one step at a time. They meet again at the loop's first node. The real output from <code>measure.py</code>:</p>
+<pre><code><span class="c"># == 3. Templates ==</span>
+middle([1, 2, 3, 4, 5]) = 3  loop rounds = 2
+middle([1, 2, 3, 4, 5, 6]) = 4  loop rounds = 3
+has_cycle([1..6], tail -> index 2) = (True, 4, 5)   <span class="c"># (found, rounds, meeting value)</span>
+cycle_start([1..6], tail -> index 2) = 3
+has_cycle([1..6], no cycle)       = (False, 3, None)</code></pre>
+  <details class="math"><summary>Why the restart-from-head trick finds the loop's start</summary><div>
+    <p>Say the path from the head to the loop's start is a nodes, and they meet b nodes into the loop, where the loop has c nodes. Slow walked a + b. Fast walked twice that, and the extra distance is whole laps: 2(a + b) - (a + b) = k x c for some whole k.</p>
+    <div class="eq">a + b = k x c, so a = k x c - b</div>
+    <p>From the meeting point, walking a more nodes means walking k laps minus b, which lands exactly on the loop's start. A pointer from the head reaches the start after the same a steps. In the example, a = 2 and they meet on node 5; both then reach node 3 together.</p>
+  </div></details>
+
+  <h3>Template D: gap pointers (remove the n-th node from the end)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>dummy = ListNode(<span class="n">0</span>, head)</code></td><td>The node to remove might be the head, so stand before it.</td></tr>
+      <tr><td><code>fast = slow = dummy</code></td><td>Both start on the dummy.</td></tr>
+      <tr><td><code><span class="k">for</span> _ <span class="k">in</span> range(n + <span class="n">1</span>): fast = fast.next</code></td><td>Give fast a head start of n + 1 nodes.</td></tr>
+      <tr><td><code><span class="k">while</span> fast: fast, slow = fast.next, slow.next</code></td><td>Walk both until fast is None. The gap never changes.</td></tr>
+      <tr><td><code>slow.next = slow.next.next</code></td><td>slow stands just before the target; skip over it.</td></tr>
+      <tr><td><code><span class="k">return</span> dummy.next</code></td><td>The head, which may be a new one.</td></tr>
+    </tbody>
+  </table>
+<pre><code>remove_nth([1, 2, 3, 4, 5], 2) = [1, 2, 3, 5]
+remove_nth([1, 2], 2)          -> [2]        <span class="c"># removing the head: fine with a dummy</span></code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Reverse with <code>prev, cur, nxt</code>. Use a dummy whenever the head can change. Use two speeds for the middle or a loop, and a head start for "from the end".</div>
+  <p class="newwords">New words: <span class="chip">Floyd's algorithm</span></p>
+</section>
+
+<section class="step" id="p10-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: which linked list trick fits?</h2>
+  <p>Read each made-up task. Decide: is it this pattern, and which variant? Then reveal.</p>
+  <div class="predict">
+    <h3>A. A playlist is a chain of songs. Play it in the opposite order, without making a copy.</h3>
+    <textarea aria-label="Which trick fits task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: in-place reversal.</strong> Signal: reverse, plus "no copy". Template A, O(n) time and O(1) memory.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A train of carriages is a chain. Uncouple the carriage that is third from the back, walking the train only once.</h3>
+    <textarea aria-label="Which trick fits task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: gap pointers plus a dummy.</strong> Signal: "k-th from the end" in one pass. Give fast a head start; the dummy covers the case where the third from the back is the engine.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. You are given a chain of nodes and nothing else. Does following the arrows ever bring you back to a node you visited?</h3>
+    <textarea aria-label="Which trick fits task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: fast and slow.</strong> Signal: a possible loop. A set of visited nodes also works, but uses O(n) memory; Floyd uses O(1).</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A Python list of numbers must be reversed in place.</h3>
+    <textarea aria-label="Which trick fits task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> It says "reverse", but the input is an array: you can jump to any index. Swap <code>a[i]</code> and <code>a[j]</code> from both ends (two pointers). There are no arrows to re-point.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A web browser keeps the pages you visited so the back button can return to the last one.</h3>
+    <textarea aria-label="Which trick fits task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> "Return to the most recent one" is last in, first out: a stack (a Python list with <code>append</code> and <code>pop</code>). A linked list could store it, but none of the linked list tricks are needed.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Start from a number, replace it by the sum of the squares of its digits, and repeat. Does it reach 1, or loop for ever?</h3>
+    <textarea aria-label="Which trick fits task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, in disguise: fast and slow.</strong> There is no ListNode, but "next value" works like a next pointer. Run slow with one step and fast with two; they meet if the numbers loop. This is LeetCode 202, Happy Number.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>A ListNode input; reverse, merge, reorder or remove; middle or k-th from the end; "is there a loop?"; O(1) extra memory. Any "follow the next value" process, even without nodes, can use fast and slow.</div>
+</section>
+
+<section class="step" id="p10-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: cutting before you save next</span>
+    <p>Flip the arrow first and the only route to the rest of the list is gone. Step through it: after the flip, <code>cur = cur.next</code> follows the <em>new</em> arrow, back to None.</p>
+    <div id="p10tpG"></div>
+<pre><code><span class="c"># == 4. Traps ==</span>
+reverse_buggy([1, 2, 3]) = [1]   <span class="c"># nodes 2 and 3 are lost</span>
+reverse([1, 2, 3])       = [3, 2, 1]</code></pre>
+    <p><strong>Fix:</strong> <code>nxt = cur.next</code> is always the first line inside the loop.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: half a null check</span>
+    <p>This middle-finder tests only <code>fast.next</code>. On an even-length list, fast lands on None, and the next test reads <code>None.next</code>.</p>
+<pre><code><span class="k">while</span> fast.next:             <span class="c"># wrong</span>
+    slow = slow.next
+    fast = fast.next.next
+
+middle_buggy([1, 2, 3, 4]) -> AttributeError: 'NoneType' object has no attribute 'next'
+middle([1, 2, 3, 4])       -> 3</code></pre>
+    <p><strong>Fix:</strong> <code>while fast and fast.next:</code>. Before every <code>x.next</code>, ask "can x be None here?"</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: no dummy when the head can go</span>
+    <p>Removing the 2nd node from the end of <code>[1, 2]</code> means removing the head. Without a dummy, fast runs off the list during its head start and the loop test crashes.</p>
+<pre><code>fast = slow = head                 <span class="c"># wrong: no node before the head</span>
+<span class="k">for</span> _ <span class="k">in</span> range(n): fast = fast.next
+<span class="k">while</span> fast.next: ...
+
+remove_nth_no_dummy([1, 2], 2) -> AttributeError: 'NoneType' object has no attribute 'next'
+remove_nth([1, 2], 2)          -> [2]</code></pre>
+    <p><strong>Fix:</strong> start both pointers on <code>dummy = ListNode(0, head)</code> and return <code>dummy.next</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: the hidden cost of recursive reversal</span>
+    <p>Reversing with recursion is short and pretty, but each node waits on the <dfn class="term" tabindex="0" data-def="The memory Python uses to remember every function call that has not finished yet. Deep recursion uses one entry per level.">call stack</dfn>. That is O(n) memory, and Python stops at about 1000 levels.</p>
+<pre><code>recursion limit = 1000
+reverse_recursive(1200 nodes) -> RecursionError: maximum recursion depth exceeded
+reverse(1200 nodes) -> 1200 nodes, no crash</code></pre>
+    <p><strong>Fix:</strong> in Python, use the loop (Template A) unless the list is known to be short. Say the O(n) stack cost out loud if you do recurse.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Save next, then cut. Check every pointer before you read its <code>.next</code>. A dummy whenever the head can change.</div>
+  <p class="newwords">New words: <span class="chip">call stack</span></p>
+</section>
+
+<section class="step" id="p10-s-cost">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>7. Count the hops as the list grows</h2>
+  <p>Drag the slider. The page builds a list of n nodes, runs both reversals on it with a counter, and shows the real hop counts.</p>
+  <div class="card">
+    <div class="control-group">
+      <label for="p10rgN">list size n</label>
+      <input type="range" id="p10rgN" min="2" max="2000" step="1" value="100">
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p10roN"><span class="lab">nodes n</span><span class="val">100</span></div>
+      <div class="ro" id="p10roF"><span class="lab">flip each arrow</span><span class="val">-</span> <span class="unit">hops</span></div>
+      <div class="ro" id="p10roS"><span class="lab">walk to the end</span><span class="val">-</span> <span class="unit">hops</span></div>
+      <div class="ro" id="p10roR"><span class="lab">slow / pattern</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">Bar lengths, scaled to the slow count:</p>
+    <div style="height:10px;border-radius:5px;background:var(--bg-input);margin:6px 0"><div id="p10barF" style="height:100%;width:1%;border-radius:5px;background:var(--teal)"></div></div>
+    <div style="height:10px;border-radius:5px;background:var(--bg-input);margin:6px 0"><div id="p10barS" style="height:100%;width:100%;border-radius:5px;background:var(--orange)"></div></div>
+  </div>
+  <p><code>measure.py</code> counts the same thing in Python:</p>
+<pre><code><span class="c"># == 2. Race: hops to reverse n nodes ==</span>
+n =   10: slow hops =       45   pattern hops =   10   ratio = 4.5x
+n =  100: slow hops =     4950   pattern hops =  100   ratio = 49.5x
+n = 1000: slow hops =   499500   pattern hops = 1000   ratio = 499.5x
+n = 5000: slow hops = 12497500   pattern hops = 5000   ratio = 2499.5x</code></pre>
+  <details class="math"><summary>Step 1: where 10 and 499500 come from</summary><div>
+    <p>Round one walks from the head to the last node: n - 1 hops. Round two: n - 2. The last round: 0.</p>
+    <div class="eq">(n - 1) + (n - 2) + ... + 1 + 0 = n x (n - 1) / 2</div>
+    <p>For n = 5 that is 5 x 4 / 2 = 10, the count you saw in section 1. For n = 1000 it is 499500. That is O(n<sup>2</sup>). The pattern does one hop per node: O(n).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: the cost table for the whole pattern</summary><div>
+    <table>
+      <thead><tr><th>Template</th><th>Time</th><th>Extra memory</th><th>Hidden cost</th></tr></thead>
+      <tbody>
+        <tr><td>Reverse with a loop</td><td>O(n)</td><td>O(1): three pointers</td><td>none</td></tr>
+        <tr><td>Reverse with recursion</td><td>O(n)</td><td>O(n) call stack</td><td>RecursionError past about 1000 nodes</td></tr>
+        <tr><td>Merge with a dummy</td><td>O(n + m)</td><td>O(1): it reuses the nodes</td><td>none</td></tr>
+        <tr><td>Fast and slow</td><td>O(n)</td><td>O(1)</td><td>A visited set would cost O(n) memory</td></tr>
+        <tr><td>Gap pointers</td><td>O(n), one pass</td><td>O(1)</td><td>Two passes (count, then walk) is also O(n)</td></tr>
+        <tr><td>Reach node i</td><td>O(i)</td><td>O(1)</td><td>no <code>a[i]</code> jump: a loop that does it each time becomes O(n<sup>2</sup>)</td></tr>
+      </tbody>
+    </table>
+  </div></details>
+  <details class="math"><summary>Step 3: why fast and slow meet within one lap</summary><div>
+    <p>Once both are inside the loop, fast gains exactly one node on slow every round. The gap from fast round to slow is less than the loop length c, so it shrinks to 0 in fewer than c rounds. Slow walks less than one lap after entering. In the example (2 nodes before a loop of 4) they meet after 4 rounds.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p10-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each problem is this pattern in a new costume. The twist column says what makes it worth doing. Their pages arrive in later sessions.</p>
+  <h3>Easy</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>206</td><td><a href="https://leetcode.com/problems/reverse-linked-list/" target="_blank" rel="noopener">Reverse Linked List</a></td><td>Template A exactly; then write it again recursively and say its stack cost.</td><td>coming up</td></tr>
+      <tr><td>21</td><td><a href="https://leetcode.com/problems/merge-two-sorted-lists/" target="_blank" rel="noopener">Merge Two Sorted Lists</a></td><td>The dummy head in its purest form.</td><td>coming up</td></tr>
+      <tr><td>141</td><td><a href="https://leetcode.com/problems/linked-list-cycle/" target="_blank" rel="noopener">Linked List Cycle</a></td><td>Floyd: O(1) memory instead of a visited set.</td><td>coming up</td></tr>
+    </tbody>
+  </table>
+  <h3>Medium</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>143</td><td><a href="https://leetcode.com/problems/reorder-list/" target="_blank" rel="noopener">Reorder List</a></td><td>Three templates chained: find the middle, reverse the back half, weave the two halves.</td><td>coming up</td></tr>
+      <tr><td>19</td><td><a href="https://leetcode.com/problems/remove-nth-node-from-end-of-list/" target="_blank" rel="noopener">Remove Nth Node From End of List</a></td><td>Gap pointers plus a dummy, because the head may be the one removed.</td><td>coming up</td></tr>
+      <tr><td>138</td><td><a href="https://leetcode.com/problems/copy-list-with-random-pointer/" target="_blank" rel="noopener">Copy List with Random Pointer</a></td><td>A map from old node to new node, so random arrows can be copied.</td><td>coming up</td></tr>
+      <tr><td>2</td><td><a href="https://leetcode.com/problems/add-two-numbers/" target="_blank" rel="noopener">Add Two Numbers</a></td><td>Digits stored backwards; a dummy head and a carry, and do not forget the last carry.</td><td>coming up</td></tr>
+      <tr><td>287</td><td><a href="https://leetcode.com/problems/find-the-duplicate-number/" target="_blank" rel="noopener">Find the Duplicate Number</a></td><td>No nodes at all: read <code>nums[i]</code> as "next", then Floyd finds the loop's start.</td><td>coming up</td></tr>
+      <tr><td>146</td><td><a href="https://leetcode.com/problems/lru-cache/" target="_blank" rel="noopener">LRU Cache</a></td><td>A doubly linked list for order plus a dict for O(1) lookup.</td><td>coming up</td></tr>
+    </tbody>
+  </table>
+  <h3>Hard</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>23</td><td><a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank" rel="noopener">Merge k Sorted Lists</a></td><td>Template B with a heap choosing the smallest front node (see the Heap lesson).</td><td>optional extra</td></tr>
+      <tr><td>25</td><td><a href="https://leetcode.com/problems/reverse-nodes-in-k-group/" target="_blank" rel="noopener">Reverse Nodes in k-Group</a></td><td>Template A on k nodes at a time, then stitch each reversed group back in.</td><td>optional extra</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p10-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Template A runs on <code>7 → 8</code>. How many times does <code>cur.next = prev</code> run, and what does node 7 point to at the end?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>2 times</strong>, once per node, and node 7 points to <strong>None</strong>: it is the new tail. <code>measure.py</code> prints 2 hops for <code>[7, 8]</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. The middle-finder (Template C) runs on <code>1 → 2 → 3 → 4</code>. Which node does it return?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>3</strong>, the second of the two middles. Round 1: slow to 2, fast to 3. Round 2: slow to 3, fast to None. If a problem wants the first middle (as Reorder List's split does), start fast at <code>head.next</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Remove the 1st node from the end of the one-node list <code>[5]</code>. What should come back, and why does the dummy matter?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>An empty list (None).</strong> The node to remove is the head. With the dummy, slow stays on the dummy and <code>dummy.next</code> becomes None. <code>measure.py</code> prints <code>remove_nth([5], 1) = []</code>.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>node</dt><dd>One link of the chain: a value and a next pointer.</dd>
+    <dt>head / tail</dt><dd>The first node (your way in) / the last node (its next is None).</dd>
+    <dt>next pointer</dt><dd>The arrow from a node to the one after it.</dd>
+    <dt>None</dt><dd>Nothing: marks the end of the chain.</dd>
+    <dt>hop</dt><dd>One move of a pointer to the next node.</dd>
+    <dt>singly / doubly linked</dt><dd>Arrows one way only / both ways.</dd>
+    <dt>dummy head</dt><dd>A fake node before the head so the head is never a special case. Return dummy.next.</dd>
+    <dt>fast and slow pointers</dt><dd>Two walkers at speeds 2 and 1; they find the middle and detect loops.</dd>
+    <dt>Floyd's algorithm</dt><dd>Loop detection with fast and slow pointers, O(1) memory.</dd>
+    <dt>cycle</dt><dd>A loop of arrows; walking never reaches None.</dd>
+    <dt>in place</dt><dd>Rewiring what you were given with O(1) extra memory.</dd>
+    <dt>call stack</dt><dd>Memory for unfinished function calls; recursion uses one entry per level.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p10-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> each node knows only the next one. Walk with a few named pointers and re-point arrows; never move values. Every arrow change is O(1).</p>
+    <p><strong>Signals:</strong> a ListNode input; reverse, merge, reorder, remove; the middle or k-th from the end; "is there a loop?"; O(1) extra memory.</p>
+    <p><strong>Templates:</strong> reverse with four moves in order: <code>nxt = cur.next</code>, <code>cur.next = prev</code>, <code>prev = cur</code>, <code>cur = nxt</code>. A <code>dummy</code> when the head can change. <code>slow</code> 1 step and <code>fast</code> 2 steps while <code>fast and fast.next</code>. A head start of n for "from the end".</p>
+    <p><strong>Cost:</strong> O(n) time, O(1) extra memory. Walking to the end every round is O(n<sup>2</sup>): 499,500 hops against 1000 at n = 1000.</p>
+    <p><strong>Traps:</strong> cutting before saving next; reading <code>.next</code> on None; no dummy when the head goes; recursion's O(n) stack.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own chain and reverse it, find its middle, or give it a loop with <code>pos</code> and watch fast catch slow.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(10)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

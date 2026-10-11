@@ -1,0 +1,36 @@
+<div class="sandbox-container" id="sandbox4">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Recursion lab</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a recursive function, type n, and run it. Watch the call stack grow and shrink, and compare the call counts.</p>
+    <div class="btn-row" role="group" aria-label="Which function to run">
+      <button class="btn btn-sm" type="button" data-s4k="fact">factorial</button>
+      <button class="btn btn-sm" type="button" data-s4k="fib">naive fib</button>
+      <button class="btn btn-sm" type="button" data-s4k="memo">memo fib</button>
+      <button class="btn btn-sm" type="button" data-s4k="pow">power</button>
+    </div>
+    <div class="control-group">
+      <label for="s4N">n (a whole number)</label>
+      <input type="text" id="s4N" value="4" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group" id="s4XGroup" hidden>
+      <label for="s4X">x (power only)</label>
+      <input type="text" id="s4X" value="2" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s4ex="fact|0">factorial(0)</button>
+      <button class="btn btn-sm" type="button" data-s4ex="fib|6">naive fib(6)</button>
+      <button class="btn btn-sm" type="button" data-s4ex="memo|6">memo fib(6)</button>
+      <button class="btn btn-sm" type="button" data-s4ex="pow|5|3">power(3, 5)</button>
+      <button class="btn btn-sm" type="button" data-s4ex="pow|-2|2">power(2, -2)</button>
+      <button class="btn btn-sm" type="button" data-s4ex="pow|1000000000|1.00000001">n = 10^9</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s4Run">Run</button>
+    </div>
+    <p class="sb-error" id="s4Err" role="alert"></p>
+    <div id="s4Tp"></div>
+    <div class="readout" id="s4Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These match <code>patterns/foundations/measure.py</code>: naive fib(6) makes 25 calls and memo fib(6) makes 11; power(3, 5) makes 4 calls and 5 multiplications; power(2, -2) = 0.25 in 4 calls; n = 10<sup>9</sup> needs 31 calls. For fib with n up to 6 the player draws the call tree; above that it shows the stack.</p>
+  </div>
+</div>

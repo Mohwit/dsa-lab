@@ -1,0 +1,47 @@
+<div class="sandbox-container" id="sandbox5">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Two pointer playground</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type your own input, and step through it. The pair search also counts what trying every pair would cost.</p>
+    <div class="btn-row" role="group" aria-label="Which template to run">
+      <button class="btn btn-sm btn-primary" type="button" data-s5mode="pair" aria-pressed="true">Pair search (sorted)</button>
+      <button class="btn btn-sm" type="button" data-s5mode="pal" aria-pressed="false">Palindrome check</button>
+    </div>
+    <div id="s5PairBox">
+      <div class="control-group">
+        <label for="s5Nums">nums, sorted (up to 12 whole numbers)</label>
+        <input type="text" id="s5Nums" value="1, 3, 5, 6, 8, 10, 12" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="control-group">
+        <label for="s5Tgt">target</label>
+        <input type="text" id="s5Tgt" value="14" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm" type="button" data-s5ex="1, 3, 5, 6, 8, 10, 12|14">Found</button>
+        <button class="btn btn-sm" type="button" data-s5ex="2, 4, 6, 8, 10|7">No pair</button>
+        <button class="btn btn-sm" type="button" data-s5ex="2, 2, 3, 5|4">Repeats</button>
+        <button class="btn btn-sm" type="button" data-s5ex="-5, -2, 0, 3, 7|1">Negatives</button>
+        <button class="btn btn-sm" type="button" data-s5ex="9, 1, 4, 3|7">Unsorted</button>
+      </div>
+    </div>
+    <div id="s5PalBox" hidden>
+      <div class="control-group">
+        <label for="s5Text">text (up to 40 characters)</label>
+        <input type="text" id="s5Text" value="Top spot!" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm" type="button" data-s5pal="Top spot!">Top spot!</button>
+        <button class="btn btn-sm" type="button" data-s5pal="race a car">race a car</button>
+        <button class="btn btn-sm" type="button" data-s5pal="No lemon, no melon">No lemon, no melon</button>
+        <button class="btn btn-sm" type="button" data-s5pal="?!">Only marks</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s5Run">Run</button>
+      <button class="btn btn-sm" type="button" id="s5Sort" hidden>Sort it for me</button>
+    </div>
+    <p class="sb-error" id="s5Err" role="alert"></p>
+    <div id="s5Tp"></div>
+    <div class="readout" id="s5Out" aria-live="polite"></div>
+    <p class="sidebar-hint">For the four pair examples, these counts match <code>patterns/two-pointers/measure.py</code>: 6 vs 16, 4 vs 10, 3 vs 1 and 3 vs 6 (two pointer checks vs brute force checks). On "Repeats" the brute force wins, because its very first pair is the answer. Big-O is about how the worst case grows. The palindrome checks need 3, 4, 7 and 0 comparisons.</p>
+  </div>
+</div>

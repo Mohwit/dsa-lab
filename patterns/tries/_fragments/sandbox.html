@@ -1,0 +1,31 @@
+<div class="sandbox-container" id="sandbox14">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Trie workshop</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type your own words, separated by commas. Watch the trie grow, then look something up in it. In a wildcard search, a dot matches any one letter.</p>
+    <div class="control-group">
+      <label for="s14Words">words (up to 8, each up to 6 letters)</label>
+      <input type="text" id="s14Words" value="cat, car, card, care, dog" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s14Q">query (a word, a prefix, or a pattern with dots)</label>
+      <input type="text" id="s14Q" value="car" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s14ex="cat, car, card, care, dog|ca|search">Prefix, not a word</button>
+      <button class="btn btn-sm" type="button" data-s14ex="apple, app, apply, apt|app|starts">Starts with</button>
+      <button class="btn btn-sm" type="button" data-s14ex="cat, cot, cut, cup, dog|..g|wild">Wildcard backtracks</button>
+      <button class="btn btn-sm" type="button" data-s14ex="sea, seat, seal, see, set|sea|build">Shared starts</button>
+      <button class="btn btn-sm" type="button" data-s14ex="cat, dog|cow|search">Dead end</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s14Build">Watch the build</button>
+      <button class="btn btn-sm" type="button" id="s14Search">search</button>
+      <button class="btn btn-sm" type="button" id="s14Starts">starts_with</button>
+      <button class="btn btn-sm" type="button" id="s14Wild">Wildcard search</button>
+    </div>
+    <p class="sb-error" id="s14Err" role="alert"></p>
+    <div id="s14Tp"></div>
+    <div class="readout" id="s14Out" aria-live="polite"></div>
+    <p class="sidebar-hint">Node and letter counts for the example word lists match <code>patterns/tries/measure.py</code> (for example cat, car, card, care, dog: 17 letters, 9 nodes; cat, cot, cut, cup, dog with ..g: 8 calls).</p>
+  </div>
+</div>

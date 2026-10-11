@@ -1,0 +1,26 @@
+<div class="sandbox-container" id="sandbox22">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Matrix lab</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type a grid: numbers separated by spaces, rows separated by semicolons. Then rotate it, walk it in a spiral, or set its zeroes, and step through the trace.</p>
+    <div class="control-group">
+      <label for="s22In">grid (up to 6 x 6)</label>
+      <input type="text" id="s22In" value="1 2 3; 4 5 6; 7 8 9" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s22ex="1 2 3; 4 5 6; 7 8 9" data-s22run="rotate">Rotate 3 x 3</button>
+      <button class="btn btn-sm" type="button" data-s22ex="1 2 3; 4 5 6; 7 8 9" data-s22run="spiral">Spiral 3 x 3</button>
+      <button class="btn btn-sm" type="button" data-s22ex="1 2 3 4" data-s22run="spiral">One row</button>
+      <button class="btn btn-sm" type="button" data-s22ex="1 1 1; 1 0 1; 1 1 1" data-s22run="zeroes">Zero in the middle</button>
+      <button class="btn btn-sm" type="button" data-s22ex="0 1 2; 3 4 5" data-s22run="zeroes">Zero in the corner</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s22Rot">Rotate clockwise</button>
+      <button class="btn btn-sm" type="button" id="s22Spi">Spiral order</button>
+      <button class="btn btn-sm" type="button" id="s22Zer">Set zeroes</button>
+    </div>
+    <p class="sb-error" id="s22Err" role="alert"></p>
+    <div id="s22Tp"></div>
+    <div class="readout" id="s22Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These match <code>patterns/math-geometry/measure.py</code>: rotating 1..9 gives 7 4 1 | 8 5 2 | 9 6 3; its spiral is 1, 2, 3, 6, 9, 8, 7, 4, 5; one row stays 1, 2, 3, 4; the middle zero gives 1 0 1 | 0 0 0 | 1 0 1; the corner zero gives 0 0 0 | 0 4 5.</p>
+  </div>
+</div>

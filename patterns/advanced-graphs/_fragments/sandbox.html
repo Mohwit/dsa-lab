@@ -1,0 +1,29 @@
+<div class="sandbox-container" id="sandbox18">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Shortest paths and MST lab</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type an undirected weighted graph as edges like <code>A-B 4</code>, separated by commas. Pick a start node, then run Dijkstra (cheapest cost to every node) or Prim (cheapest tree that connects them).</p>
+    <div class="control-group">
+      <label for="s18E">edges (up to 16, weights 0 to 999)</label>
+      <input type="text" id="s18E" value="A-B 4, A-C 1, B-C 2, B-D 5, C-D 8, C-E 10, D-E 2, D-F 4, E-F 3" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s18S">start node</label>
+      <input type="text" id="s18S" value="A" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s18e="A-B 4, A-C 1, B-C 2, B-D 5, C-D 8, C-E 10, D-E 2, D-F 4, E-F 3" data-s18s="A">Lesson graph</button>
+      <button class="btn btn-sm" type="button" data-s18e="S-T 10, S-X 1, X-Y 1, Y-T 1" data-s18s="S">BFS fooled</button>
+      <button class="btn btn-sm" type="button" data-s18e="A-B 1, A-C 1, B-D 1, C-D 1" data-s18s="A">Ties</button>
+      <button class="btn btn-sm" type="button" data-s18e="A-B 2, B-C 3, X-Y 1" data-s18s="A">Two islands</button>
+      <button class="btn btn-sm" type="button" data-s18e="H-A 3, H-B 1, H-C 4, H-D 2" data-s18s="H">Star</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s18RunD">Run Dijkstra</button>
+      <button class="btn btn-sm" type="button" id="s18RunP">Run Prim</button>
+    </div>
+    <p class="sb-error" id="s18Err" role="alert"></p>
+    <div id="s18Tp"></div>
+    <div class="readout" id="s18Out" aria-live="polite"></div>
+    <p class="sidebar-hint">For the five examples, <code>patterns/advanced-graphs/measure.py</code> prints the same distances and counts. Two islands: X and Y stay at inf, and Prim reports that the graph is not connected. A negative weight is refused for Dijkstra (see Trap 2) but allowed for Prim.</p>
+  </div>
+</div>

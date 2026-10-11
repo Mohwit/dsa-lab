@@ -1,0 +1,394 @@
+<div class="lesson-content xp" id="lesson21">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Bit Manipulation</h1>
+    <p class="lesson-subtitle">Goal: see every number as a row of on/off switches, and learn the handful of moves that flip, test and cancel those switches in one step. Pairs that cancel, a trick that switches off one 1 at a time, and the 32-bit trap that catches Python users.</p>
+    <div class="lesson-meta"><span class="badge">Tier 5</span><span class="badge">pattern</span><span class="badge diff-easy">mostly easy problems</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Bit Manipulation lesson"><a href="#p21-s-idea">Switches</a><a href="#p21-s-words">Pattern words</a><a href="#p21-s-map">Mental map</a><a href="#p21-s-template">Templates</a><a href="#p21-s-spot">Spot it</a><a href="#p21-s-traps">Traps</a><a href="#p21-s-cost">Complexity</a><a href="#p21-s-problems">Problems</a><a href="#p21-s-check">Check yourself</a><a href="#p21-recap">Recap</a></nav>
+
+<section class="step" id="p21-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. A number is a row of switches</h2>
+  <p>Inside the computer, every whole number is stored as a row of switches. Each switch is off (0) or on (1).</p>
+  <p>The rightmost switch is worth 1. Each switch to its left is worth double: 2, 4, 8, 16 and so on. The number is the sum of the switches that are on.</p>
+  <div class="card analogy"><strong>Analogy: a row of light switches.</strong> Picture eight light switches on a wall, each with a price tag: 128, 64, 32, 16, 8, 4, 2, 1. Turn some on and add up their tags. That total is the number. Bit tricks are ways to flip many switches with one hand.</div>
+  <h3>Try it: flip the switches</h3>
+  <p>Click a switch to flip it. The number below is the sum of the price tags of the switches that are on.</p>
+  <div class="card">
+    <div id="p21sw" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;max-width:460px">
+      <div style="text-align:center"><button type="button" data-p21bit="7" aria-label="Switch worth 128" style="width:100%">0</button><div class="caption" style="margin-top:4px">128</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="6" aria-label="Switch worth 64" style="width:100%">0</button><div class="caption" style="margin-top:4px">64</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="5" aria-label="Switch worth 32" style="width:100%">0</button><div class="caption" style="margin-top:4px">32</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="4" aria-label="Switch worth 16" style="width:100%">0</button><div class="caption" style="margin-top:4px">16</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="3" aria-label="Switch worth 8" style="width:100%">0</button><div class="caption" style="margin-top:4px">8</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="2" aria-label="Switch worth 4" style="width:100%">0</button><div class="caption" style="margin-top:4px">4</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="1" aria-label="Switch worth 2" style="width:100%">0</button><div class="caption" style="margin-top:4px">2</div></div>
+      <div style="text-align:center"><button type="button" data-p21bit="0" aria-label="Switch worth 1" style="width:100%">0</button><div class="caption" style="margin-top:4px">1</div></div>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p21roV"><span class="lab">the number</span><span class="val">0</span></div>
+      <div class="ro" id="p21roW"><span class="lab">in binary</span><span class="val">00000000</span></div>
+      <div class="ro" id="p21roK"><span class="lab">switches on</span><span class="val">0</span></div>
+    </div>
+    <p class="caption" id="p21goal" aria-live="polite">Challenge: make 44, then 255.</p>
+    <div class="btn-row"><button class="btn btn-sm" type="button" id="p21swClear">All off</button></div>
+  </div>
+
+  <h3>Race: count the switches that are on</h3>
+  <p>Take n = 44, which is <code>00101100</code>. How many switches are on? There are two ways to find out. Step through both.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Fast: switch off one 1 per step.</strong> <code>n &amp; (n - 1)</code> turns off the lowest 1. Count the steps until nothing is left.</p>
+      <div id="p21tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: check every position.</strong> Look at all 32 positions one by one, even the many that are 0.</p>
+      <div id="p21tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p21roA"><span class="lab">switch off one 1 per step</span><span class="val">-</span> <span class="unit">steps</span></div>
+    <div class="ro" id="p21roB"><span class="lab">check all 32 positions</span><span class="val">-</span> <span class="unit">steps</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on 44, in the page and in <code>measure.py</code>, which prints 3 steps and 32 steps. n goes 44, 40, 32, 0.</p>
+  <h3>Drag n and watch the gap</h3>
+  <label class="slider">n (0 to 255) <output id="p21slO">44</output><input type="range" id="p21slN" min="0" max="255" value="44" aria-label="Choose n from 0 to 255"></label>
+  <div class="readouts">
+    <div class="ro" id="p21roS1"><span class="lab">n in binary</span><span class="val">-</span></div>
+    <div class="ro" id="p21roS2"><span class="lab">n &amp;= n - 1 steps</span><span class="val">-</span></div>
+    <div class="ro" id="p21roS3"><span class="lab">check-all steps</span><span class="val">-</span></div>
+  </div>
+  <p class="caption">The fast way costs one step per 1, so it is cheap when few switches are on. Its worst case on this slider is 255 (all eight on): 8 steps. The slow way always costs 32.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Think of a number as its switches. Most bit tricks treat each column of switches on its own, with no carrying between columns, which is why they are so cheap.</div>
+  <p class="newwords">New words: <span class="chip">bit</span><span class="chip">binary</span><span class="chip">set bit</span></p>
+</section>
+
+<section class="step" id="p21-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words and the six operators</h2>
+  <p>A <dfn class="term" tabindex="0" data-def="One switch: a single 0 or 1. Short for binary digit.">bit</dfn> is one switch. Writing a number as its bits is writing it in <dfn class="term" tabindex="0" data-def="Base 2: each position is worth double the one to its right. 44 in binary is 101100.">binary</dfn>. A <dfn class="term" tabindex="0" data-def="A bit that is 1 (on).">set bit</dfn> is a bit that is 1. Bit 0 is the rightmost one, the <dfn class="term" tabindex="0" data-def="Least significant bit: the rightmost bit, worth 1. It tells you if a number is odd.">least significant bit</dfn>.</p>
+  <table>
+    <thead><tr><th>Operator</th><th>Name</th><th>Per column</th><th>Example (12 and 10)</th></tr></thead>
+    <tbody>
+      <tr><td><code>a &amp; b</code></td><td><dfn class="term" tabindex="0" data-def="Bitwise AND: a column is 1 only when both inputs have 1 there.">AND</dfn></td><td>1 only if both are 1</td><td><code>1100 &amp; 1010 = 1000</code> (8)</td></tr>
+      <tr><td><code>a | b</code></td><td><dfn class="term" tabindex="0" data-def="Bitwise OR: a column is 1 when at least one input has 1 there.">OR</dfn></td><td>1 if either is 1</td><td><code>1100 | 1010 = 1110</code> (14)</td></tr>
+      <tr><td><code>a ^ b</code></td><td><dfn class="term" tabindex="0" data-def="Exclusive or: a column is 1 when the two inputs differ. x ^ x = 0 and x ^ 0 = x.">XOR</dfn></td><td>1 if they differ</td><td><code>1100 ^ 1010 = 0110</code> (6)</td></tr>
+      <tr><td><code>~a</code></td><td>NOT</td><td>flip every bit</td><td>in Python <code>~5 = -6</code> (see the traps)</td></tr>
+      <tr><td><code>a &lt;&lt; k</code></td><td><dfn class="term" tabindex="0" data-def="Shift: slide every bit k places. Left shift by k multiplies by 2 to the k; right shift by k divides by 2 to the k, rounding down.">left shift</dfn></td><td>slide left k places</td><td><code>1 &lt;&lt; 3 = 1000</code> (8)</td></tr>
+      <tr><td><code>a &gt;&gt; k</code></td><td>right shift</td><td>slide right, drop the bits that fall off</td><td><code>12 &gt;&gt; 2 = 0011</code> (3)</td></tr>
+    </tbody>
+  </table>
+  <p>A <dfn class="term" tabindex="0" data-def="A number used as a stencil: its 1s pick which bits of another number to read, set, clear or flip. 1 << i is the mask for bit i alone.">mask</dfn> is a number used as a stencil, such as <code>1 &lt;&lt; i</code> to pick out bit i. Negative numbers use <dfn class="term" tabindex="0" data-def="The usual way to store negative numbers: -x is stored as (flip all bits of x) + 1. In 32 bits, -1 is 32 ones.">two's complement</dfn>: -1 in 32 bits is thirty-two 1s.</p>
+  <h3>Try it: AND, OR and XOR, one column at a time</h3>
+  <p>Pick two numbers from 0 to 255 and an operator. Step through: every column is decided by its own two switches. Nothing carries.</p>
+  <div class="card">
+    <div class="grid2" style="margin:0 0 8px">
+      <div class="control-group"><label for="p21inA">a (0 to 255)</label><input type="text" id="p21inA" value="12" autocomplete="off" spellcheck="false" style="width:100%;font:13px var(--mono);padding:7px 9px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-bright)"></div>
+      <div class="control-group"><label for="p21inB">b (0 to 255)</label><input type="text" id="p21inB" value="10" autocomplete="off" spellcheck="false" style="width:100%;font:13px var(--mono);padding:7px 9px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-bright)"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p21op="&amp;">AND</button>
+      <button class="btn btn-sm" type="button" data-p21op="|">OR</button>
+      <button class="btn btn-sm" type="button" data-p21op="^">XOR</button>
+      <button class="btn btn-sm" type="button" id="p21go">Run</button>
+    </div>
+    <p class="sb-error" id="p21err" role="alert"></p>
+    <div id="p21tpC"></div>
+    <div class="readouts"><div class="ro" id="p21roC"><span class="lab">result</span><span class="val">-</span></div></div>
+    <p class="caption">With the default inputs, <code>measure.py</code> prints 12 &amp; 10 = 8, 12 | 10 = 14 and 12 ^ 10 = 6, both from this column loop and from Python's own operators.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Three XOR facts to know cold</span><code>x ^ x = 0</code> (a pair cancels). <code>x ^ 0 = x</code> (0 changes nothing). Order does not matter, so <code>a ^ b ^ a = b</code>.</div>
+  <p class="newwords">New words: <span class="chip">AND</span><span class="chip">OR</span><span class="chip">XOR</span><span class="chip">shift</span><span class="chip">mask</span><span class="chip">two's complement</span><span class="chip">least significant bit</span></p>
+</section>
+
+<section class="step" id="p21-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>"Every item appears twice except one", "O(1) extra memory", "count the 1 bits", "power of two", "without using + or -", "reverse the bits", "all subsets of up to 20 items", or a stated 32-bit range.</span></li>
+    <li><b>Ask</b><span>Write a tiny example in binary on paper. What happens in one column of switches? Do pairs cancel? Do I need to read, write or count single bits?</span></li>
+    <li><b>Pick the variant</b><span>Each variant has its own tell-tale sign.</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>pairs cancel, one left over</i>XOR fold: <code>acc ^= x</code> over everything (Single Number, Missing Number).</li>
+        <li><i>count or test the 1s</i><code>n &amp;= n - 1</code> drops the lowest 1; <code>n &amp; (n - 1) == 0</code> tests a power of two.</li>
+        <li><i>read or write bit i</i>masks and shifts: get, set, clear, toggle (Reverse Bits).</li>
+        <li><i>add without +, fixed width</i>XOR is the sum, AND shifted left is the carry; mask to 32 bits in Python.</li>
+        <li><i>answers for all of 0..n</i>reuse a smaller answer: <code>bits[i] = bits[i &gt;&gt; 1] + (i &amp; 1)</code>.</li>
+        <li><i>every subset of a small set</i>loop <code>mask</code> over <code>range(1 &lt;&lt; n)</code>; bit i says "item i is in".</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>XOR fold: <code>acc</code> is the XOR of everything seen so far, so every finished pair has already cancelled. Drop loop: each step removes exactly one 1, so the step count equals the number of 1s.</span></li>
+    <li><b>Steps</b><span>Start with the identity (<code>0</code> for XOR and OR, all-ones for AND). Loop over the items (fold), over the set bits (drop), or over exactly 32 positions (reverse, scan). Apply one operator per step. If negatives can appear, mask with <code>0xFFFFFFFF</code> first and convert back at the end.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Negative input in Python (endless 1s on the left). <code>~x</code> is <code>-x - 1</code>, not "flip 32 bits". A reverse loop that stops when n hits 0 loses the leading zeros. Precedence is different in C and Java: add brackets.</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p21-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Templates</h2>
+  <h3>Template A: read and write one bit</h3>
+  <p>Four one-liners. <code>i</code> is the position, counted from the right, starting at 0.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>(x &gt;&gt; i) &amp; <span class="n">1</span></code></td><td>Get bit i: slide it to the right end, then keep only that switch.</td></tr>
+      <tr><td><code>x | (<span class="n">1</span> &lt;&lt; i)</code></td><td>Set bit i: OR with a stencil that has one 1. Other bits stay.</td></tr>
+      <tr><td><code>x &amp; ~(<span class="n">1</span> &lt;&lt; i)</code></td><td>Clear bit i: the stencil is all 1s except a 0 at i. AND keeps everything else.</td></tr>
+      <tr><td><code>x ^ (<span class="n">1</span> &lt;&lt; i)</code></td><td>Toggle bit i: XOR with 1 flips, XOR with 0 keeps.</td></tr>
+      <tr><td><code>x &amp; -x</code></td><td>The lowest set bit on its own (a common helper).</td></tr>
+    </tbody>
+  </table>
+<pre><code><span class="c"># == 4. Templates (x = 10 = 00001010) ==</span>
+get bit 1:    (x &gt;&gt; 1) &amp; 1   = 1
+set bit 0:    x | (1 &lt;&lt; 0)   = 11 (00001011)
+clear bit 3:  x &amp; ~(1 &lt;&lt; 3)  = 2 (00000010)
+toggle bit 2: x ^ (1 &lt;&lt; 2)   = 14 (00001110)
+lowest set bit of 12: 12 &amp; -12 = 4</code></pre>
+
+  <h3>Template B: XOR fold, pairs cancel</h3>
+  <p>Every value appears twice except one. XOR everything together: each pair cancels to 0, and the single survives. Compare it with counting in a dict on <code>[2, 7, 4, 7, 2]</code>.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> single_number(nums):</code></td><td>Find the value with no partner.</td></tr>
+      <tr><td><code>acc = <span class="n">0</span></code></td><td>All switches off. <code>x ^ 0 = x</code>, so 0 is a safe start.</td></tr>
+      <tr><td><code><span class="k">for</span> x <span class="k">in</span> nums:</code></td><td>One pass, O(n).</td></tr>
+      <tr><td><code>acc ^= x</code></td><td>Flip the switches where x has a 1. A second copy of x flips them back.</td></tr>
+      <tr><td><code><span class="k">return</span> acc</code></td><td>Only the single is left. Memory used: one number.</td></tr>
+    </tbody>
+  </table>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: XOR fold.</strong> Watch the 7s and the 2s flip their switches back.</p>
+      <div id="p21tpD"></div>
+    </div>
+    <div>
+      <p><strong>Slow on memory: count in a dict.</strong> Tally every value, then look for a count of 1.</p>
+      <div id="p21tpE"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p21roD"><span class="lab">XOR fold</span><span class="val">-</span> <span class="unit">steps, 1 number stored</span></div>
+    <div class="ro" id="p21roE"><span class="lab">counting dict</span><span class="val">-</span> <span class="unit">operations</span></div>
+    <div class="ro" id="p21roF"><span class="lab">dict keys stored</span><span class="val">-</span></div>
+  </div>
+  <p class="caption"><code>measure.py</code>: XOR fold 5 steps, acc goes 2, 5, 1, 6, 4. Counting dict 8 operations (5 updates and 3 checks) with 3 keys stored. Both are O(n) time; the real win is O(1) memory against O(n).</p>
+
+  <h3>Template C: drop the lowest 1</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>count = <span class="n">0</span></code></td><td>No 1s found yet.</td></tr>
+      <tr><td><code><span class="k">while</span> n:</code></td><td>Keep going while any switch is on. Only safe for n &gt;= 0 in Python.</td></tr>
+      <tr><td><code>n &amp;= n - <span class="n">1</span></code></td><td><code>n - 1</code> turns the lowest 1 into 0 and the 0s below it into 1s. AND wipes them all, so exactly one 1 disappears.</td></tr>
+      <tr><td><code>count += <span class="n">1</span></code></td><td>One step per 1.</td></tr>
+      <tr><td><code>n &gt; <span class="n">0</span> <span class="k">and</span> n &amp; (n - <span class="n">1</span>) == <span class="n">0</span></code></td><td>Power of two test: a power of two has exactly one 1. <code>measure.py</code>: 16 gives True, 18 gives False.</td></tr>
+    </tbody>
+  </table>
+  <p>Answers for every number from 0 to n reuse a smaller answer: <code>i &gt;&gt; 1</code> is i without its last bit. <code>measure.py</code> prints <code>[0, 1, 1, 2, 1, 2]</code> for 0 to 5. The same XOR idea finds the missing number: XOR every index and every value, and the missing one has no partner. For <code>[3, 0, 1]</code> it prints 2.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>bits = [<span class="n">0</span>] * (n + <span class="n">1</span>)</code></td><td>bits[i] will hold the number of 1s in i.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(<span class="n">1</span>, n + <span class="n">1</span>):</code></td><td>Fill from small to large.</td></tr>
+      <tr><td><code>bits[i] = bits[i &gt;&gt; <span class="n">1</span>] + (i &amp; <span class="n">1</span>)</code></td><td>Ones in i = ones in i with the last bit chopped off, plus that last bit.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Template D: add with no plus sign (32-bit)</h3>
+  <p>XOR adds each column but forgets carries. AND finds the columns where both are 1, which is where a carry is born; shift it left one column and add again. Step through 5 + 7.</p>
+  <div id="p21tpF"></div>
+  <p class="caption"><code>measure.py</code>: 5 + 7 = 12 in 3 rounds, -2 + -3 = -5 in 2 rounds, -1 + 1 = 0 in 32 rounds. The mask and the last line are what make negatives work in Python (trap 3).</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Pick the operator by the column rule you need: XOR to cancel or flip, AND to test or keep, OR to switch on, shifts to move to a position.</div>
+  <p class="newwords">New words: <span class="chip">XOR fold</span><span class="chip">lowest set bit</span><span class="chip">carry</span></p>
+</section>
+
+<section class="step" id="p21-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: are bits the trick here?</h2>
+  <p>Read each made-up task. Decide yes or no, name the variant, then reveal.</p>
+  <div class="predict">
+    <h3>A. Sensors report in pairs: every sensor ID shows up exactly twice, except one broken sensor that reported once. Find it with O(1) extra memory.</h3>
+    <textarea aria-label="Does bit manipulation fit task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: XOR fold.</strong> Signals: "twice except one" and O(1) memory. The pairs cancel, the broken sensor remains.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A warehouse only accepts box counts that are a power of two. Check a count fast.</h3>
+    <textarea aria-label="Does bit manipulation fit task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: drop the lowest 1.</strong> A power of two has exactly one 1, so <code>n &gt; 0 and n &amp; (n - 1) == 0</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A log holds thousands of words. Report the word that appears most often.</h3>
+    <textarea aria-label="Does bit manipulation fit task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> It says "count", but the counts can be anything, and nothing cancels in pairs. This is a <code>Counter</code> job from arrays and hashing.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A pizza shop has 12 toppings. List every possible combination of toppings.</h3>
+    <textarea aria-label="Does bit manipulation fit task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: subset masks</strong> (backtracking also works). Loop <code>mask</code> over <code>range(1 &lt;&lt; 12)</code>, which is 4096 masks; bit i on means topping i is in.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Does a number read the same forwards and backwards when written in normal digits, like 1221?</h3>
+    <textarea aria-label="Does bit manipulation fit task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> It is about decimal digits, not switches. Peel digits with <code>% 10</code> and <code>// 10</code> (math pattern).</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Every value appears three times, except one that appears once. Find the single one.</h3>
+    <textarea aria-label="Does bit manipulation fit task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, but plain XOR fails.</strong> Three copies do not cancel. On <code>[5, 5, 5, 3]</code> plain XOR gives 6. Count the 1s in each column and keep the count mod 3: that gives 3, the right answer (<code>measure.py</code>).</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Pairs that cancel, O(1) memory with a "twice" promise, counting or testing 1 bits, powers of two, "no + or -", fixed 32-bit width, subsets of a small set.</div>
+</section>
+
+<section class="step" id="p21-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: negative numbers in Python never run out of 1s</span>
+    <p>Python integers have no fixed width. A negative number behaves as if it had endless 1s on the left. So <code>while n: n &amp;= n - 1</code> on -1 never stops.</p>
+<pre><code><span class="k">while</span> n:            <span class="c"># n = -1</span>
+    n &amp;= n - <span class="n">1</span>      <span class="c"># -1, -2, -4, -8, -16, ... never 0</span></code></pre>
+<pre><code><span class="c"># measure.py</span>
+drop loop on -1 (no mask): first values [-1, -2, -4, -8, -16], still not 0 after 100 steps
+drop loop on -1 &amp; MASK: steps = 32
+bin(-5) = '-0b101'   bin(-5 &amp; MASK) = '0b11111111111111111111111111111011'
+-1 &gt;&gt; 1 = -1</code></pre>
+    <p><strong>Fix:</strong> <code>n &amp;= 0xFFFFFFFF</code> first. That gives the 32-bit pattern (-1 becomes 32 ones). Shifting right does not help: <code>-1 &gt;&gt; 1</code> is still -1.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: ~x is not "flip 32 switches"</span>
+    <p>In Python <code>~x</code> equals <code>-x - 1</code>. It flips the endless row, so the result is negative.</p>
+<pre><code>~5 = -6   ~5 &amp; MASK = 4294967290</code></pre>
+    <p><strong>Fix:</strong> when you mean "flip the 32 bits", write <code>~x &amp; 0xFFFFFFFF</code> (or <code>x ^ 0xFFFFFFFF</code>).</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: add without + loops forever on negatives</span>
+    <p>The carry loop from Template D, without the mask:</p>
+<pre><code><span class="k">while</span> b:
+    a, b = a ^ b, (a &amp; b) &lt;&lt; <span class="n">1</span>   <span class="c"># -1 + 1: the carry walks left forever</span></code></pre>
+<pre><code><span class="c"># measure.py</span>
+add_buggy(-1, 1): carry still True after 100 rounds (carry = 1267650600228229401496703205376)
+add_fixed(-1, 1) = (0, 32)   # (answer, rounds)
+add_fixed(-2, -3) = (-5, 2)
+without the convert-back step: (-2 + -3) &amp; MASK = 4294967291</code></pre>
+    <p><strong>Fix:</strong> mask both values every round, so the carry falls off at bit 32. Then convert back: if the result is above <code>0x7FFFFFFF</code>, subtract <code>1 &lt;&lt; 32</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: reversing bits but stopping when n hits 0</span>
+    <p>Reverse Bits needs all 32 positions. Stopping early loses the zeros that should move to the right end.</p>
+<pre><code>r = <span class="n">0</span>
+<span class="k">while</span> n:                       <span class="c"># wrong: stops early</span>
+    r = (r &lt;&lt; <span class="n">1</span>) | (n &amp; <span class="n">1</span>)
+    n &gt;&gt;= <span class="n">1</span></code></pre>
+<pre><code><span class="c"># measure.py</span>
+reverse_buggy(1) = 1   reverse_fixed(1) = 2147483648 (0b10000000000000000000000000000000)
+reverse_buggy(6) = 3   reverse_fixed(6) = 1610612736</code></pre>
+    <p><strong>Fix:</strong> <code>for _ in range(32):</code> instead of <code>while n:</code>.</p>
+  </div>
+  <p>One more, for other languages: in C and Java, <code>x &amp; 1 == 0</code> means <code>x &amp; (1 == 0)</code>. Python binds <code>&amp;</code> tighter, so there it works (<code>4 &amp; 1 == 0</code> is True). Brackets cost nothing: write <code>(x &amp; 1) == 0</code>.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>If a negative number can appear, mask with <code>0xFFFFFFFF</code> going in and convert back coming out. Loop over exactly 32 positions when position matters.</div>
+</section>
+
+<section class="step" id="p21-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Complexity: count the work</h2>
+  <p>Say you need the number of 1s in every number from 0 to 1000 (the Counting Bits problem).</p>
+<pre><code><span class="c"># == 7. measure.py: count ones for every n in 0..1000 ==</span>
+scan steps total = 32032   drop steps total = 4938   dp steps = 1000</code></pre>
+  <details class="math"><summary>Step 1: where 32032, 4938 and 1000 come from</summary><div>
+    <p>Check all 32 positions: 1001 numbers x 32 checks = 32032. Always the same, whatever the numbers are.</p>
+    <p>Drop the lowest 1: one step per 1. The numbers 0 to 1000 hold 4938 ones in total, so 4938 steps.</p>
+    <p>Reuse the smaller answer: one line per number from 1 to 1000, so 1000 steps.</p>
+    <div class="eq">scan:  (n + 1) x 32           O(32 n) = O(n), with a big constant
+drop:  total number of 1s      O(n log n) at most
+dp:    n                       O(n)</div>
+  </div></details>
+  <details class="math"><summary>Step 2: one number, and the hidden costs</summary><div>
+    <p>For one 32-bit number, both ways are O(1): at most 32 steps. The drop loop is O(k), where k is the number of 1s.</p>
+    <p>The XOR fold is O(n) time and O(1) extra memory. The counting dict is also O(n) time, but O(n) memory: on <code>[2, 7, 4, 7, 2]</code> it stored 3 keys.</p>
+    <p>Hidden cost: Python ints can grow without limit, so an unmasked loop on a negative number never ends (trap 1). Python 3.10 and newer also has <code>n.bit_count()</code>; <code>(44).bit_count()</code> gives 3. In an interview, say you know it, then write the loop.</p>
+    <p>Subsets by mask: 2<sup>n</sup> masks, each read in n steps, so O(n x 2<sup>n</sup>). Fine for n up to about 20.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p21-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each one is a switch trick in a new costume. Problem pages for this pattern come in later sessions.</p>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><th colspan="3"><span class="badge diff-easy">easy</span></th></tr>
+      <tr><td>136</td><td><a href="https://leetcode.com/problems/single-number/" target="_blank" rel="noopener">Single Number</a></td><td>Pairs plus one single, O(1) memory: the XOR fold.</td></tr>
+      <tr><td>191</td><td><a href="https://leetcode.com/problems/number-of-1-bits/" target="_blank" rel="noopener">Number of 1 Bits</a></td><td>Count the 1s: <code>n &amp;= n - 1</code> beats checking all 32.</td></tr>
+      <tr><td>338</td><td><a href="https://leetcode.com/problems/counting-bits/" target="_blank" rel="noopener">Counting Bits</a></td><td>Every number up to n: reuse <code>bits[i &gt;&gt; 1]</code>, O(n).</td></tr>
+      <tr><td>190</td><td><a href="https://leetcode.com/problems/reverse-bits/" target="_blank" rel="noopener">Reverse Bits</a></td><td>Exactly 32 rounds of "take the last bit, push it on the right".</td></tr>
+      <tr><td>268</td><td><a href="https://leetcode.com/problems/missing-number/" target="_blank" rel="noopener">Missing Number</a></td><td>XOR the indices with the values; the missing one has no partner.</td></tr>
+      <tr><th colspan="3"><span class="badge diff-medium">medium</span></th></tr>
+      <tr><td>371</td><td><a href="https://leetcode.com/problems/sum-of-two-integers/" target="_blank" rel="noopener">Sum of Two Integers</a></td><td>No + allowed: XOR is the sum, AND shifted is the carry, mask for Python.</td></tr>
+      <tr><td>7</td><td><a href="https://leetcode.com/problems/reverse-integer/" target="_blank" rel="noopener">Reverse Integer</a></td><td>Decimal digits, but the real test is staying inside the 32-bit range.</td></tr>
+      <tr><th colspan="3"><span class="badge diff-hard">hard</span></th></tr>
+      <tr><td>-</td><td colspan="2">None on this list. Stretch goals once the easies feel easy: <a href="https://leetcode.com/problems/single-number-ii/" target="_blank" rel="noopener">137 Single Number II</a> (three copies: count each column mod 3) and <a href="https://leetcode.com/problems/single-number-iii/" target="_blank" rel="noopener">260 Single Number III</a> (two singles: split by the lowest set bit of their XOR). Both are medium on LeetCode.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p21-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. What is 12 &amp; 11? How many steps does the drop loop take on 255?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>8, and 8 steps.</strong> 12 is <code>1100</code>, 11 is <code>1011</code>; only bit 3 is on in both. 11 is 12 - 1, so this is one drop step: the lowest 1 of 12 (worth 4) is gone. 255 has eight 1s, so eight steps. Printed by <code>measure.py</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. What does the XOR fold return for <code>[5, 3, 5, 9, 3]</code>?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>9.</strong> The 5s cancel and the 3s cancel, whatever their order. <code>measure.py</code> prints 9.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. In Python, what is <code>-3 &amp; 0xFFFFFFFF</code>, and why would you want it?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>4294967293.</strong> It is the 32-bit pattern of -3 (thirty 1s, then <code>01</code>), read as a non-negative number. Now loops end: the drop loop takes 31 steps on it, while on plain -3 it would never stop. Both numbers are printed by <code>measure.py</code>; try <code>-3</code> in the sandbox too.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>bit</dt><dd>One switch: 0 or 1.</dd>
+    <dt>binary</dt><dd>Writing a number with bits; each position is worth double the one to its right.</dd>
+    <dt>set bit</dt><dd>A bit that is 1.</dd>
+    <dt>least significant bit</dt><dd>The rightmost bit, worth 1; it is 1 for odd numbers.</dd>
+    <dt>AND, OR, XOR</dt><dd>Column rules: both 1, either 1, different.</dd>
+    <dt>shift</dt><dd>Slide every bit left (times 2 per place) or right (divide by 2, rounding down).</dd>
+    <dt>mask</dt><dd>A stencil number whose 1s pick the bits to read, set, clear or flip.</dd>
+    <dt>two's complement</dt><dd>How negatives are stored: flip every bit of x and add 1. -1 is all 1s.</dd>
+    <dt>XOR fold</dt><dd><code>acc ^= x</code> over a list; pairs cancel, singles remain.</dd>
+    <dt>lowest set bit</dt><dd>The rightmost 1. <code>n &amp; (n - 1)</code> removes it; <code>n &amp; -n</code> keeps only it.</dd>
+    <dt>carry</dt><dd>The 1 that moves one column left when both columns are 1 during addition.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p21-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> a number is a row of switches. Each operator works column by column with no carries, so one line can flip, test or cancel many switches.</p>
+    <p><strong>Signals:</strong> "twice except one" with O(1) memory, count or test 1 bits, power of two, no + or -, reverse bits, fixed 32-bit range, subsets of a small set.</p>
+    <p><strong>Templates:</strong> XOR fold <code>acc ^= x</code>. Drop loop <code>n &amp;= n - 1</code>. Bit i: get <code>(x &gt;&gt; i) &amp; 1</code>, set <code>x | (1 &lt;&lt; i)</code>, clear <code>x &amp; ~(1 &lt;&lt; i)</code>, toggle <code>x ^ (1 &lt;&lt; i)</code>. All counts: <code>bits[i] = bits[i &gt;&gt; 1] + (i &amp; 1)</code>.</p>
+    <p><strong>Cost:</strong> O(1) per 32-bit number; the drop loop is one step per 1 (3 steps for 44 against 32 checks). XOR fold: O(n) time, O(1) memory.</p>
+    <p><strong>Traps:</strong> negatives in Python (mask with <code>0xFFFFFFFF</code>, convert back above <code>0x7FFFFFFF</code>), <code>~x</code> is <code>-x - 1</code>, reverse loops need exactly 32 rounds, brackets around <code>&amp;</code> in C and Java.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, count the 1s of your own numbers (try -1) and fold your own lists with XOR. Then break it: give it a list where some value appears three times.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm primary" type="button" onclick="markComplete(21)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

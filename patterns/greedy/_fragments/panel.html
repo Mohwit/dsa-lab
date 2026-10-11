@@ -1,0 +1,401 @@
+<div class="lesson-content xp" id="lesson16">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Greedy</h1>
+    <p class="lesson-subtitle">Goal: learn to take the best-looking move right now, and, just as important, learn when that move is a trap. You will race a one-pass greedy scan against brute force, break greedy on purpose with a bad coin set, and learn the one argument that proves a greedy choice is safe.</p>
+    <div class="lesson-meta"><span class="badge">Tier 3</span><span class="badge">pattern</span><span class="badge diff-medium">medium problems</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Greedy lesson"><a href="#p16-s-idea">The idea</a><a href="#p16-s-proof">Prove it or DP</a><a href="#p16-s-words">Pattern words</a><a href="#p16-s-map">Mental map</a><a href="#p16-s-template">Templates</a><a href="#p16-s-spot">Spot it</a><a href="#p16-s-traps">Traps</a><a href="#p16-s-cost">Complexity</a><a href="#p16-s-problems">Problems</a><a href="#p16-s-check">Check yourself</a><a href="#p16-recap">Recap</a></nav>
+
+<section class="step" id="p16-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Take the best move now, and never look back</h2>
+  <p>A greedy method makes one choice at each step. It picks whatever looks best right now. It never undoes a choice.</p>
+  <p>That makes greedy code short and fast: usually one pass, sometimes after a sort. The hard part is not the code. The hard part is being sure the choice is safe.</p>
+  <div class="card analogy"><strong>Analogy: a cashier giving change.</strong> You are owed 41 cents. The cashier grabs the biggest coin that still fits (25), then the biggest that fits again (10), then 5, then 1. Four coins, and no thinking ahead. With normal coins this is always the fewest. With strange coins it can go wrong, and section 2 lets you break it.</div>
+  <p>Here is greedy in its most famous costume. You get a list of daily gains and losses. Which unbroken run of days has the biggest total?</p>
+  <h3>Try it: the same list, two ways</h3>
+  <p>Press <strong>Step</strong> or <strong>Play</strong> on each player. The list is <code>[2, -3, 4, -1, 2, -5, 3]</code>.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Greedy: keep a running sum, restart when it hurts.</strong> At each number, ask one question: is my run so far helping, or should I start fresh here? The blue cells are the current run.</p>
+      <div id="p16tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: add up every run.</strong> Try every start and every end. The grid fills one cell per run: row = first day, column = last day, cell = the run's total.</p>
+      <div id="p16tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p16roA"><span class="lab">running-sum scan</span><span class="val">-</span> <span class="unit">steps</span></div>
+    <div class="ro" id="p16roB"><span class="lab">add up every run</span><span class="val">-</span> <span class="unit">run totals</span></div>
+    <div class="ro" id="p16roC"><span class="lab">best total (both agree)</span><span class="val">-</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this list, in the page and in <code>measure.py</code> (7 steps against 28 run totals, best total 5). The greedy run is <code>[4, -1, 2]</code>.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>A running total that has gone below zero can only drag the next number down. Drop it and start again. That one safe choice turns an O(n<sup>2</sup>) search into one pass.</div>
+  <p class="newwords">New words: <span class="chip">greedy</span><span class="chip">running sum</span><span class="chip">Kadane</span></p>
+</section>
+
+<section class="step" id="p16-s-proof">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. Prove it, or it is DP: break greedy on purpose</h2>
+  <p>Greedy feels right far more often than it is right. So the rule in interviews is simple: either you can say why the choice is safe, or you treat the problem as dynamic programming.</p>
+  <h3>Try it: the coin machine</h3>
+  <p>Pick a coin set and slide the amount. The top row is the cashier's greedy pick (biggest coin first). The bottom row is the true fewest coins, found by checking every amount from 1 up (dynamic programming). When greedy loses, its row turns orange.</p>
+  <div class="card">
+    <div class="btn-row" role="group" aria-label="Coin set">
+      <button class="btn btn-sm" type="button" data-p16coins="1,5,10,25">coins 1, 5, 10, 25</button>
+      <button class="btn btn-sm" type="button" data-p16coins="1,3,4">coins 1, 3, 4</button>
+      <button class="btn btn-sm" type="button" data-p16coins="1,7,10">coins 1, 7, 10</button>
+      <button class="btn btn-sm" type="button" data-p16coins="1,10,25">coins 1, 10, 25</button>
+    </div>
+    <label class="slider">Amount to pay <output id="p16amtOut">6</output><input type="range" id="p16amt" min="1" max="40" step="1" value="6" aria-label="Amount to pay"></label>
+    <canvas id="p16cvC" role="img" aria-label="Two rows of coins: the greedy pick on top and the fewest coins below"></canvas>
+    <div class="readouts" style="grid-template-columns:repeat(2, minmax(0, 1fr))">
+      <div class="ro" id="p16roG"><span class="lab">greedy coins</span><span class="val">-</span></div>
+      <div class="ro" id="p16roD"><span class="lab">fewest coins</span><span class="val">-</span></div>
+      <div class="ro" id="p16roL"><span class="lab">amounts 1 to 40 where greedy loses</span><span class="val">-</span></div>
+      <div class="ro" id="p16roF"><span class="lab">first amount where greedy loses</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">The page computes both rows live. <code>measure.py</code> prints the same: with coins 1, 3, 4 and amount 6, greedy pays 4 + 1 + 1 (3 coins) but 3 + 3 (2 coins) is best. Over amounts 1 to 40, greedy loses 0 times with 1, 5, 10, 25; 9 times with 1, 3, 4; 9 times with 1, 7, 10 (first at 14); and 6 times with 1, 10, 25 (first at 30).</p>
+  </div>
+  <div class="predict">
+    <h3>Before you slide: with coins 1, 10, 25, what does greedy pay for 30, and what is best?</h3>
+    <textarea aria-label="Greedy and best coins for 30 with coins 1, 10, 25"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Greedy: 25 + 1 + 1 + 1 + 1 + 1 = 6 coins. Best: 10 + 10 + 10 = 3 coins.</strong> Taking the 25 felt great and then left 5 that only pennies can pay. That is the whole danger of greedy in one example.</p></div>
+  </div>
+  <h3>How to prove a greedy choice is safe: the swap argument</h3>
+  <p>The standard proof is called an <dfn class="term" tabindex="0" data-def="Exchange argument: take any best answer that differs from the greedy one. Swap one of its choices for the greedy choice and show the answer stays valid and is no worse. Repeat until it is the greedy answer.">exchange argument</dfn>. In plain words:</p>
+  <ol>
+    <li>Imagine someone hands you a perfect answer.</li>
+    <li>If its first choice differs from greedy's, swap in greedy's choice.</li>
+    <li>Show that the swap breaks nothing and costs nothing.</li>
+    <li>Repeat. You turn the perfect answer into the greedy answer without ever making it worse, so greedy was perfect too.</li>
+  </ol>
+  <div class="grid2">
+    <div class="card"><span class="callout-title" style="color:var(--teal)">Swap works: meetings by earliest end</span>You want the most meetings in one room. A perfect plan starts with some meeting M. Swap M for the meeting that ends first. It ends no later than M, so everything after M still fits. Same count, still valid. So "earliest end first" is safe.</div>
+    <div class="card"><span class="callout-title" style="color:var(--orange)">Swap fails: coins 1, 3, 4 for 6</span>The perfect answer is 3 + 3. Greedy wants to start with a 4. Swap a 3 for the 4: now 4 + 3 = 7 is too much, and 4 + 1 + 1 needs an extra coin. The swap costs something, so the proof breaks, and greedy really is wrong here.</div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Before you trust a greedy idea, spend one minute hunting for a small counterexample. If you find one, switch to DP. If you cannot, say the swap argument out loud.</div>
+  <p class="newwords">New words: <span class="chip">exchange argument</span><span class="chip">counterexample</span><span class="chip">dynamic programming</span></p>
+</section>
+
+<section class="step" id="p16-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words interviewers use for greedy</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Cashier picture</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="Greedy algorithm: builds the answer one choice at a time, always taking the choice that looks best now, and never undoing it.">greedy</dfn></td><td>Pick the best-looking choice now, never undo it</td><td>Grab the biggest coin that fits</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Local optimum: the best choice judged only by the current step. Global optimum: the best answer overall. Greedy works when the first always leads to the second.">local vs global best</dfn></td><td>Best for this step vs best overall</td><td>One big coin now vs fewest coins in total</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Greedy-choice property: some best answer always contains the greedy choice. This is what an exchange argument proves.">greedy-choice property</dfn></td><td>Some perfect answer agrees with greedy's first pick</td><td>Some fewest-coin answer starts with the biggest coin</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Optimal substructure: after a choice, the rest of the job is a smaller copy of the same problem, and its best answer is part of the overall best answer. Greedy and DP both need it.">optimal substructure</dfn></td><td>After one choice, the rest is the same problem, smaller</td><td>After a 25, pay the remaining 16 the same way</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A small input where a method gives the wrong answer. One counterexample is enough to reject a greedy idea.">counterexample</dfn></td><td>One input that breaks the idea</td><td>Coins 1, 3, 4 and amount 6</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Dynamic programming: solve every smaller version of the problem once, store the answers, and build the big answer from them. It considers every choice, so it is safe where greedy is not.">dynamic programming</dfn> (DP)</td><td>Try every choice, but remember answers so nothing is solved twice</td><td>Work out the fewest coins for 1, 2, 3, ... up to the amount</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Kadane's algorithm: the maximum subarray sum in one pass. Keep the best sum of a run ending here; restart the run whenever the old run is worth less than the number alone.">Kadane</dfn></td><td>Running sum that restarts when it goes negative</td><td>Drop a losing streak, start fresh</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Reach (or frontier): the farthest index you can get to using the spots seen so far. Jump problems keep it in one variable.">reach</dfn></td><td>The farthest spot you can get to so far</td><td>How far the change you have already covers</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A fact about your variables that stays true after every step of the loop. It is what you check when you argue the code is correct.">invariant</dfn></td><td>A fact that stays true after every step</td><td>"The coins so far are the fewest for what is paid so far"</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Greedy vs DP in one sentence</span>Greedy commits to one choice per step; DP keeps every choice open and remembers the results. Greedy is faster and simpler when it is safe; DP is the fallback when it is not.</div>
+  <p class="newwords">New words: <span class="chip">local vs global best</span><span class="chip">greedy-choice property</span><span class="chip">optimal substructure</span><span class="chip">reach</span><span class="chip">invariant</span></p>
+</section>
+
+<section class="step" id="p16-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: from a problem statement to greedy code</h2>
+  <p>Read this when you meet a new problem and wonder "could greedy work here?".</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>"Minimum number of", "maximum number of", "can you reach", "is it possible", an unbroken run with the best sum, or a list of intervals. Often n is up to 10<sup>5</sup>, so O(n) or O(n log n) is expected.</span></li>
+    <li><b>Ask</b><span>Is there one choice I can make right now that I will never regret? Can I describe everything to my left with one or two numbers?</span></li>
+    <li><b>Pick the variant</b><span>Match the tell-tale sign.</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>best unbroken run, a balance that dips</i>Running sum, restart when it hurts (Kadane, Gas Station)</li>
+        <li class="is-pick"><i>can you reach, fewest jumps</i>Reach pointer: track the farthest spot (Jump Game I and II)</li>
+        <li class="is-pick"><i>most meetings, fewest arrows, intervals</i>Sort by end, take each one that fits</li>
+        <li class="is-pick"><i>match big with small, build groups</i>Sort first, then take in order (Hand of Straights, Assign Cookies)</li>
+        <li class="is-pick"><i>a range of possible counts</i>Track a low and high bound (Valid Parenthesis String)</li>
+        <li><i>you found a counterexample</i>Not greedy: dynamic programming (Coin Change, 0/1 knapsack)</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>After each step, your few variables (<code>cur</code>, <code>reach</code>, <code>end</code>) hold everything that matters about the part already scanned, and no better answer was thrown away.</span></li>
+    <li><b>Steps</b><span>Sort if the order matters (by end time, by size). Start the state variables. One loop: update the state with the safe choice, check the stop condition. Return the state.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Try two or three tiny inputs by hand, including a counterexample hunt. Then: all negative numbers, a zero you cannot jump past, intervals that only touch, a single item, and the sort key.</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Interview tip</span>Say the greedy rule in one sentence ("always take the meeting that ends first"), then say why it is safe in one more. Interviewers care about the second sentence more than the code.</div>
+</section>
+
+<section class="step" id="p16-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Four templates cover most greedy problems</h2>
+  <h3>Template A: running sum, restart when it hurts</h3>
+  <p>Maximum subarray, best day to sell, gas station. This is the scan you raced in section 1.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> max_subarray(nums):</code></td><td>Best total of any unbroken run. The list has at least one number.</td></tr>
+      <tr><td><code>best = nums[<span class="n">0</span>]</code></td><td>Start from a real number, not 0, so an all-negative list still works.</td></tr>
+      <tr><td><code>cur = <span class="n">0</span></code></td><td>The best total of a run that ends at the current number.</td></tr>
+      <tr><td><code><span class="k">for</span> x <span class="k">in</span> nums:</code></td><td>One pass, left to right.</td></tr>
+      <tr><td><code>cur = max(x, cur + x)</code></td><td>The greedy choice: extend the run, or restart at x if the old run only drags x down.</td></tr>
+      <tr><td><code>best = max(best, cur)</code></td><td>Remember the best run seen so far.</td></tr>
+      <tr><td><code><span class="k">return</span> best</code></td><td>O(n) time, O(1) memory.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Template B: the reach pointer</h3>
+  <p>Each number says how far you may jump from that spot. Can you get to the last spot? Keep one number: the farthest spot you can reach so far.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> can_jump(nums):</code></td><td>True if the last index is reachable from index 0.</td></tr>
+      <tr><td><code>reach = <span class="n">0</span></code></td><td>So far you can only stand on index 0.</td></tr>
+      <tr><td><code><span class="k">for</span> i, step <span class="k">in</span> enumerate(nums):</code></td><td>Walk every spot in order.</td></tr>
+      <tr><td><code><span class="k">if</span> i &gt; reach:</code></td><td>Can I even stand here? If i is past the reach, nothing before could get here.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">False</span></code></td><td>Stuck: a gap no jump crosses.</td></tr>
+      <tr><td><code>reach = max(reach, i + step)</code></td><td>The greedy update: push the reach as far as this spot allows.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">True</span></code></td><td>Every spot was reachable, including the last.</td></tr>
+    </tbody>
+  </table>
+  <p>Watch the reach (blue zone) grow, with the code walk above as your guide. Switch between a list you can finish and one with a gap.</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p16jump="3,1,0,2,0,1">[3, 1, 0, 2, 0, 1]: reachable</button>
+    <button class="btn btn-sm" type="button" data-p16jump="2,1,0,3,1">[2, 1, 0, 3, 1]: stuck</button>
+  </div>
+  <div id="p16tpR"></div>
+  <p class="caption"><code>measure.py</code>: <code>can_jump([3, 1, 0, 2, 0, 1])</code> is True after 6 checks; <code>can_jump([2, 1, 0, 3, 1])</code> is False at the 4th check, because index 3 sits past reach 2. The fewest-jumps version (Jump Game II) on the first list returns 2.</p>
+
+  <h3>Template C: sort by end, take each one that fits</h3>
+  <p>The most meetings in one room, the fewest intervals to remove, the fewest arrows. Finish early to leave the most room for the rest.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> max_meetings(intervals):</code></td><td>Each interval is [start, end]. Touching (one ends at 5, the next starts at 5) is allowed.</td></tr>
+      <tr><td><code>count, end = <span class="n">0</span>, float(<span class="s">"-inf"</span>)</code></td><td>Nothing booked yet; the room is free from the start of time.</td></tr>
+      <tr><td><code><span class="k">for</span> s, e <span class="k">in</span> sorted(intervals, key=<span class="k">lambda</span> iv: iv[<span class="n">1</span>]):</code></td><td>The sort is the greedy rule: earliest end first. This costs O(n log n).</td></tr>
+      <tr><td><code><span class="k">if</span> s &gt;= end:</code></td><td>Does it start after the last booked meeting ends?</td></tr>
+      <tr><td><code>count += <span class="n">1</span></code></td><td>Book it.</td></tr>
+      <tr><td><code>end = e</code></td><td>The room is now busy until e.</td></tr>
+      <tr><td><code><span class="k">return</span> count</code></td><td>The most meetings that fit.</td></tr>
+    </tbody>
+  </table>
+  <div id="p16tpI"></div>
+  <p class="caption"><code>measure.py</code>: on <code>[[5, 9], [1, 3], [6, 8], [2, 5], [8, 10], [4, 6]]</code> the scan books 4 meetings after 6 checks. Trying every subset agrees (4), but it tries 64 subsets.</p>
+
+  <h3>Template D: fewest jumps, in levels</h3>
+  <p>Jump Game II. Think of rings: every spot you can reach with one jump, then with two, and so on. When you walk off the end of the current ring, you must spend a jump.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> min_jumps(nums):</code></td><td>Assumes the last index can be reached.</td></tr>
+      <tr><td><code>jumps, end, far = <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span></code></td><td><code>end</code> is the edge of the current ring; <code>far</code> is the farthest the next ring reaches.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(len(nums) - <span class="n">1</span>):</code></td><td>Stop before the last spot: you never jump from it.</td></tr>
+      <tr><td><code>far = max(far, i + nums[i])</code></td><td>Same reach update as Template B.</td></tr>
+      <tr><td><code><span class="k">if</span> i == end:</code></td><td>At the edge of the ring: one more jump is needed.</td></tr>
+      <tr><td><code>jumps += <span class="n">1</span>; end = far</code></td><td>Spend it, and the next ring ends at <code>far</code>.</td></tr>
+      <tr><td><code><span class="k">return</span> jumps</code></td><td>O(n) time, O(1) memory.</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Greedy code is a loop with one or two state variables, often after a sort. If your loop needs a table of past answers, you are writing DP.</div>
+</section>
+
+<section class="step" id="p16-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>6. Spot the pattern: is greedy safe here?</h2>
+  <p>Read each made-up task. Decide: greedy or not, and which variant. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A lecture hall gets requests with a start and an end time. Accept as many talks as possible with no overlap.</h3>
+    <textarea aria-label="Is greedy safe for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Greedy, Template C.</strong> Signal: intervals and "as many as possible". Sort by end and take each talk that fits. The swap argument from section 2 proves it.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A country uses coins of 1, 6 and 9. Pay a given amount with the fewest coins.</h3>
+    <textarea aria-label="Is greedy safe for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not greedy: DP.</strong> It looks just like the cashier, but the coin set is unusual. Amount 12: greedy pays 9 + 1 + 1 + 1 (4 coins), while 6 + 6 is 2. Any coin set you did not prove safe means DP.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A frog stands on stone 0. Each stone's number is the longest hop allowed from it. Can the frog reach the last stone?</h3>
+    <textarea aria-label="Is greedy safe for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Greedy, Template B.</strong> Signal: "can you reach". Keep the farthest reachable stone. You never need to know <em>which</em> path, only how far any path gets.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A trader has a list of daily profit changes. Find the best total over a stretch of back-to-back days.</h3>
+    <textarea aria-label="Is greedy safe for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Greedy, Template A (Kadane).</strong> Signal: best unbroken run. Restart whenever the running total is worth less than today alone.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A hiker's backpack holds 10 kg. Each item has a weight and a value and must be taken whole or left. Maximise the value.</h3>
+    <textarea aria-label="Is greedy safe for task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not greedy: DP (0/1 knapsack).</strong> "Best value per kg first" breaks: items (6 kg, 30), (5 kg, 20), (5 kg, 20) with 10 kg. Greedy takes the 6 kg item (5 per kg) and then nothing else fits: 30. Two 5 kg items give 40. If items could be cut into pieces, greedy by value per kg <em>would</em> be safe.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Children each need a cookie of at least a certain size. You have a bag of cookies of various sizes. Feed as many children as you can.</h3>
+    <textarea aria-label="Is greedy safe for task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Greedy, sort then take.</strong> Sort both lists. Give each child, least hungry first, the smallest cookie that is big enough. A bigger cookie is never better spent on a less hungry child.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>"Most / fewest / can you reach", intervals, best unbroken run, a balance that dips, and a choice you can defend with a swap. Warning signs for DP: odd coin sets, items taken whole, and "count the number of ways".</div>
+</section>
+
+<section class="step" id="p16-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>7. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: greedy where only DP is safe</span>
+    <p>The cashier rule on a coin set nobody proved safe.</p>
+<pre><code><span class="k">def</span> fewest_coins(coins, amount):          <span class="c"># wrong for some coin sets</span>
+    count = <span class="n">0</span>
+    <span class="k">for</span> c <span class="k">in</span> sorted(coins, reverse=<span class="k">True</span>):
+        count += amount // c
+        amount %= c
+    <span class="k">return</span> count</code></pre>
+    <p>Fails on <code>coins = [1, 3, 4]</code>, <code>amount = 6</code>: it returns 3 (4 + 1 + 1), the answer is 2 (3 + 3). <strong>Fix:</strong> DP over amounts, <code>dp[a] = min(dp[a - c] + 1 for c in coins if c &lt;= a)</code>. It is O(amount x coins): 120 checks for amount 40 and 3 coins.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: sorting intervals by start</span>
+    <p>Sorting by start feels natural, but an early, very long meeting blocks everything.</p>
+<pre><code><span class="k">for</span> s, e <span class="k">in</span> sorted(intervals):            <span class="c"># wrong: sorts by start</span>
+    <span class="k">if</span> s &gt;= end:
+        count += <span class="n">1</span>; end = e</code></pre>
+    <p>Fails on <code>[[1, 10], [2, 3], [4, 5]]</code>: it books [1, 10] and nothing else fits, so 1. Sorted by end it books [2, 3] and [4, 5]: 2. <strong>Fix:</strong> <code>key=lambda iv: iv[1]</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: Kadane that assumes the answer is at least 0</span>
+<pre><code>best = <span class="n">0</span>; cur = <span class="n">0</span>                           <span class="c"># wrong start</span>
+<span class="k">for</span> x <span class="k">in</span> nums:
+    cur = max(<span class="n">0</span>, cur + x)                    <span class="c"># an empty run is not allowed</span>
+    best = max(best, cur)</code></pre>
+    <p>Fails on <code>[-3, -1, -2]</code>: it returns 0, the empty run. The answer is -1. <strong>Fix:</strong> <code>best = nums[0]</code> and <code>cur = max(x, cur + x)</code>, as in Template A.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: pushing the reach from a spot you cannot stand on</span>
+<pre><code>reach = <span class="n">0</span>
+<span class="k">for</span> i, step <span class="k">in</span> enumerate(nums):
+    reach = max(reach, i + step)             <span class="c"># wrong: never asks "is i reachable?"</span>
+<span class="k">return</span> reach &gt;= len(nums) - <span class="n">1</span></code></pre>
+    <p>Fails on <code>[0, 1]</code>: index 1 is out of reach, yet its jump still pushes the reach to 2, so it returns True. The answer is False. <strong>Fix:</strong> check <code>if i &gt; reach: return False</code> before the update.</p>
+  </div>
+  <p>All four wrong answers and their fixes are printed by <code>measure.py</code> (section "5. Traps").</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Hunt for a counterexample, sort by the right key, never assume the answer is at least 0, and only act from states you can actually be in.</div>
+</section>
+
+<section class="step" id="p16-s-cost">
+  <span class="lvl lvl-math">Maths</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>8. Complexity: one pass, plus the sort</h2>
+  <p>Slide the list size. Both racers do one operation per tick. Every run must be added up by the slow way, so it has no lucky early exit.</p>
+  <div class="card">
+    <label class="slider">List size n <output id="p16nOut">10</output><input type="range" id="p16n" min="10" max="2000" step="10" value="10" aria-label="List size n"></label>
+    <canvas id="p16cvR" role="img" aria-label="Race between the running-sum scan and adding up every run: two bars that fill as each method counts its operations"></canvas>
+    <div class="btn-row"><button class="btn btn-sm primary" type="button" id="p16raceGo">Start the race</button></div>
+    <div class="readouts">
+      <div class="ro" id="p16roS"><span class="lab">running-sum steps</span><span class="val">10</span></div>
+      <div class="ro" id="p16roP"><span class="lab">run totals (brute)</span><span class="val">55</span></div>
+      <div class="ro" id="p16roX"><span class="lab">brute / greedy</span><span class="val">5.5x</span></div>
+    </div>
+  </div>
+<pre><code><span class="c"># == 6. Race: Kadane steps vs brute subarray sums ==</span>
+n =   10: kadane steps =    10   brute sums =       55   ratio = 5.5x
+n =  100: kadane steps =   100   brute sums =     5050   ratio = 50.5x
+n = 1000: kadane steps =  1000   brute sums =   500500   ratio = 500.5x
+n = 2000: kadane steps =  2000   brute sums =  2001000   ratio = 1000.5x</code></pre>
+  <details class="math"><summary>Step 1: where 55 and 500500 come from</summary><div>
+    <p>A run starting at index 0 can end at n places. A run starting at index 1 can end at n - 1 places. And so on down to 1:</p>
+    <div class="eq">n + (n - 1) + ... + 1 = n x (n + 1) / 2</div>
+    <p>For n = 10 that is 10 x 11 / 2 = 55. For n = 1000 it is 1000 x 1001 / 2 = 500500. That is O(n<sup>2</sup>). The greedy scan touches each number once: O(n).</p>
+  </div></details>
+  <details class="math"><summary>Step 2: the hidden cost is the sort</summary><div>
+    <p>Templates A, B and D are one pass: O(n) time and O(1) extra memory. Template C sorts first, and a sort costs about n x log<sub>2</sub>(n) comparisons:</p>
+    <div class="eq">n = 1000:  1000 x log2(1000) = about 9966 comparisons for the sort
+then 1000 checks for the scan</div>
+    <p>So the sort dominates: O(n log n) time. Python's <code>sorted</code> also builds a new list: O(n) memory (<code>list.sort()</code> sorts in place).</p>
+  </div></details>
+  <details class="math"><summary>Step 3: what greedy saves compared with DP and brute force</summary><div>
+    <p>The coin DP checks every coin for every amount: O(amount x coins), for example 40 x 3 = 120 checks. Trying every subset of meetings is O(2<sup>n</sup>): 64 subsets for 6 meetings, about a million for 20. A correct greedy rule replaces all that with one pass.</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Greedy is O(n) if you scan, O(n log n) if you sort first, and O(1) extra memory apart from the sort.</div>
+</section>
+
+<section class="step" id="p16-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>9. The problems in this pattern, easiest first</h2>
+  <p>Each one is a greedy rule in a new costume. Pages for them arrive in later sessions; the links open LeetCode in a new tab. The core list has only medium problems, so two easy warm-ups and one hard stretch are added as extras.</p>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><th colspan="3"><span class="badge diff-easy">easy</span></th></tr>
+      <tr><td>455</td><td><a href="https://leetcode.com/problems/assign-cookies/" target="_blank" rel="noopener">Assign Cookies</a> (extra)</td><td>Sort both lists, then match the smallest cookie that is big enough.</td></tr>
+      <tr><td>860</td><td><a href="https://leetcode.com/problems/lemonade-change/" target="_blank" rel="noopener">Lemonade Change</a> (extra)</td><td>The cashier in reverse: always hand back the biggest bill first, and the safe coin set makes it correct.</td></tr>
+      <tr><th colspan="3"><span class="badge diff-medium">medium</span></th></tr>
+      <tr><td>53</td><td><a href="https://leetcode.com/problems/maximum-subarray/" target="_blank" rel="noopener">Maximum Subarray</a></td><td>Template A exactly: restart the run when it goes negative.</td></tr>
+      <tr><td>55</td><td><a href="https://leetcode.com/problems/jump-game/" target="_blank" rel="noopener">Jump Game</a></td><td>Template B: one reach variable, and a stop when you fall behind it.</td></tr>
+      <tr><td>45</td><td><a href="https://leetcode.com/problems/jump-game-ii/" target="_blank" rel="noopener">Jump Game II</a></td><td>Template D: count rings, like breadth-first search without a queue.</td></tr>
+      <tr><td>134</td><td><a href="https://leetcode.com/problems/gas-station/" target="_blank" rel="noopener">Gas Station</a></td><td>A fuel balance that dips below zero means "start after here": Kadane's restart in disguise.</td></tr>
+      <tr><td>846</td><td><a href="https://leetcode.com/problems/hand-of-straights/" target="_blank" rel="noopener">Hand of Straights</a></td><td>The smallest card left must start a group, so build groups from the bottom up.</td></tr>
+      <tr><td>1899</td><td><a href="https://leetcode.com/problems/merge-triplets-to-form-target-triplet/" target="_blank" rel="noopener">Merge Triplets to Form Target Triplet</a></td><td>Throw away any triplet that overshoots the target; merge all the rest.</td></tr>
+      <tr><td>763</td><td><a href="https://leetcode.com/problems/partition-labels/" target="_blank" rel="noopener">Partition Labels</a></td><td>A reach pointer over letters: a part ends when you reach the last place any of its letters appears.</td></tr>
+      <tr><td>678</td><td><a href="https://leetcode.com/problems/valid-parenthesis-string/" target="_blank" rel="noopener">Valid Parenthesis String</a></td><td>Track the lowest and highest possible count of open brackets instead of trying every choice.</td></tr>
+      <tr><th colspan="3"><span class="badge diff-hard">hard</span></th></tr>
+      <tr><td>135</td><td><a href="https://leetcode.com/problems/candy/" target="_blank" rel="noopener">Candy</a> (extra)</td><td>Two greedy passes, left to right then right to left, each fixing one side's rule.</td></tr>
+    </tbody>
+  </table>
+  <p>Order to try them: 53, 55, 45, then 134 and 763, then the rest. Coin Change (322) is the famous look-alike; it lives in the 1D DP lesson.</p>
+</section>
+
+<section class="step" id="p16-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>10. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Template A runs on <code>[-3, -1, -2]</code>. What does it return, and how many steps does it take?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>-1, after 3 steps.</strong> Every number restarts the run (each old run is negative), and the best single number is -1. <code>measure.py</code> prints <code>(-1, 3)</code>. The trap version would return 0.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Template B runs on <code>[1, 0, 1]</code>. What does it return, and at which check does it stop?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>False, at the 3rd check.</strong> Index 0 pushes reach to 1. Index 1 has a 0, so reach stays 1. Index 2 is past reach 1, so the frog is stuck. <code>measure.py</code> prints <code>(False, 3)</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. You need the most non-overlapping meetings. A friend sorts by length, shortest first. Find a small input where that loses.</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>One example: [[1, 5], [4, 7], [6, 10]].</strong> Shortest first books [4, 7] (length 3), which overlaps both others: 1 meeting. Earliest end books [1, 5] and [6, 10]: 2 meetings. A short meeting in the middle can block two. This is how you test a greedy rule: hunt for a tiny counterexample.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>greedy</dt><dd>Build the answer one choice at a time, always the best-looking choice now, never undone.</dd>
+    <dt>local vs global best</dt><dd>Best for this step vs best overall. Greedy works when the first always leads to the second.</dd>
+    <dt>exchange argument</dt><dd>Swap a perfect answer's choice for greedy's, show nothing breaks or gets worse, repeat.</dd>
+    <dt>greedy-choice property</dt><dd>Some best answer contains the greedy choice.</dd>
+    <dt>optimal substructure</dt><dd>After a choice, the rest is a smaller copy of the same problem.</dd>
+    <dt>counterexample</dt><dd>One input where a method gives the wrong answer. One is enough to reject it.</dd>
+    <dt>dynamic programming (DP)</dt><dd>Solve every smaller version once, store the answers, build the big answer from them.</dd>
+    <dt>running sum</dt><dd>A total you keep updating as you scan.</dd>
+    <dt>Kadane</dt><dd>Maximum subarray in one pass: extend the run or restart at the current number.</dd>
+    <dt>reach</dt><dd>The farthest index you can get to so far.</dd>
+    <dt>invariant</dt><dd>A fact about your variables that stays true after every step.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p16-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> make the best-looking choice now and never undo it, but only after you can say why it is safe (the swap argument). If a tiny counterexample breaks it, use DP.</p>
+    <p><strong>Signals:</strong> "most / fewest / can you reach", intervals, best unbroken run, a balance that dips, n up to 10<sup>5</sup>.</p>
+    <p><strong>Templates:</strong> A <code>cur = max(x, cur + x)</code>; B <code>if i &gt; reach: return False</code> then <code>reach = max(reach, i + step)</code>; C sort by end, take if <code>s &gt;= end</code>; D count rings with <code>end</code> and <code>far</code>.</p>
+    <p><strong>Cost:</strong> O(n) for a scan, O(n log n) with a sort, O(1) extra memory. Brute force over runs is O(n<sup>2</sup>): 500,500 run totals against 1000 steps at n = 1000.</p>
+    <p><strong>Traps:</strong> unproved coin sets (1, 3, 4 for 6), sorting by start, <code>best = 0</code> with all-negative input, pushing the reach from a spot you cannot reach.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own list and run the running-sum scan or the reach pointer. Try an all-negative list, and a jump list with a zero in a bad place.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm primary" type="button" onclick="markComplete(16)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

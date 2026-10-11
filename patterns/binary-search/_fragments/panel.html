@@ -1,0 +1,420 @@
+<div class="lesson-content xp" id="lesson9">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Binary Search</h1>
+    <p class="lesson-subtitle">Goal: whenever one question tells you which half holds the answer, throw the other half away. You will play it as a game, learn three templates that cover almost every problem, and learn to spot the traps that make binary search famous for bugs.</p>
+    <div class="lesson-meta"><span class="badge">Tier 2</span><span class="badge">pattern</span><span class="badge diff-medium">core</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Binary Search lesson"><a href="#p9-s-idea">The game</a><a href="#p9-s-words">Pattern words</a><a href="#p9-s-map">Mental map</a><a href="#p9-s-template">Templates</a><a href="#p9-s-spot">Spot it</a><a href="#p9-s-traps">Traps</a><a href="#p9-s-cost">Cost</a><a href="#p9-s-problems">Problems</a><a href="#p9-s-check">Check yourself</a><a href="#p9-recap">Recap</a></nav>
+
+<section class="step" id="p9-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Throw away half, every time</h2>
+  <p>If one question can tell you which half holds the answer, you never need to look at the other half. Ask about the middle, keep the half that can still hold the answer, and repeat.</p>
+  <p>Each question halves what is left. So the work grows with the number of halvings, not with the size of the input.</p>
+  <div class="card analogy"><strong>Analogy: higher or lower.</strong> A friend thinks of a number from 1 to 100. You guess, and they say "higher" or "lower". Guess 50 first, and one answer rules out half the numbers. Keep guessing the middle of what is left, and you never need more than 7 guesses.</div>
+  <h3>Play it: find my number</h3>
+  <p>Type a guess and press <strong>Guess</strong>. The blue cells are still possible; grey ones are ruled out. Try it your way first. Then play again using <strong>Guess the middle</strong>.</p>
+  <div class="card">
+    <canvas id="p9cvG" role="img" aria-label="Numbers 1 to 100 as a strip: blue cells are still possible, grey cells are ruled out, ticks mark your guesses"></canvas>
+    <div class="btn-row">
+      <label for="p9gIn" style="font-size:13.5px">your guess</label>
+      <input type="text" id="p9gIn" value="50" inputmode="numeric" autocomplete="off" spellcheck="false" style="width:5em;font:13px var(--mono);padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-bright)">
+      <button class="btn btn-sm primary" type="button" id="p9gGo">Guess</button>
+      <button class="btn btn-sm" type="button" id="p9gMid">Guess the middle</button>
+      <button class="btn btn-sm" type="button" id="p9gNew">New secret</button>
+    </div>
+    <p id="p9gMsg" aria-live="polite" style="min-height:3em"></p>
+    <div class="readouts">
+      <div class="ro" id="p9roG"><span class="lab">your guesses</span><span class="val">0</span></div>
+      <div class="ro" id="p9roL"><span class="lab">still possible</span><span class="val">1 to 100</span></div>
+      <div class="ro" id="p9roK"><span class="lab">numbers left</span><span class="val">100</span></div>
+    </div>
+    <p class="caption">From <code>measure.py</code>: always guessing the middle finds any number from 1 to 100 in at most 7 guesses, 5.80 on average. 37 of the 100 numbers need all 7.</p>
+  </div>
+
+  <h3>Try it: search a sorted list, two ways</h3>
+  <p>The list has 12 sorted numbers and we look for 58, the last one. Step through both. In the binary search, dimmed cells are thrown away.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: binary search.</strong> Look at the middle. Too small? Drop the left half. Too big? Drop the right half.</p>
+      <div id="p9tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: linear scan.</strong> Check the items one by one from the left until you hit the target.</p>
+      <div id="p9tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p9roA"><span class="lab">binary search</span><span class="val">-</span> <span class="unit">probes</span></div>
+    <div class="ro" id="p9roB"><span class="lab">linear scan</span><span class="val">-</span> <span class="unit">checks</span></div>
+  </div>
+  <p class="caption">Counted by running both, in the page and in <code>measure.py</code>: 4 probes against 12 checks. A <dfn class="term" tabindex="0" data-def="One look at the middle item of the range that is still possible. The number of probes is the number of loop rounds.">probe</dfn> is one look at a middle item.</p>
+
+  <h3>Race: make the list longer</h3>
+  <p>The target is bigger than every item, the worst case for both. Pick a size and start the race.</p>
+  <div class="card">
+    <canvas id="p9cvA" role="img" aria-label="Race between binary search and a linear scan: two bars that fill as each method counts its looks at the list"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p9n="16">n = 16</button>
+      <button class="btn btn-sm" type="button" data-p9n="1000">n = 1000</button>
+      <button class="btn btn-sm" type="button" data-p9n="1000000">n = 1,000,000</button>
+      <button class="btn btn-sm" type="button" id="p9raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p9roN"><span class="lab">list size n</span><span class="val">16</span></div>
+      <div class="ro" id="p9roS"><span class="lab">binary probes</span><span class="val">5</span></div>
+      <div class="ro" id="p9roP"><span class="lab">linear checks</span><span class="val">16</span></div>
+      <div class="ro" id="p9roR"><span class="lab">checks / probes</span><span class="val">3.2x</span></div>
+    </div>
+    <p class="caption">The list holds 0, 2, 4, ... (value 2i at index i), so the page can search a million items without storing them. At n = 1,000,000 the teal bar is too short to see: 20 probes against 1,000,000 checks.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Binary search needs one thing: a yes/no question whose answers line up as all "no" then all "yes" (or the other way round). Sorted data gives you that question for free.</div>
+  <p class="newwords">New words: <span class="chip">probe</span></p>
+</section>
+
+<section class="step" id="p9-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>In the game</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="The set of places the answer could still be, usually written as indices lo..hi.">search space</dfn></td><td>Where the answer could still be</td><td>The blue cells</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="lo and hi: the two ends of the search space. Each round moves one of them past the middle.">lo, hi</dfn></td><td>The two ends of the search space</td><td>"It is between lo and hi"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The middle index (lo + hi) // 2. Python's // rounds down, so mid leans left when the range has an even length.">mid</dfn></td><td>The middle of what is left, rounded down</td><td>Your next guess</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A sentence that is true before and after every round of a loop. For binary search: if the answer exists, it is inside lo..hi.">invariant</dfn></td><td>A promise that stays true every round</td><td>"The secret is always in the blue part"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A yes/no test that is false for a while, then true from some point on, and never goes back. Binary search finds the first true.">monotonic predicate</dfn></td><td>A yes/no test shaped no, no, ..., yes, yes</td><td>"Is the secret at most x?"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The first index whose value is at least the target. Also the place to insert the target to keep the list sorted. Python: bisect.bisect_left.">lower bound</dfn></td><td>First index with value &gt;= target</td><td>Where a new card would slide in</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Binary search over possible answers (a speed, a size, a day) instead of over list positions, using a feasible(x) check.">search on the answer</dfn></td><td>Guess the answer itself, then test it</td><td>"Is speed 6 fast enough?"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="feasible(x): returns True if answer x works. It must be monotonic: if x works, every bigger x works too (or every smaller one).">feasible(x)</dfn></td><td>Does this candidate answer work?</td><td>The friend's "higher or lower"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A sorted list cut in two and the pieces swapped, such as [6, 7, 9, 1, 2, 4, 5]. One half around any mid is always still sorted.">rotated sorted array</dfn></td><td>A sorted list cut once and swapped round</td><td>A clock face that starts at 9</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Logarithm base 2: how many times you can halve n before reaching 1. log2(1000) is about 10, log2(1,000,000) about 20.">log n</dfn></td><td>How many halvings until one item is left</td><td>7 for 100 numbers</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Python has it built in</span><code>bisect.bisect_left(nums, x)</code> is the lower bound; <code>bisect.bisect_right(nums, x)</code> is the first index with value &gt; x. Interviewers usually want you to write the loop, but say you know these.</div>
+  <p class="newwords">New words: <span class="chip">search space</span><span class="chip">lo, hi, mid</span><span class="chip">invariant</span><span class="chip">monotonic predicate</span><span class="chip">lower bound</span><span class="chip">search on the answer</span><span class="chip">feasible(x)</span><span class="chip">rotated sorted array</span><span class="chip">log n</span></p>
+</section>
+
+<section class="step" id="p9-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a problem statement to binary search</h2>
+  <p>Read this when a problem might be binary search but you are not sure what to search over.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>Sorted input. "O(log n)" in the statement. "The minimum X such that ..." or "the maximum X that still ...". Answers in a huge range (up to 10<sup>9</sup>) with a quick way to test one candidate. A sorted list that was rotated.</span></li>
+    <li><b>Ask</b><span>Is there a yes/no question that is "no" for a while, then "yes" forever? If I ask it at the middle, do I know which half to throw away?</span></li>
+    <li><b>Pick the variant</b><span>Each variant has a tell-tale signal:</span>
+      <ul class="mm-branches">
+        <li><i>sorted, find this exact value</i>Template A: exact match, <code>lo &lt;= hi</code>, return as soon as you hit it.</li>
+        <li><i>first / last position, insert point</i>Template B: lower bound, the first index where the test turns true.</li>
+        <li><i>minimum speed, size, days that works</i>Template C: search on the answer with <code>feasible(x)</code>.</li>
+        <li><i>sorted but rotated</i>Compare with the last item (minimum), or check which half is sorted (search).</li>
+        <li><i>sorted grid, rows follow on</i>Treat it as one list: row = i // cols, col = i % cols.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Write it down before the code: "if the answer exists, it is in lo..hi" (Template A) or "the first true is in lo..hi" (Templates B and C). Every update must keep it true.</span></li>
+    <li><b>Steps</b><span>Set lo and hi to cover every possible answer. Loop while the range is not empty. Take mid. Ask the question. Move lo past mid or hi onto (or past) mid. Return what the invariant promises.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Does every round shrink the range? Test a range of two items. Is hi a real index or one past the end? Do <code>&lt;=</code> or <code>&lt;</code> in the loop match how you move hi? For rotated input, test a two-item list.</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p9-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Three templates (and a rotated twist)</h2>
+  <h3>Template A: find an exact value</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>lo, hi = <span class="n">0</span>, len(nums) - <span class="n">1</span></code></td><td>Both ends are real indices. The answer, if any, is in lo..hi.</td></tr>
+      <tr><td><code><span class="k">while</span> lo &lt;= hi:</code></td><td>Keep going while at least one item is left. <code>&lt;=</code> because lo == hi is still one item.</td></tr>
+      <tr><td><code>mid = (lo + hi) // <span class="n">2</span></code></td><td>The middle, rounded down.</td></tr>
+      <tr><td><code><span class="k">if</span> nums[mid] == target: <span class="k">return</span> mid</code></td><td>Lucky hit: stop.</td></tr>
+      <tr><td><code><span class="k">if</span> nums[mid] &lt; target: lo = mid + <span class="n">1</span></code></td><td>mid and everything left of it is too small. Drop them.</td></tr>
+      <tr><td><code><span class="k">else</span>: hi = mid - <span class="n">1</span></code></td><td>mid and everything right of it is too big. Drop them.</td></tr>
+      <tr><td><code><span class="k">return</span> -<span class="n">1</span></code></td><td>lo passed hi: nothing is left, so the target is missing.</td></tr>
+    </tbody>
+  </table>
+  <p>Step through a search that fails, and watch lo cross hi. Or pick another target:</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p9ta="40">target 40 (missing)</button>
+    <button class="btn btn-sm" type="button" data-p9ta="34">target 34</button>
+    <button class="btn btn-sm" type="button" data-p9ta="3">target 3</button>
+    <button class="btn btn-sm" type="button" data-p9ta="99">target 99</button>
+  </div>
+  <div id="p9tpTa"></div>
+  <p class="caption">From <code>measure.py</code>: target 40 takes 4 probes to prove it is missing; the linear scan needs all 12 checks.</p>
+
+  <h3>Template B: the first index where a test turns true</h3>
+  <p>Most binary search problems are secretly this one. Picture the test as a row of answers: <code>False False False True True</code>. You want the first True.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>lo, hi = <span class="n">0</span>, len(nums)</code></td><td>hi is one past the end. If no item passes, the answer is <code>len(nums)</code>.</td></tr>
+      <tr><td><code><span class="k">while</span> lo &lt; hi:</code></td><td>Stop when lo and hi meet: that spot is the answer. Strict <code>&lt;</code>.</td></tr>
+      <tr><td><code>mid = (lo + hi) // <span class="n">2</span></code></td><td>Rounded down, so mid is always less than hi. That is what keeps <code>hi = mid</code> safe.</td></tr>
+      <tr><td><code><span class="k">if</span> nums[mid] &gt;= target:</code></td><td>The test. Swap in any monotonic yes/no question.</td></tr>
+      <tr><td><code>hi = mid</code></td><td>True: mid could be the first true one, so keep it.</td></tr>
+      <tr><td><code><span class="k">else</span>: lo = mid + <span class="n">1</span></code></td><td>False: mid and everything left of it are false. Drop them.</td></tr>
+      <tr><td><code><span class="k">return</span> lo</code></td><td>lo == hi: the first true index.</td></tr>
+    </tbody>
+  </table>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p9tb="3">target 3 (a run of 3s)</button>
+    <button class="btn btn-sm" type="button" data-p9tb="4">target 4 (between)</button>
+    <button class="btn btn-sm" type="button" data-p9tb="10">target 10 (too big)</button>
+  </div>
+  <div id="p9tpTb"></div>
+  <p class="caption">On <code>[1, 3, 3, 3, 5, 8, 9]</code>, <code>measure.py</code> prints index 1 for target 3, index 4 for target 4, and 7 (the length) for target 10, each in 3 probes. Last position of 3 = lower_bound(4) - 1 = 3.</p>
+
+  <h3>Template C: search on the answer</h3>
+  <p>A story: boxes hold 4, 9, 5 and 12 letters. You sort at a steady speed of k letters per hour, one box at a time, and any time left over in an hour is wasted. What is the slowest speed that finishes within 7 hours?</p>
+  <p>There is no sorted list here. But the yes/no question "is speed k fast enough?" is no, no, ..., yes, yes as k grows. So binary search the speed.</p>
+  <div class="card">
+    <label class="slider">Speed k (letters per hour) <output id="p9kOut">1</output><input type="range" id="p9kSl" min="1" max="12" step="1" value="3" aria-label="Sorting speed k"></label>
+    <div class="readouts">
+      <div class="ro" id="p9roKh"><span class="lab">hours needed</span><span class="val">-</span></div>
+      <div class="ro" id="p9roKf"><span class="lab">within 7 hours?</span><span class="val">-</span></div>
+    </div>
+    <p class="caption" id="p9kWhy"></p>
+    <div class="tp-chips" id="p9kStrip" aria-label="feasible for each speed from 1 to 12"></div>
+    <p class="caption">Slide k and watch the yes/no row: once a speed works, every faster speed works too. That shape is what makes binary search legal here.</p>
+  </div>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> feasible(k):</code></td><td>Can speed k finish in time?</td></tr>
+      <tr><td><code>hours = sum((p + k - <span class="n">1</span>) // k <span class="k">for</span> p <span class="k">in</span> piles)</code></td><td>Each box takes ceil(p / k) hours. <code>(p + k - 1) // k</code> is ceiling division with whole numbers only.</td></tr>
+      <tr><td><code><span class="k">return</span> hours &lt;= h</code></td><td>True means fast enough.</td></tr>
+      <tr><td><code>lo, hi = <span class="n">1</span>, max(piles)</code></td><td>The answer is between the slowest possible speed and a speed that surely works (every box in one hour).</td></tr>
+      <tr><td><code><span class="k">while</span> lo &lt; hi: ...</code></td><td>Template B, with <code>feasible(mid)</code> as the test.</td></tr>
+    </tbody>
+  </table>
+  <div id="p9tpTc"></div>
+<pre><code><span class="c"># == 5. Search on the answer (measure.py) ==</span>
+hours by speed: {1: 30, 2: 16, 3: 11, 4: 9, 5: 7, 6: 6, 7: 6, 8: 6, 9: 5, 10: 5, 11: 5, 12: 4}
+min_speed -> (5, 4, [6, 3, 5, 4])   <span class="c"># (speed, feasible calls, speeds tried)</span>
+linear try k = 1, 2, ...: first feasible after 5 calls</code></pre>
+  <p>Here trying 1, 2, 3, ... would also be quick (5 calls). With huge boxes it would not. <code>measure.py</code> runs boxes of 1,000,000,000, 7 and 123,456,789 letters with h = 5: the answer is 333,333,334, found in 30 calls. Counting up from 1 would need 333,333,334 calls.</p>
+
+  <h3>The rotated twist</h3>
+  <p>A sorted list cut once and swapped round, like <code>[6, 7, 9, 1, 2, 4, 5]</code>. Two tricks cover it.</p>
+  <p><strong>Finding the smallest item</strong> is Template B with a clever test: "is nums[i] at most the last item?" The left piece answers no, the right piece answers yes. The first yes is the smallest item.</p>
+  <div id="p9tpTd"></div>
+  <p><strong>Finding a target</strong>: around any mid, at least one half is sorted. Find it, then ask whether the target sits inside that sorted half.</p>
+  <table>
+    <thead><tr><th style="width:52%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">if</span> nums[lo] &lt;= nums[mid]:</code></td><td>The left half lo..mid is sorted. Use <code>&lt;=</code>: when lo == mid, that half is a single item.</td></tr>
+      <tr><td><code><span class="k">if</span> nums[lo] &lt;= target &lt; nums[mid]: hi = mid - <span class="n">1</span></code></td><td>The target fits inside the sorted left half: go left.</td></tr>
+      <tr><td><code><span class="k">else</span>: lo = mid + <span class="n">1</span></code></td><td>Otherwise it can only be on the right.</td></tr>
+      <tr><td><code><span class="k">else</span>:</code> (the right half mid..hi is sorted)</td><td>Same idea, mirrored.</td></tr>
+      <tr><td><code><span class="k">if</span> nums[mid] &lt; target &lt;= nums[hi]: lo = mid + <span class="n">1</span></code></td><td>Inside the sorted right half: go right.</td></tr>
+      <tr><td><code><span class="k">else</span>: hi = mid - <span class="n">1</span></code></td><td>Otherwise go left.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">From <code>measure.py</code>: the smallest item of <code>[6, 7, 9, 1, 2, 4, 5]</code> is at index 3 (3 probes); target 2 is at index 4, target 7 at index 1, target 3 is missing (-1).</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Find the yes/no question first. Then pick Template A for "is it exactly here?" and Template B for "where does the answer start?". Search on the answer is Template B over candidate answers.</div>
+</section>
+
+<section class="step" id="p9-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: binary search or not?</h2>
+  <p>Read each made-up task. Decide if binary search fits, and which template. Then reveal.</p>
+  <div class="predict">
+    <h3>A. An app has versions 1 to n. Some version broke the login, and every version after it is broken too. You can test one version at a time. Find the first broken one.</h3>
+    <textarea aria-label="Does binary search fit task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, Template B.</strong> "Is version v broken?" is no, no, ..., yes, yes. Find the first yes.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. Parcels must leave in the given order over D days. Find the smallest truck capacity that ships them all in time.</h3>
+    <textarea aria-label="Does binary search fit task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, search on the answer.</strong> Signal: "smallest capacity that works". feasible(c) packs the parcels greedily day by day. lo = the heaviest parcel, hi = the total weight.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A shuffled list of IDs. Does ID 4721 appear in it?</h3>
+    <textarea aria-label="Does binary search fit task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No.</strong> The list is not sorted, so the middle tells you nothing about which half to keep. One question: a linear scan, O(n). Many questions: a set. Sorting first costs O(n log n), worth it only for many searches.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Without any square root function, find the whole-number part of the square root of x (x up to 2<sup>31</sup>).</h3>
+    <textarea aria-label="Does binary search fit task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, search on the answer.</strong> "Is k x k &gt; x?" is no, then yes. The answer is the first yes minus one (the last k with k x k &lt;= x).</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A sorted list of prices. Find two prices that add up to exactly 100.</h3>
+    <textarea aria-label="Does binary search fit task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not the best fit.</strong> It is sorted, so binary searching each partner works in O(n log n). But two pointers, one at each end, does it in O(n). Sorted input is a signal for both patterns; "a pair" points to two pointers.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A list was sorted, then cut and swapped round, like a clock starting at 9. Find where the original first item ended up.</h3>
+    <textarea aria-label="Does binary search fit task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, the rotated variant.</strong> The original first item is the smallest. Template B with the test "nums[i] &lt;= nums[-1]".</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. Find the longest stretch of a string with no repeated letter.</h3>
+    <textarea aria-label="Does binary search fit task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: sliding window.</strong> You could binary search the length (if length L works, so does L - 1), but each check costs O(n), giving O(n log n). A window that grows and shrinks does it in one O(n) pass.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Sorted data, "O(log n)", "minimum or maximum value that works", a huge answer range with a quick check, rotated sorted lists. Not for unsorted lookups (hash set) or sorted pairs (two pointers).</div>
+</section>
+
+<section class="step" id="p9-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Classic traps</h2>
+  <p>Binary search is short, and famous for bugs anyway. A bug of this kind even sat for years inside Java's own library search. Here are the ones that bite in interviews, each run on a real input.</p>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: <code>lo = mid</code> with a mid that rounds down</span>
+    <p>Looking for the <em>last</em> item &lt;= target, it is tempting to write <code>lo = mid</code>. With two items left, <code>(lo + hi) // 2</code> equals lo, so lo never moves.</p>
+<pre><code>mid = (lo + hi) // 2       <span class="c"># wrong with lo = mid</span>
+mid = (lo + hi + 1) // 2   <span class="c"># fixed: round up when the "keep" move is lo = mid</span>
+
+<span class="c"># measure.py on [1, 3], target 5</span>
+round-down mid: after 1000 rounds lo = 0, hi = 1 (stuck)
+round-up mid:   1 round, answer index 1</code></pre>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: hi one too far</span>
+    <p>Template A needs <code>hi = len(nums) - 1</code>. With <code>hi = len(nums)</code> and <code>lo &lt;= hi</code>, a target bigger than everything walks mid off the end.</p>
+<pre><code><span class="c"># measure.py on [1, 3, 5], target 9</span>
+hi = len(nums)     -> IndexError: list index out of range
+hi = len(nums) - 1 -> -1</code></pre>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: mixing the two templates</span>
+    <p><code>while lo &lt;= hi</code> belongs with <code>hi = mid - 1</code>. <code>while lo &lt; hi</code> belongs with <code>hi = mid</code>. Mix them and, once lo == hi on a true item, nothing changes.</p>
+<pre><code><span class="c"># measure.py on [1, 3, 5], target 3: "lo &lt;= hi" with "hi = mid"</span>
+after 1000 rounds lo = 1, hi = 1 (stuck)
+"lo &lt; hi" with "hi = mid" -> index 1 in 2 probes</code></pre>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: which half is sorted, with two items</span>
+    <p>In a rotated search, writing <code>nums[lo] &lt; nums[mid]</code> instead of <code>&lt;=</code> breaks when lo == mid: a one-item left half counts as "not sorted", so the code trusts the wrong half.</p>
+<pre><code><span class="c"># measure.py on [3, 1], target 1</span>
+nums[lo] &lt;  nums[mid] -> -1   <span class="c"># wrong: 1 is right there</span>
+nums[lo] &lt;= nums[mid] -> 1</code></pre>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 5: a search range that includes an impossible answer</span>
+    <p>In search on the answer, <code>lo = 0</code> lets mid become 0, and <code>feasible(0)</code> divides by zero.</p>
+<pre><code><span class="c"># measure.py on piles [1, 1], h = 5</span>
+lo = 0 -> ZeroDivisionError: integer division or modulo by zero
+lo = 1 -> 1</code></pre>
+    <p>In Java or C++, also watch <code>(lo + hi) / 2</code>: the sum can overflow. Write <code>lo + (hi - lo) / 2</code>. Python integers never overflow.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Every round must shrink the range. Test by hand on one item, two items, and a target off each end.</div>
+</section>
+
+<section class="step" id="p9-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Why halving is so fast</h2>
+  <details class="math"><summary>Step 1: count the probes</summary><div>
+    <p>Each probe keeps at most half of what was left. Start with n items. After one probe at most n / 2 are left, after two n / 4, and so on until none are left. The number of probes is about log<sub>2</sub> n, plus one.</p>
+<pre><code><span class="c"># measure.py: worst-case probes (target bigger than everything)</span>
+n = 10: 4      n = 100: 7      n = 1000: 10
+n = 1,000,000: 20      n = 1,000,000,000: 30      n = 10^18: 60
+doubling n: 1 -> 1, 2 -> 2, 4 -> 3, 8 -> 4, 16 -> 5, 32 -> 6</code></pre>
+    <p>Doubling the list adds just one probe. A thousand times more items adds about ten.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: search on the answer</summary><div>
+    <p>The binary search makes about log<sub>2</sub> M calls to feasible, where M is the size of the answer range. Each call here walks all n boxes. Total: O(n log M).</p>
+    <p>Each call doubles the precision, so a range of about 10<sup>9</sup> speeds takes about 30 calls (<code>measure.py</code> counts 29 and 30 on its two big examples). With n boxes that is about 30 x n steps, where trying every speed from 1 upward could take up to 10<sup>9</sup> x n.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: memory and hidden costs</summary><div>
+    <p>The loop uses O(1) extra memory: just lo, hi and mid. A recursive version that passes slices like <code>nums[mid + 1:]</code> copies half the list each time, which costs O(n) in total and hides the log n speed. Pass indices, not slices.</p>
+    <p>Sorting first costs O(n log n). That is only worth it if you then search many times.</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Costs at a glance</span>Templates A and B: O(log n) time, O(1) space. Search on the answer: O(cost of feasible x log M). A 2D matrix of r x c: O(log(r x c)).</div>
+</section>
+
+<section class="step" id="p9-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern</h2>
+  <p>Each one is binary search in a different costume. Pages for them come in later sessions; the links open LeetCode.</p>
+  <h3><span class="badge diff-easy">easy</span></h3>
+  <table>
+    <thead><tr><th style="width:4.5em">No.</th><th style="width:38%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>704</td><td><a href="https://leetcode.com/problems/binary-search/" target="_blank" rel="noopener">Binary Search</a></td><td>Template A with no costume at all. Get it right first time.</td></tr>
+      <tr><td>35</td><td><a href="https://leetcode.com/problems/search-insert-position/" target="_blank" rel="noopener">Search Insert Position</a> <span class="caption">(extra)</span></td><td>Exactly the lower bound, including "past the end".</td></tr>
+      <tr><td>278</td><td><a href="https://leetcode.com/problems/first-bad-version/" target="_blank" rel="noopener">First Bad Version</a> <span class="caption">(extra)</span></td><td>Template B where the test is an API call.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-medium">medium</span></h3>
+  <table>
+    <thead><tr><th style="width:4.5em">No.</th><th style="width:38%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>74</td><td><a href="https://leetcode.com/problems/search-a-2d-matrix/" target="_blank" rel="noopener">Search a 2D Matrix</a></td><td>Rows follow on from each other, so read it as one sorted list: row = i // cols, col = i % cols.</td></tr>
+      <tr><td>875</td><td><a href="https://leetcode.com/problems/koko-eating-bananas/" target="_blank" rel="noopener">Koko Eating Bananas</a></td><td>Search on the answer, just like the letter-sorting story. Ceiling division.</td></tr>
+      <tr><td>153</td><td><a href="https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/" target="_blank" rel="noopener">Find Minimum in Rotated Sorted Array</a></td><td>First index where nums[i] &lt;= nums[-1].</td></tr>
+      <tr><td>33</td><td><a href="https://leetcode.com/problems/search-in-rotated-sorted-array/" target="_blank" rel="noopener">Search in Rotated Sorted Array</a></td><td>One half is always sorted; is the target inside it? Mind the <code>&lt;=</code>.</td></tr>
+      <tr><td>981</td><td><a href="https://leetcode.com/problems/time-based-key-value-store/" target="_blank" rel="noopener">Time Based Key-Value Store</a></td><td>A dict of lists; timestamps arrive sorted, so find the last one &lt;= t.</td></tr>
+      <tr><td>34</td><td><a href="https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/" target="_blank" rel="noopener">Find First and Last Position of Element in Sorted Array</a> <span class="caption">(extra)</span></td><td>Two lower bounds: of target and of target + 1.</td></tr>
+      <tr><td>162</td><td><a href="https://leetcode.com/problems/find-peak-element/" target="_blank" rel="noopener">Find Peak Element</a> <span class="caption">(extra)</span></td><td>Not sorted at all. Compare nums[mid] with nums[mid + 1] and walk uphill.</td></tr>
+      <tr><td>1011</td><td><a href="https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/" target="_blank" rel="noopener">Capacity To Ship Packages Within D Days</a> <span class="caption">(extra)</span></td><td>Search on the answer with lo = the heaviest parcel.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-hard">hard</span></h3>
+  <table>
+    <thead><tr><th style="width:4.5em">No.</th><th style="width:38%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>4</td><td><a href="https://leetcode.com/problems/median-of-two-sorted-arrays/" target="_blank" rel="noopener">Median of Two Sorted Arrays</a></td><td>Binary search where to cut the shorter list, so both left parts together hold half the items.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p9-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. A sorted list has 1000 items. What is the most probes Template A can ever need?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>10.</strong> 2<sup>10</sup> = 1024 is the first power of two above 1000. <code>measure.py</code> tries every target from -1 to 1000 and the maximum is 10.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. What does <code>lower_bound([1, 3, 3, 5, 8], 4)</code> return?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>3.</strong> The first value that is at least 4 is the 5 at index 3. It is also where 4 would be inserted to keep the list sorted. <code>measure.py</code>: 3 probes.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Boxes of 3, 8 and 6 letters, 6 hours allowed. What is the slowest speed that works, and which speeds does Template C try?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Speed 3; it tries 4, 2, then 3.</strong> Hours at speeds 1 to 8 are 17, 9, 6, 5, 5, 4, 4, 3. lo = 1, hi = 8: mid 4 works (hi = 4), mid 2 needs 9 hours (lo = 3), mid 3 needs 6 hours and works (hi = 3). Check it in the sandbox.</p></div>
+  </div>
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>binary search</dt><dd>Repeatedly ask about the middle and throw away the half that cannot hold the answer.</dd>
+    <dt>probe</dt><dd>One look at a middle item; one round of the loop.</dd>
+    <dt>search space, lo, hi, mid</dt><dd>Where the answer could still be, its two ends, and the middle (rounded down).</dd>
+    <dt>invariant</dt><dd>A promise true before and after every round, such as "the answer is in lo..hi".</dd>
+    <dt>monotonic predicate</dt><dd>A yes/no test that is false, then true from some point on, and never switches back.</dd>
+    <dt>lower bound</dt><dd>First index with value &gt;= target. Python: <code>bisect.bisect_left</code>.</dd>
+    <dt>search on the answer</dt><dd>Binary search over candidate answers using feasible(x).</dd>
+    <dt>feasible(x)</dt><dd>Says whether answer x works; must be monotonic in x.</dd>
+    <dt>rotated sorted array</dt><dd>A sorted list cut once and swapped round; one half around any mid is still sorted.</dd>
+    <dt>log n</dt><dd>How many halvings take n down to 1: about 10 for 1000, 20 for a million.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p9-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> if one question tells you which half holds the answer, throw the other half away. n items need about log<sub>2</sub> n probes: 10 for 1000, 20 for a million.</p>
+    <p><strong>Signals:</strong> sorted input, "O(log n)", "minimum or maximum value that works", a huge answer range with a quick check, rotated sorted lists.</p>
+    <p><strong>Template A:</strong> <code>lo, hi = 0, n - 1</code>; <code>while lo &lt;= hi</code>; move to <code>mid + 1</code> or <code>mid - 1</code>. <strong>Template B:</strong> <code>lo, hi = 0, n</code>; <code>while lo &lt; hi</code>; <code>hi = mid</code> on true, <code>lo = mid + 1</code> on false; return lo. <strong>Template C:</strong> Template B over answers with <code>feasible(x)</code>.</p>
+    <p><strong>Cost:</strong> O(log n) time, O(1) space. Search on the answer: O(cost of feasible x log of the range).</p>
+    <p><strong>Traps:</strong> <code>lo = mid</code> with a round-down mid; hi one past the end with <code>&lt;=</code>; mixing templates; <code>&lt;</code> instead of <code>&lt;=</code> in rotated halves; an impossible value (like speed 0) inside the range.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, try all three templates on your own input. Give the exact-match mode an unsorted list to see why sorting matters.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(9)">Mark lesson complete</button>
+    </div>
+    <p class="caption">First problem in this pattern: 704 Binary Search (its page comes in a later session).</p>
+  </div>
+</section>
+</div>

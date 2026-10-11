@@ -1,0 +1,426 @@
+<div class="lesson-content xp" id="lesson11">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Trees</h1>
+    <p class="lesson-subtitle">Goal: solve almost any tree question with one move. Ask the left child, ask the right child, combine the two answers. Then learn the four twists on that move that interviewers love.</p>
+    <div class="lesson-meta"><span class="badge">Tier 2</span><span class="badge">pattern</span><span class="badge diff-medium">core</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Trees lesson"><a href="#p11-s-idea">Org chart</a><a href="#p11-s-words">Pattern words</a><a href="#p11-s-map">Mental map</a><a href="#p11-s-template">Templates</a><a href="#p11-s-spot">Spot it</a><a href="#p11-s-traps">Traps</a><a href="#p11-s-cost">Complexity</a><a href="#p11-s-problems">Problems</a><a href="#p11-s-check">Check yourself</a><a href="#p11-recap">Recap</a></nav>
+
+<section class="step" id="p11-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Ask the left, ask the right, combine</h2>
+  <p>A tree is a set of boxes joined by arrows. One box sits at the top. Every box points down to at most two smaller boxes.</p>
+  <p>The trick: a box below you is the top of its own smaller tree. So a question about the whole tree splits into the same question about two smaller trees.</p>
+  <div class="card analogy"><strong>Analogy: a company org chart.</strong> The CEO wants to know how many layers deep the company is. She does not walk every corridor. She asks her two direct reports: "how deep is your team?" Each of them asks their own two reports, and so on. A person with no reports answers "just me: 1". Every manager takes the bigger answer from below, adds 1 for themselves, and reports up.</div>
+  <div class="predict">
+    <h3>Before you press play: the tree below has 9 people. How many layers deep is it? And how many people must be asked at least once?</h3>
+    <textarea aria-label="Your guess for the depth and the number of people asked"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>4 layers, and all 9 people are asked exactly once.</strong> Every answer travels up one arrow, so nobody is asked twice.</p></div>
+  </div>
+  <h3>Try it: the same tree, two ways</h3>
+  <p>The tree in level order is <code>[8, 3, 10, 1, 6, null, 14, null, null, 4, 7, 13]</code>. Lit circle: the person being asked. Orange ring: a manager waiting for an answer. Faded: finished.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: ask the reports.</strong> Each person asks left, then right, then reports 1 + the bigger answer. Watch the call stack grow and shrink.</p>
+      <div id="p11tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: walk every path.</strong> Start at the top and walk down to each person with no reports, one path at a time. Shared bosses get walked again and again.</p>
+      <div id="p11tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p11roA"><span class="lab">ask the reports</span><span class="val">-</span> <span class="unit">node visits</span></div>
+    <div class="ro" id="p11roB"><span class="lab">walk every path</span><span class="val">-</span> <span class="unit">node visits</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this tree, in the page and in <code>measure.py</code> (9 visits against 15). The gap grows with the tree: the diameter race in section 4 shows a 512x gap.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Trust the recursive call. Assume <code>f(node.left)</code> already returns the right answer for the left subtree. Your only job is the base case and the combine step.</div>
+  <p class="newwords">New words: <span class="chip">root</span><span class="chip">subtree</span><span class="chip">leaf</span><span class="chip">call stack</span></p>
+</section>
+
+<section class="step" id="p11-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use for trees</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Org chart</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A tree where every node has at most two children, called left and right.">binary tree</dfn></td><td>Each box has at most two boxes under it</td><td>Every manager has at most two reports</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="One box in the tree. In Python: an object with val, left and right.">node</dfn></td><td>One box: a value and two arrows</td><td>One person</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The node at the top of the tree, with no parent. Problems hand you the root.">root</dfn></td><td>The top box</td><td>The CEO</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A node with no children: both left and right are None.">leaf</dfn></td><td>A box with nothing under it</td><td>Someone with no reports</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A node together with everything below it. Every child is the root of its own subtree.">subtree</dfn></td><td>A box and everything below it</td><td>A manager's whole team</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Depth of a node: how many nodes from the root down to it. Height (or max depth) of a tree: the most nodes on any root-to-leaf path. Some problems count edges instead; read the statement.">depth / height</dfn></td><td>How far down a box is / how tall the tree is</td><td>How many layers deep</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Depth-first search: go all the way down one branch before trying the next. Usually written with recursion.">DFS</dfn></td><td>Go deep first, then come back up</td><td>Ask down the chain, wait for the answer</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Breadth-first search: visit the tree level by level using a queue.">BFS</dfn></td><td>Visit level by level</td><td>A meeting per layer: CEO, then VPs, then managers</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The order you visit nodes in a DFS. Preorder: node before its children. Inorder: between left and right. Postorder: after both children.">pre / in / postorder</dfn></td><td>When you handle a box: before, between or after its children</td><td>Speak before, between or after your reports speak</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Binary search tree: for every node, all values in the left subtree are smaller and all values in the right subtree are larger.">BST</dfn></td><td>Smaller things always go left, larger right</td><td>Reports sorted by employee number</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The stack of function calls still waiting for an answer. Its height is the recursion depth, which costs O(h) memory for a tree of height h.">call stack</dfn></td><td>The list of calls still waiting</td><td>Managers waiting on their reports</td></tr>
+    </tbody>
+  </table>
+  <p>The empty tree is <code>None</code>. It is the <dfn class="term" tabindex="0" data-def="The smallest input a recursive function answers directly, without calling itself. For trees it is almost always None.">base case</dfn> of nearly every tree function, so most bugs start there.</p>
+  <p class="newwords">New words: <span class="chip">binary tree</span><span class="chip">node</span><span class="chip">leaf</span><span class="chip">subtree</span><span class="chip">depth</span><span class="chip">DFS</span><span class="chip">BFS</span><span class="chip">BST</span><span class="chip">base case</span></p>
+</section>
+
+<section class="step" id="p11-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <p>Read this when a new tree problem lands and you do not know where to start.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The input is a <code>root</code>. Words like depth, height, path, level, ancestor, subtree, "validate" or "build the tree".</span></li>
+    <li><b>Ask</b><span>"If my two children already gave me their answers, could I build mine?" If yes, it is DFS. If the question says "level", "row" or "closest to the top", it is BFS.</span></li>
+    <li><b>Pick the variant</b><span>Five shapes cover nearly every problem:</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>answer = f(left, right)</i>Return-a-value DFS. Max depth, same tree, invert, balanced.</li>
+        <li><i>a rule from above: bounds, best so far</i>Carry state down as arguments. Validate BST, count good nodes, path sum.</li>
+        <li><i>"longest / largest path anywhere"</i>Global answer: return a height, update a best on the side. Diameter, max path sum.</li>
+        <li><i>"each level", "right side", "fewest steps"</i>BFS with a queue, one level per loop.</li>
+        <li><i>BST and "kth smallest" or "in order"</i>Inorder walk visits values sorted. Or go left or right by comparing.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>A call on a node returns the correct answer for that node's subtree, and nothing else. The global answer, if any, lives outside the return value.</span></li>
+    <li><b>Steps</b><span>1. Write the base case for <code>None</code>. 2. Call left and right. 3. Combine. 4. Decide what flows down (arguments) and what flows up (return value). 5. Test on an empty tree, one node and a long chain.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Did you handle <code>None</code> before touching <code>.val</code>? Is the return value the same kind of thing at every node? For a BST, did you pass the bounds down, not just compare with the parent? Could the tree be a chain 10<sup>4</sup> deep (recursion limit)?</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p11-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Templates: one per variant</h2>
+  <p>Every template uses this node class. Trees on this page come in LeetCode's level-order format, with <code>null</code> for a missing child.</p>
+<pre><code><span class="k">class</span> TreeNode:
+    <span class="k">def</span> __init__(self, val=<span class="n">0</span>, left=<span class="k">None</span>, right=<span class="k">None</span>):
+        self.val, self.left, self.right = val, left, right</code></pre>
+
+  <h3>Template A: return a value (combine the children)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> max_depth(node):</code></td><td>Answer for the subtree that starts at <code>node</code>.</td></tr>
+      <tr><td><code><span class="k">if not</span> node:</code></td><td>Base case first: an empty spot.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="n">0</span></code></td><td>An empty tree has depth 0. This is what a leaf's children say.</td></tr>
+      <tr><td><code>left = max_depth(node.left)</code></td><td>Ask the left report. Trust the answer.</td></tr>
+      <tr><td><code>right = max_depth(node.right)</code></td><td>Ask the right report.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="n">1</span> + max(left, right)</code></td><td>Combine: me plus the deeper side. This is postorder: the work happens after both children.</td></tr>
+    </tbody>
+  </table>
+  <p>Same shape, different combine: same tree compares <code>a.val == b.val and same(a.left, b.left) and same(a.right, b.right)</code>; invert swaps the two answers; count nodes returns <code>1 + left + right</code>.</p>
+  <div id="p11tpC"></div>
+
+  <h3>Template B: carry state down (validate a BST)</h3>
+  <p>Sometimes a node cannot decide alone. It needs a rule from above, such as "every value here must be between 5 and 8". Pass that rule down as arguments.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> is_bst(node, lo, hi):</code></td><td><code>lo</code> and <code>hi</code> are the bounds every ancestor has set so far. Start with minus and plus infinity.</td></tr>
+      <tr><td><code><span class="k">if not</span> node: <span class="k">return</span> <span class="k">True</span></code></td><td>An empty tree breaks no rule.</td></tr>
+      <tr><td><code><span class="k">if not</span> lo &lt; node.val &lt; hi:</code></td><td>Check this node against the bounds from <em>all</em> its ancestors, not just its parent.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">False</span></code></td><td>One broken rule anywhere is enough.</td></tr>
+      <tr><td><code><span class="k">if not</span> is_bst(node.left, lo, node.val):</code></td><td>Going left: the ceiling drops to my value. A failure on the left stops the search.</td></tr>
+      <tr><td><code><span class="k">return</span> is_bst(node.right, node.val, hi)</code></td><td>Going right: the floor rises to my value.</td></tr>
+    </tbody>
+  </table>
+  <p>Count good nodes (1448) is the same move: pass down the biggest value seen on the path so far.</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p11bst="sneaky">Sneaky tree [5, 4, 6, null, null, 3, 7]</button>
+    <button class="btn btn-sm" type="button" data-p11bst="good">Real BST (the picture tree)</button>
+  </div>
+  <div id="p11tpD"></div>
+
+  <h3>Template C: return one thing, record another (diameter)</h3>
+  <p>The longest path between any two nodes may not pass through the root. So each node answers two different questions: "how tall am I?" for its parent, and "how long is the best path bending at me?" for the global answer.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>best = <span class="n">0</span></code></td><td>The global answer lives outside the recursion.</td></tr>
+      <tr><td><code><span class="k">def</span> height(node):</code></td><td>Returns a height. Never the diameter.</td></tr>
+      <tr><td><code><span class="k">nonlocal</span> best</code></td><td>Lets the helper write to <code>best</code> (or use <code>self.best</code>, or a one-item list).</td></tr>
+      <tr><td><code><span class="k">if not</span> node: <span class="k">return</span> <span class="n">0</span></code></td><td>Empty: height 0.</td></tr>
+      <tr><td><code>l = height(node.left)</code><br><code>r = height(node.right)</code></td><td>Heights of the two arms.</td></tr>
+      <tr><td><code>best = max(best, l + r)</code></td><td>A path that bends here uses both arms: l + r edges. Record it on the side.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="n">1</span> + max(l, r)</code></td><td>Tell the parent my height. A path going up can only use one arm.</td></tr>
+    </tbody>
+  </table>
+  <p>The tree below is <code>[1, 2, null, 3, 4, 5, null, null, 6]</code>. Its longest path bends at 2, not at the root. Watch <code>best</code> change at node 2.</p>
+  <div id="p11tpG"></div>
+  <h3>Race: one pass against "recompute the height at every node"</h3>
+  <p>The slow version calls a fresh <code>height()</code> at every node. Pick a tree shape and size, then race. Both count node visits.</p>
+  <div class="card">
+    <canvas id="p11cvA" role="img" aria-label="Race between the one-pass diameter and the naive diameter: two bars that fill as each method counts node visits"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p11shape="balanced">Balanced tree</button>
+      <button class="btn btn-sm" type="button" data-p11shape="chain">Long chain</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p11n="15">n = 15</button>
+      <button class="btn btn-sm" type="button" data-p11n="127">n = 127</button>
+      <button class="btn btn-sm" type="button" data-p11n="1023">n = 1023</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p11raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p11roS"><span class="lab">shape, n</span><span class="val">balanced, 15</span></div>
+      <div class="ro" id="p11roO"><span class="lab">one-pass visits</span><span class="val">15</span></div>
+      <div class="ro" id="p11roV"><span class="lab">naive visits</span><span class="val">49</span></div>
+      <div class="ro" id="p11roR"><span class="lab">naive / one-pass</span><span class="val">3.3x</span></div>
+    </div>
+    <p class="caption">The page builds each tree and runs both methods with a counter. <code>measure.py</code> prints the same table:</p>
+<pre><code>balanced n =   15: one pass   15   naive     49   3.3x
+balanced n =  127: one pass  127   naive    769   6.1x
+balanced n = 1023: one pass 1023   naive   9217   9.0x
+chain    n =   15: one pass   15   naive    120   8.0x
+chain    n =  127: one pass  127   naive   8128   64.0x
+chain    n = 1023: one pass 1023   naive 523776   512.0x</code></pre>
+  </div>
+
+  <h3>Template D: BFS, one level per loop</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>q = deque([root])</code></td><td>A queue: first in, first out. It holds the next nodes to visit. (Return <code>[]</code> first if root is None.)</td></tr>
+      <tr><td><code><span class="k">while</span> q:</code></td><td>One loop turn per level.</td></tr>
+      <tr><td><code><span class="k">for</span> _ <span class="k">in</span> range(len(q)):</code></td><td>Freeze the level size <em>now</em>. Children added during the loop belong to the next level.</td></tr>
+      <tr><td><code>node = q.popleft()</code></td><td>Take from the front. <code>list.pop(0)</code> would cost O(n) each time.</td></tr>
+      <tr><td><code>level.append(node.val)</code></td><td>Record it in this level.</td></tr>
+      <tr><td><code><span class="k">if</span> node.left: q.append(node.left)</code> (same for right)</td><td>Queue the children at the back.</td></tr>
+      <tr><td><code>out.append(level)</code></td><td>One list per level. Right side view keeps only <code>level[-1]</code>.</td></tr>
+    </tbody>
+  </table>
+  <div id="p11tpE"></div>
+
+  <h3>Template E: the order you visit in (BST gives sorted)</h3>
+  <p>Where you put the "handle this node" line decides the order. In a BST, inorder (left, me, right) visits values smallest first. That is why "kth smallest in a BST" is an inorder walk that stops at step k.</p>
+  <div class="predict">
+    <h3>The player starts on preorder. Predict the inorder order of the picture tree before you press Inorder.</h3>
+    <textarea aria-label="Your guess for the inorder order"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>1, 3, 4, 6, 7, 8, 10, 13, 14</strong>: sorted, because the tree is a BST. So the 3rd smallest is <strong>4</strong>. Preorder is 8, 3, 1, 6, 4, 7, 10, 14, 13 and postorder is 1, 4, 7, 6, 3, 13, 14, 10, 8 (all printed by <code>measure.py</code>).</p></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p11ord="pre">Preorder</button>
+    <button class="btn btn-sm" type="button" data-p11ord="in">Inorder</button>
+    <button class="btn btn-sm" type="button" data-p11ord="post">Postorder</button>
+  </div>
+  <div id="p11tpF"></div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Decide two things before coding: what flows down (arguments) and what flows up (the return value). If the answer is not what flows up, keep it in a variable outside.</div>
+  <p class="newwords">New words: <span class="chip">queue</span><span class="chip">deque</span><span class="chip">nonlocal</span><span class="chip">diameter</span></p>
+</section>
+
+<section class="step" id="p11-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: which tree move, if any?</h2>
+  <p>Read each made-up task. Decide: is it a tree problem, and which variant? Then reveal.</p>
+  <div class="predict">
+    <h3>A. A family tree with one founder. Count the people who are older than every ancestor above them.</h3>
+    <textarea aria-label="Which variant for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree, carry state down.</strong> A node cannot decide alone; it needs "the oldest so far on my path". Pass it as an argument. This is Count Good Nodes in a costume.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A building's floors form a tree of rooms. From the side, which room do you see on each floor if you stand on the right?</h3>
+    <textarea aria-label="Which variant for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree, BFS by level.</strong> Signal: "each floor" means each level. Keep the last node of each level. (A DFS that visits right first and records the first node per depth also works.)</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. In a tree of cities connected by roads, find the two cities farthest apart (most roads between them).</h3>
+    <textarea aria-label="Which variant for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree, global answer.</strong> The longest path may bend anywhere. Return a height, update <code>best = max(best, l + r)</code> on the side. This is the diameter.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Office IDs are stored in a BST. Find the 5th smallest ID.</h3>
+    <textarea aria-label="Which variant for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree, BST inorder.</strong> Inorder visits a BST in sorted order. Count as you go and stop at 5.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A list of friendships between 50 people, where friend groups can form loops. Is everyone connected?</h3>
+    <textarea aria-label="Is task E a tree problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern.</strong> Loops and "a list of pairs" mean a <em>graph</em>: no root, no left and right, and you need a visited set or you walk in circles. That is the Graphs pattern. A tree never has a loop.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A sorted array of prices. Find whether 42 is in it, in O(log n) time.</h3>
+    <textarea aria-label="Is task F a tree problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern.</strong> It smells like a BST ("go left if smaller"), but the input is a sorted array. Binary search on indexes does it with no tree at all.</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. Given two trees, decide whether the second appears somewhere inside the first, with the same shape and values.</h3>
+    <textarea aria-label="Which variant for task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Tree, return a value, twice.</strong> A "same tree" DFS that returns True or False, called from a second DFS over every node of the big tree. This is Subtree of Another Tree.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>A root is given; depth, height, path, level, ancestor, subtree, "validate" or "build". No root and possible loops means graph, not tree.</div>
+</section>
+
+<section class="step" id="p11-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Five classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: no base case for None</span>
+    <p>The code reaches a leaf, calls itself on the empty child, and then reads <code>.left</code> of nothing.</p>
+<pre><code><span class="k">def</span> depth(node):
+    <span class="k">return</span> <span class="n">1</span> + max(depth(node.left), depth(node.right))   <span class="c"># no base case</span>
+
+<span class="c"># measure.py, on [1, 2]:</span>
+AttributeError: 'NoneType' object has no attribute 'left'</code></pre>
+    <p><strong>Fix:</strong> start every tree function with <code>if not node: return &lt;base&gt;</code>. Also check <code>node.left</code> is not None before reading <code>node.left.val</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: only measuring through the root</span>
+    <p>For the diameter, it is tempting to return <code>height(root.left) + height(root.right)</code>. That misses paths that bend lower down.</p>
+<pre><code><span class="c"># measure.py, tree [1, 2, null, 3, 4, 5, null, null, 6]:</span>
+root-only diameter: 3     <span class="c"># wrong</span>
+one-pass diameter:  4     <span class="c"># the path 5-3-2-4-6 bends at node 2</span></code></pre>
+    <p><strong>Fix:</strong> record <code>l + r</code> at every node in a <code>best</code> outside the recursion, and return the height (Template C). The same trap hits Max Path Sum (124), where the return value also drops negative arms: <code>max(0, ...)</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: checking a BST against the parent only</span>
+<pre><code><span class="k">if</span> node.left <span class="k">and</span> node.left.val &gt;= node.val: <span class="k">return</span> <span class="k">False</span>
+<span class="k">if</span> node.right <span class="k">and</span> node.right.val &lt;= node.val: <span class="k">return</span> <span class="k">False</span>
+
+<span class="c"># measure.py, tree [5, 4, 6, null, null, 3, 7]:</span>
+buggy local check: True    <span class="c"># 3 &lt; 6 is fine locally, but 3 sits right of 5</span>
+bounds check:      False</code></pre>
+    <p><strong>Fix:</strong> pass <code>lo</code> and <code>hi</code> down (Template B). Use strict <code>&lt;</code> when duplicates are not allowed, and real infinities, not 0 or a magic number.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: BFS without freezing the level size</span>
+    <p>If you drop the <code>for _ in range(len(q))</code> line, the queue never tells you where one level ends.</p>
+<pre><code><span class="c"># measure.py, picture tree, levels without the size snapshot:</span>
+[[8, 3, 10, 1, 6, 14, 4, 7, 13]]
+<span class="c"># with it:</span>
+[[8], [3, 10], [1, 6, 14], [4, 7, 13]]</code></pre>
+    <p><strong>Fix:</strong> read <code>len(q)</code> once at the top of each level, before you add any children.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 5: a very deep tree and Python's recursion limit</span>
+<pre><code><span class="c"># measure.py, a left-only chain of 5000 nodes:</span>
+recursive depth (default limit 1000) -> RecursionError: maximum recursion depth exceeded
+BFS level count -> 5000</code></pre>
+    <p><strong>Fix:</strong> LeetCode trees are usually under 10<sup>4</sup> nodes, and many judges raise the limit. Say it out loud in an interview, and offer an iterative version (BFS, or DFS with your own stack) if the tree can be a long chain.</p>
+  </div>
+</section>
+
+<section class="step" id="p11-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>7. Complexity: count the visits</h2>
+  <details class="math"><summary>Step 1: every node is visited once, every empty spot once</summary><div>
+    <p>A tree with n nodes has n + 1 empty child spots. Template A calls itself once per node and once per empty spot.</p>
+    <div class="eq">calls = n real + (n + 1) empty = 2n + 1</div>
+    <p><code>measure.py</code> on a perfect tree of 15 nodes: 15 real visits and 16 empty calls, 31 in all. Each call does O(1) work, so the time is <strong>O(n)</strong>.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: memory is the height, not the size</summary><div>
+    <p>DFS keeps one call per level on the call stack, so it needs O(h) memory, where h is the height. Same 15 nodes, two shapes:</p>
+    <div class="eq">perfect tree: h = 4 &nbsp;&nbsp;&nbsp; long chain: h = 15</div>
+    <p>BFS keeps a whole level in the queue. The widest level of the perfect 15-node tree holds 8 nodes; the chain's widest level holds 1. So BFS costs <strong>O(w)</strong>, the width. For a balanced tree, h is about log<sub>2</sub> n and w is about n / 2.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: the hidden cost of recomputing heights</summary><div>
+    <p>The naive diameter calls <code>height()</code> at every node. On a long chain, the node with s nodes below it pays s - 1 more visits:</p>
+    <div class="eq">n + (0 + 1 + ... + (n - 1)) = n(n + 1) / 2</div>
+    <p>For n = 1000 that is 500,500 visits against 1,000. For n = 100,000 it is 5,000,050,000 against 100,000. That is <strong>O(n<sup>2</sup>)</strong> against O(n), and why interviewers ask for the one-pass version.</p>
+  </div></details>
+  <table class="approaches">
+    <tr><th>Template</th><th>Time</th><th>Extra space</th><th>Note</th></tr>
+    <tr class="is-best"><td>A, B, C: one DFS</td><td>O(n)</td><td>O(h)</td><td>h = log n balanced, n worst case</td></tr>
+    <tr><td>D: BFS</td><td>O(n)</td><td>O(w)</td><td>w = widest level</td></tr>
+    <tr><td>E: kth smallest in a BST</td><td>O(h + k)</td><td>O(h)</td><td>Stop the inorder walk at k</td></tr>
+    <tr><td>Recompute a helper at every node</td><td>O(n<sup>2</sup>) worst</td><td>O(h)</td><td>Naive diameter or balanced check</td></tr>
+  </table>
+</section>
+
+<section class="step" id="p11-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each one is a template from section 4 in a costume. The twist column says what makes it interesting.</p>
+  <h3>Easy</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td>226</td><td><a href="https://leetcode.com/problems/invert-binary-tree/" target="_blank" rel="noopener">Invert Binary Tree</a></td><td>Template A where the combine step is a swap.</td></tr>
+      <tr><td>104</td><td><a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/" target="_blank" rel="noopener">Maximum Depth of Binary Tree</a></td><td>The org chart itself: 1 + max(left, right).</td></tr>
+      <tr><td>543</td><td><a href="https://leetcode.com/problems/diameter-of-binary-tree/" target="_blank" rel="noopener">Diameter of Binary Tree</a></td><td>Return a height, record a path: Template C.</td></tr>
+      <tr><td>110</td><td><a href="https://leetcode.com/problems/balanced-binary-tree/" target="_blank" rel="noopener">Balanced Binary Tree</a></td><td>Return the height, or -1 as a "not balanced" signal, to stay O(n).</td></tr>
+      <tr><td>100</td><td><a href="https://leetcode.com/problems/same-tree/" target="_blank" rel="noopener">Same Tree</a></td><td>Walk two trees at once; both None is the base case.</td></tr>
+      <tr><td>572</td><td><a href="https://leetcode.com/problems/subtree-of-another-tree/" target="_blank" rel="noopener">Subtree of Another Tree</a></td><td>A DFS that calls Same Tree at every node.</td></tr>
+    </tbody>
+  </table>
+  <h3>Medium</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td>235</td><td><a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/" target="_blank" rel="noopener">Lowest Common Ancestor of a BST</a></td><td>Walk down: the first node between the two values is the answer.</td></tr>
+      <tr><td>102</td><td><a href="https://leetcode.com/problems/binary-tree-level-order-traversal/" target="_blank" rel="noopener">Binary Tree Level Order Traversal</a></td><td>Template D exactly.</td></tr>
+      <tr><td>199</td><td><a href="https://leetcode.com/problems/binary-tree-right-side-view/" target="_blank" rel="noopener">Binary Tree Right Side View</a></td><td>BFS, keep the last node of each level.</td></tr>
+      <tr><td>1448</td><td><a href="https://leetcode.com/problems/count-good-nodes-in-binary-tree/" target="_blank" rel="noopener">Count Good Nodes in Binary Tree</a></td><td>Carry the path's maximum down.</td></tr>
+      <tr><td>98</td><td><a href="https://leetcode.com/problems/validate-binary-search-tree/" target="_blank" rel="noopener">Validate Binary Search Tree</a></td><td>Bounds from all ancestors, not just the parent.</td></tr>
+      <tr><td>230</td><td><a href="https://leetcode.com/problems/kth-smallest-element-in-a-bst/" target="_blank" rel="noopener">Kth Smallest Element in a BST</a></td><td>Inorder is sorted; stop at k.</td></tr>
+      <tr><td>105</td><td><a href="https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/" target="_blank" rel="noopener">Construct Binary Tree from Preorder and Inorder Traversal</a></td><td>Preorder names the root; inorder splits left from right. Use a dict of inorder indexes.</td></tr>
+    </tbody>
+  </table>
+  <h3>Hard (optional)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td>124</td><td><a href="https://leetcode.com/problems/binary-tree-maximum-path-sum/" target="_blank" rel="noopener">Binary Tree Maximum Path Sum</a></td><td>Template C with values and negative arms dropped.</td></tr>
+      <tr><td>297</td><td><a href="https://leetcode.com/problems/serialize-and-deserialize-binary-tree/" target="_blank" rel="noopener">Serialize and Deserialize Binary Tree</a></td><td>Preorder with a marker for None, then rebuild with an iterator.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">Problem pages for this pattern are built in later sessions; the links open LeetCode in a new tab.</p>
+</section>
+
+<section class="step" id="p11-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Template A runs on <code>[1, null, 2, null, 3]</code> (a chain leaning right). What does it return, and how many calls hit None?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Depth 3, with 4 empty calls</strong> (3 real nodes, so 3 + 1 empty spots). <code>measure.py</code> prints <code>(3, 3, 4)</code>. Try it in the sandbox.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. What are the levels of <code>[1, 2, 3, 4, null, null, 5]</code>, and what is its right side view?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p>Levels <strong>[[1], [2, 3], [4, 5]]</strong>, right side view <strong>[1, 3, 5]</strong>. Note that 4 hangs under 2 and 5 under 3, so they are on the same level even though they are far apart.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Is <code>[10, 5, 15, null, null, 6, 20]</code> a valid BST? What does the parent-only check say?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not valid</strong>: 6 sits in the right subtree of 10 but is smaller than 10. The parent-only check says True (6 &lt; 15 is fine locally). The bounds check says False, because 6 arrives with <code>lo = 10</code>.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>binary tree</dt><dd>Nodes where each one has at most a left and a right child.</dd>
+    <dt>node, root, leaf</dt><dd>A box with a value; the top box; a box with no children.</dd>
+    <dt>subtree</dt><dd>A node and everything below it.</dd>
+    <dt>depth / height</dt><dd>How far down a node is / the most nodes on any root-to-leaf path.</dd>
+    <dt>base case</dt><dd>The input a recursive function answers without calling itself. For trees, None.</dd>
+    <dt>DFS</dt><dd>Depth-first search: finish one branch before the next, usually with recursion.</dd>
+    <dt>BFS</dt><dd>Breadth-first search: level by level, with a queue.</dd>
+    <dt>preorder, inorder, postorder</dt><dd>Handle the node before, between or after its children.</dd>
+    <dt>BST</dt><dd>Left subtree smaller, right subtree larger, at every node. Inorder visits it sorted.</dd>
+    <dt>call stack</dt><dd>Calls still waiting for an answer. Its height is the recursion depth: O(h) memory.</dd>
+    <dt>queue, deque</dt><dd>First in, first out. <code>collections.deque</code> pops from the front in O(1).</dd>
+    <dt>diameter</dt><dd>The most edges on a path between any two nodes.</dd>
+    <dt>nonlocal</dt><dd>Lets an inner function write to a variable of the function around it.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p11-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> a tree question splits into the same question on the left and right subtrees. Base case for None, ask both children, combine.</p>
+    <p><strong>Signals:</strong> a root is given; depth, height, path, level, ancestor, subtree, validate, build. Loops or "list of pairs" mean a graph instead.</p>
+    <p><strong>Templates:</strong> A return a value (<code>1 + max(l, r)</code>); B carry state down (BST bounds, best so far); C return a height, record a global best (diameter); D BFS with <code>for _ in range(len(q))</code>; E inorder of a BST is sorted.</p>
+    <p><strong>Cost:</strong> O(n) time, O(h) stack for DFS or O(w) queue for BFS. Recomputing a helper at every node is O(n<sup>2</sup>) on a chain: 523,776 against 1,023 visits at n = 1023.</p>
+    <p><strong>Traps:</strong> no None base case; returning the global answer instead of the height; BST checked against the parent only; BFS without the level size; deep chains and the recursion limit.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own tree in level order and run max depth or level order. Try a long chain, then a perfect tree, and compare the stack height with the queue width.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(11)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

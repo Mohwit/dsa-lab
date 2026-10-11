@@ -1,0 +1,287 @@
+<div class="lesson-content xp" id="lesson2">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Problem 2 (LeetCode 217)</p>
+    <h1 class="lesson-title">Contains Duplicate</h1>
+    <p class="lesson-subtitle">Goal: given a list of numbers, say whether any number shows up more than once. You will solve it three ways and race them.</p>
+    <div class="lesson-meta">
+      <span class="badge diff-easy">easy</span>
+      <span class="badge">arrays and hashing</span>
+      <a href="https://leetcode.com/problems/contains-duplicate/" target="_blank" rel="noopener">LeetCode 217</a>
+    </div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in problem 2"><a href="#p2-s-plain">The problem</a><a href="#p2-s-predict">Predict</a><a href="#p2-s-try">Try it</a><a href="#p2-s-hints">Hints</a><a href="#p2-s-brute">Brute force</a><a href="#p2-s-insight">The insight</a><a href="#p2-s-approaches">Approaches</a><a href="#p2-s-map">Mental map</a><a href="#p2-s-code">Code</a><a href="#p2-s-cost">Complexity</a><a href="#p2-s-talk">Interview</a><a href="#p2-s-check">Check yourself</a><a href="#p2-recap">Recap</a></nav>
+
+<section class="step" id="p2-s-plain">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>1. Was any ticket used twice?</h2>
+  <p>You guard the door at a school concert. Every guest shows a ticket with a number on it. Tickets are copied sometimes, so the same number might come through twice.</p>
+  <p>After the night, you get the list of ticket numbers in the order guests arrived. Your job: answer yes or no. Did any number appear more than once?</p>
+  <div class="card analogy"><strong>Analogy: the door guard's notebook.</strong> A careful guard writes down each ticket number as it comes in. When a new guest arrives, the guard checks the notebook. If the number is already there, that is a copied ticket. Keep this picture: it is the whole solution in disguise.</div>
+  <p><strong>Input:</strong> a list of whole numbers called <code>nums</code>. <strong>Output:</strong> <code>True</code> if some value appears at least twice, <code>False</code> if every value is different. A <dfn class="term" tabindex="0" data-def="A value that appears more than once in the list. The positions differ, the value is the same.">duplicate</dfn> means the same value at two different positions.</p>
+  <div id="p2tpX"></div>
+  <p class="caption">Step through the three examples. Red cells are the repeats. Note that <code>5</code> and <code>-5</code> would be different values.</p>
+  <h3>The limits, and what they hint at</h3>
+  <ul>
+    <li>The list holds 1 to 100,000 numbers. With 100,000 numbers, checking every pair is about 5 billion checks. Too slow. Aim for <dfn class="term" tabindex="0" data-def="Big-O notation: how the work grows as the input grows. O(n) means the work grows in step with n; O(n^2) means doubling n makes it four times as much work.">O(n)</dfn> or O(n log n).</li>
+    <li>Each number is between minus one billion and one billion. That range is far too big to use the numbers as positions in a list. Keep that in mind for a follow-up.</li>
+  </ul>
+  <p class="newwords">New words: <span class="chip">duplicate</span><span class="chip">O(n)</span></p>
+</section>
+
+<section class="step" id="p2-s-predict">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>2. Predict before you code</h2>
+  <div class="predict">
+    <h3>Predict: what should <code>contains_duplicate([6, -6, 60, 0, 6])</code> return?</h3>
+    <textarea aria-label="Your prediction for [6, -6, 60, 0, 6]"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p><code>True</code>. The value 6 sits at index 0 and again at index 4.</p></div>
+  </div>
+</section>
+
+<section class="step" id="p2-s-try">
+  <h2>3. Try it first (15 minutes)</h2>
+  <div class="card try-first">
+    <p><strong>Your turn.</strong> Open <code>problems/arrays-hashing/0217-contains-duplicate/attempt.py</code> and fill in <code>contains_duplicate</code>.</p>
+    <p>Run the tests from the <code>dsa-lab</code> folder:</p>
+    <pre><code>python3 tools/run_tests.py problems/arrays-hashing/0217-contains-duplicate</code></pre>
+    <p>Time box: 15 minutes for an easy problem. Any working answer counts, even a slow one. Stuck after 10 minutes? Open the first hint below.</p>
+  </div>
+</section>
+
+<section class="step" id="p2-s-hints">
+  <h2>4. Hints, one at a time</h2>
+  <details class="hint"><summary>Hint 1: what do you need to know when you look at a number?</summary><div><p>Stand on one number. What single question about the numbers <em>before</em> it would settle everything? Write that question in plain words.</p></div></details>
+  <details class="hint"><summary>Hint 2: which tool answers that question fast?</summary><div><p>The question is "have I seen this value before?". A <strong>set</strong> answers that in one step on average, no matter how many values it holds. This is the arrays and hashing pattern.</p></div></details>
+  <details class="hint"><summary>Hint 3: the key step, in words</summary><div><p>Walk the list once. For each number: if it is already in the set, stop and answer True. Otherwise, add it to the set. If the walk ends, answer False.</p></div></details>
+</section>
+
+<section class="step" id="p2-s-brute">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>5. The slow but sure way: compare every pair</h2>
+  <details class="spoiler"><summary>Show the brute force</summary><div>
+    <p>The most direct idea: compare each number with every number after it. If any pair matches, answer True. This is the <dfn class="term" tabindex="0" data-def="The simplest correct method, usually trying every possibility. Good as a first step and a checker, often too slow.">brute force</dfn> method.</p>
+    <p>Watch it on <code>[3, 8, 5, 1, 9, 5]</code>. The grid on the right has one cell per pair. An <code>x</code> means "checked, different". An <code>=</code> means "checked, the same".</p>
+    <div id="p2tpB"></div>
+    <div class="readouts">
+      <div class="ro"><span class="lab">comparisons on this list</span><span class="val">12</span></div>
+      <div class="ro"><span class="lab">worst case for 6 numbers (no repeat)</span><span class="val">15</span></div>
+      <div class="ro"><span class="lab">worst case for 100,000 numbers</span><span class="val">4,999,950,000</span></div>
+    </div>
+    <p>It found the repeat after 12 comparisons. That sounds fine for 6 numbers. But the number of pairs grows with the square of the list length. On this Mac, the pairs method took 1.1 seconds for 10,000 different numbers. Ten times more numbers means about 100 times more work: roughly 2 minutes for 100,000 numbers.</p>
+    <div class="card warn"><span class="callout-title" style="color:var(--orange)">Why it is too slow</span>Doubling the list makes the work four times as large. That is <dfn class="term" tabindex="0" data-def="Quadratic time: the work grows with the square of n. Two nested loops over the list are the usual cause.">O(n^2)</dfn>, and the limits allow up to 100,000 numbers.</div>
+  </div></details>
+  <p class="newwords">New words: <span class="chip">brute force</span><span class="chip">O(n^2)</span></p>
+</section>
+
+<section class="step" id="p2-s-insight">
+  <span class="lvl lvl-words">Pattern words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>6. Two better ideas, then a race</h2>
+  <details class="spoiler"><summary>Show the pattern solution</summary><div>
+    <h3>Idea A: sort first, then look at neighbours</h3>
+    <p>After sorting, equal numbers sit next to each other. So you only need to compare each number with the one just before it. Same list as before:</p>
+    <div id="p2tpS"></div>
+    <p>The sort did 11 comparisons (counted by running Python's sort), then 3 neighbour checks found the pair. Total: 14. Sorting costs about <dfn class="term" tabindex="0" data-def="The work grows a little faster than n: n times the number of halvings of n. For 100,000 numbers, log2 n is about 17.">O(n log n)</dfn>, which is far better than O(n^2) on big lists.</p>
+
+    <h3>Idea B: remember what you have seen (the pattern)</h3>
+    <p>Go back to the door guard's notebook. The one observation: <strong>when you reach a number, you only need to know whether it appeared earlier</strong>. A <dfn class="term" tabindex="0" data-def="A Python set: a bag of unique values that answers 'is x in here?' in about one step, by jumping straight to where x would be stored.">hash set</dfn> answers that in one step on average. It uses <dfn class="term" tabindex="0" data-def="Turning a value into a storage position with a fixed recipe, so a lookup jumps straight there instead of searching.">hashing</dfn> to jump straight to where the value would be.</p>
+    <div class="card rule"><span class="callout-title" style="color:var(--teal)">The invariant</span>An <dfn class="term" tabindex="0" data-def="A fact that stays true at every step of a loop. It is how you convince yourself the code is right.">invariant</dfn> is a fact that stays true every step. Here: before we look at index i, <code>seen</code> holds exactly the values at indices 0 to i - 1, and none of them repeat.</div>
+    <div id="p2tpA"></div>
+    <p>Each number costs one lookup, plus one add if it is new. The repeat 5 is caught on the 6th lookup. The method also has an <dfn class="term" tabindex="0" data-def="Stopping as soon as the answer is known, instead of finishing the whole loop.">early exit</dfn>: it stops the moment it knows.</p>
+
+    <h3>The race, counted by running the code</h3>
+    <table>
+      <thead><tr><th>Input</th><th>Pairs (comparisons)</th><th>Sort (sort comparisons + neighbour checks)</th><th>Set (lookups)</th></tr></thead>
+      <tbody>
+        <tr><td><code>[3, 8, 5, 1, 9, 5]</code></td><td>12</td><td>11 + 3 = 14</td><td>6</td></tr>
+        <tr><td><code>[2, 9, 4, 1, 6, 3, 8, 5]</code> (no repeat)</td><td>28</td><td>16 + 7 = 23</td><td>8</td></tr>
+        <tr><td><code>[4, 9, 2, 7, 5, 1, 8, 3, 6, 6]</code> (late repeat)</td><td>45</td><td>24 + 6 = 30</td><td>10</td></tr>
+        <tr><td><code>[7, 7, 1, 2, 3, 4, 5, 6, 8, 9]</code> (early repeat)</td><td>1</td><td>23 + 7 = 30</td><td>2</td></tr>
+      </tbody>
+    </table>
+    <p class="caption">On tiny lists the pairs method can get lucky (last row). What matters is the worst case on big lists. Try your own lists in the sandbox race.</p>
+
+    <h3>What about the one-liner?</h3>
+    <pre><code><span class="k">return</span> len(set(nums)) != len(nums)</code></pre>
+    <p>This is correct. A set drops repeats, so it is shorter than the list exactly when a repeat exists. It is O(n) time and O(n) space, like idea B.</p>
+    <p>The catch: it never stops early. It puts every number into the set first. For the early-repeat list above, the loop does 2 lookups; the one-liner adds all 10 numbers.</p>
+    <div class="readouts">
+      <div class="ro"><span class="lab">100,000 numbers, no repeat: loop</span><span class="val">4.0</span> <span class="unit">ms</span></div>
+      <div class="ro"><span class="lab">100,000 numbers, no repeat: one-liner</span><span class="val">1.9</span> <span class="unit">ms</span></div>
+      <div class="ro"><span class="lab">100,000 numbers, repeat at the start: loop</span><span class="val">0.0001</span> <span class="unit">ms</span></div>
+      <div class="ro"><span class="lab">100,000 numbers, repeat at the start: one-liner</span><span class="val">1.9</span> <span class="unit">ms</span></div>
+    </div>
+    <p class="caption">Measured on this Mac with Python's <code>timeit</code>. The one-liner runs inside Python's C code, so it wins when there is no repeat. The loop wins hugely when the repeat comes early. In an interview, both are fine; say which trade-off you picked.</p>
+  </div></details>
+  <p class="newwords">New words: <span class="chip">O(n log n)</span><span class="chip">hash set</span><span class="chip">hashing</span><span class="chip">invariant</span><span class="chip">early exit</span></p>
+</section>
+
+<section class="step" id="p2-s-approaches">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>7. All approaches side by side</h2>
+  <details class="spoiler"><summary>Show all approaches</summary><div>
+    <p>Four ways to answer the same question, from slowest to the one to reach for. The work on the example is counted by <code>approaches.py</code> in this problem's folder, on <code>[3, 8, 5, 1, 9, 5]</code>.</p>
+    <table class="approaches">
+      <tr><th>Approach</th><th>Idea</th><th>Time</th><th>Space</th><th>Choose it when</th></tr>
+      <tr><td>Compare all pairs</td><td>Two nested loops; any equal pair means True.<br><small>On the example: 12 comparisons.</small></td><td>O(n^2)</td><td>O(1)</td><td>The list is tiny, or you need a checker for your fast version.</td></tr>
+      <tr><td>Sort, then check neighbours</td><td>After sorting, equal values sit side by side.<br><small>On the example: 11 sort comparisons + 3 neighbour checks.</small></td><td>O(n log n)</td><td>O(n) with <code>sorted()</code>; in place with <code>nums.sort()</code></td><td>Memory is tight and you may reorder the input, or it is already sorted.</td></tr>
+      <tr class="is-best"><td>Hash set, one pass</td><td>Ask "seen it?", stop on yes, otherwise remember it.<br><small>On the example: 6 lookups.</small></td><td>O(n) average</td><td>O(n)</td><td>The default answer: linear time with an early exit.</td></tr>
+      <tr><td>Set size one-liner</td><td><code>len(set(nums)) != len(nums)</code>. A set drops repeats, so it is shorter exactly when a repeat exists.<br><small>On the example: 6 inserts, always all n.</small></td><td>O(n) average</td><td>O(n)</td><td>You want one readable line and repeats are rare (no early exit).</td></tr>
+      </table>
+    <p class="caption"><code>approaches.py</code> also checks that all four give the reference answer on every test case and 300 random lists.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p2-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>8. Mental map: how to get here next time</h2>
+  <details class="spoiler"><summary>Show the mental map</summary><div>
+    <p>Read this when a new problem looks a bit like this one. Each step is a question you can ask yourself on a blank page.</p>
+    <ol class="mmap">
+      <li class="mm-signal"><b>Signal</b><span>"Does any value appear more than once?" That is a "have I seen this before?" question, and n can reach 100,000.</span></li>
+      <li><b>Ask</b><span>"Standing on one number, what do I need to know about the numbers before it?" Only one fact: is this value among them.</span></li>
+      <li><b>Pick</b><span>Rule out the forks that do not fit, and keep the one that does.</span>
+        <ul class="mm-branches">
+          <li><i>n is tiny</i>Compare all pairs. Too slow at 100,000 numbers.</li>
+          <li><i>may reorder, tight memory</i>Sort, then neighbours. Fine, but O(n log n).</li>
+          <li><i>need counts, not yes or no</i>A Counter. More than we need here.</li>
+          <li class="is-pick"><i>only "seen it before?"</i>A hash set, one pass, with an early exit.</li>
+        </ul>
+      </li>
+      <li><b>Invariant</b><span>Before index i, <code>seen</code> holds exactly the values at indices 0 to i - 1, all different.</span></li>
+      <li><b>Steps</b><span>Empty set. Loop over the numbers. If the number is in the set, return True. Otherwise add it. After the loop, return False.</span></li>
+      <li class="mm-trap"><b>Check</b><span>Check before you add, or every list looks like it has a repeat.</span></li>
+      <li class="mm-trap"><b>Check</b><span><code>seen</code> must be a set, not a list, or the loop becomes O(n^2).</span></li>
+      <li class="mm-trap"><b>Check</b><span>Empty list and a single number both return False; <code>5</code> and <code>-5</code> are different values.</span></li>
+    </ol>
+  </div></details>
+</section>
+
+<section class="step" id="p2-s-code">
+  <span class="lvl lvl-code">Code</span>
+  <h2>9. The code, line by line</h2>
+  <details class="spoiler"><summary>Show the code walk</summary><div>
+    <table>
+      <thead><tr><th>Code</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code><span class="k">def</span> contains_duplicate(nums):</code></td><td>Takes the list, returns True or False.</td></tr>
+        <tr><td><code>seen = set()</code></td><td>The guard's empty notebook.</td></tr>
+        <tr><td><code><span class="k">for</span> x <span class="k">in</span> nums:</code></td><td>Walk the list once, left to right.</td></tr>
+        <tr><td><code><span class="k">if</span> x <span class="k">in</span> seen:</code></td><td>Is this value already written down? One lookup, about one step.</td></tr>
+        <tr><td><code><span class="k">return</span> True</code></td><td>Yes: a repeat. Stop right away (early exit).</td></tr>
+        <tr><td><code>seen.add(x)</code></td><td>No: write it down, then go on.</td></tr>
+        <tr><td><code><span class="k">return</span> False</code></td><td>The walk ended with no repeat, so every value is different.</td></tr>
+      </tbody>
+    </table>
+    <div class="card warn"><span class="callout-title" style="color:var(--orange)">Common mistake</span>Adding before checking. If you write <code>seen.add(x)</code> first, then <code>x in seen</code> is always true, and every list looks like it has a repeat. Check first, then add.</div>
+    <p><strong>Edge cases it handles:</strong> an empty list (the loop never runs, returns False), a single number (False), all the same (True on the second number), negative and very large numbers (a set holds any whole number).</p>
+    <div class="card warn"><span class="callout-title" style="color:var(--orange)">Another trap</span>Using a list instead of a set: <code>x in seen_list</code> searches the whole list each time. That quietly turns the solution back into O(n^2).</div>
+  </div></details>
+</section>
+
+<section class="step" id="p2-s-cost">
+  <span class="lvl lvl-math">Maths (optional)</span>
+  <h2>10. Counting the work</h2>
+  <details class="math"><summary>Step 1: pairs, counted for real sizes</summary><div>
+    <p>With n numbers, the first number is compared with n - 1 others, the next with n - 2, and so on.</p>
+    <div class="eq">pairs = (n - 1) + (n - 2) + ... + 1 = n(n - 1) / 2
+n = 8:       8 * 7 / 2          = 28
+n = 100,000: 100,000 * 99,999 / 2 = 4,999,950,000</div>
+    <p>Time O(n^2). Extra space O(1): only two counters.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: sort, then neighbours</summary><div>
+    <div class="eq">sorting:    about n * log2(n)  = 100,000 * 16.6 = about 1,660,000 comparisons
+measured:   Python sorted 100,000 random numbers with 1,529,349 comparisons
+neighbours: at most n - 1      = 99,999</div>
+    <p>Time O(n log n). Space: <code>sorted(nums)</code> makes a new list, so O(n) extra. <code>nums.sort()</code> sorts <dfn class="term" tabindex="0" data-def="Changing the input itself instead of building a new copy. Saves memory, but the caller's list changes.">in place</dfn> instead, but it changes the caller's list.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: the set, and why you cannot beat O(n)</summary><div>
+    <div class="eq">lookups: at most n = 100,000     (one per number)
+time:    O(n) on average
+space:   O(n) for the set        (all n values when there is no repeat)</div>
+    <p>A set lookup is O(1) on <dfn class="term" tabindex="0" data-def="What happens typically, not in the unluckiest possible case. Hash set lookups are O(1) on average but can be slower if many values land in the same spot.">average</dfn>, not guaranteed. Many values landing in the same spot could slow it down. For Python's whole numbers this is rare in practice.</p>
+    <p><strong>Why O(n) is the best possible:</strong> if no number repeats, you must read every number. Any number you skip could have been the repeat.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p2-s-talk">
+  <h2>11. Interview talk track</h2>
+  <div class="card">
+    <ol>
+      <li><strong>Clarify.</strong> "Can the list be empty? Can numbers be negative? Should I keep the input unchanged?"</li>
+      <li><strong>Example.</strong> "For [3, 8, 5, 1, 9, 5] the answer is True, because 5 repeats."</li>
+      <li><strong>Brute force.</strong> "I could compare every pair. That is n(n - 1)/2 comparisons, O(n^2) time, O(1) space."</li>
+      <li><strong>Better idea.</strong> "I only need to know whether each number appeared before. A set answers that in O(1) on average."</li>
+      <li><strong>Code.</strong> One loop: check, then add. Return True on the first repeat.</li>
+      <li><strong>Test.</strong> Walk the example out loud. Then the empty list and a single number.</li>
+      <li><strong>Complexity.</strong> "O(n) time on average, O(n) extra space. Sorting would use less memory but O(n log n) time."</li>
+    </ol>
+    <div class="predict">
+      <h3>Follow-ups: (1) what if memory is very tight? (2) what if every number is small, between 0 and k?</h3>
+      <textarea aria-label="Your answers to the two follow-up questions"></textarea>
+      <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+      <div class="answer">
+        <p><strong>(1) Tight memory:</strong> sort the list in place, then compare neighbours. Time O(n log n). Extra space O(1) with an in-place sort such as heapsort. Python's <code>list.sort()</code> is in place, but it may borrow up to n/2 temporary slots while merging. Say that the caller's list gets reordered.</p>
+        <p><strong>(2) Small numbers 0 to k:</strong> use a list of k + 1 booleans instead of a set. <code>seen[x]</code> is a true O(1) check with no hashing. Time O(n + k), space O(k). It only pays off when k is small; here values reach one billion, so it would not fit.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="p2-s-check">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>12. Check yourself</h2>
+  <div class="predict">
+    <h3>Predict: the set version gets an empty list. What does it return, and how many lookups does it make?</h3>
+    <textarea aria-label="Your prediction for the empty list"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p><code>False</code> with 0 lookups. The loop body never runs, so the last line returns False. No numbers means no repeats.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Predict: someone promises the list is already sorted. What is the best method now, and what does it cost?</h3>
+    <textarea aria-label="Your answer for a sorted list"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p>Skip the sort and compare neighbours only. Time O(n), extra space O(1). That beats the set on memory.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Predict: the question changes to "does any value appear at least 3 times?". Does a set still work?</h3>
+    <textarea aria-label="Your answer for the three-times variant"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p>Not alone: a set only says "seen or not". Use a dictionary of counts instead (value to how many times so far), and return True when a count reaches 3. Still O(n) time and O(n) space.</p></div>
+  </div>
+  <h3>Glossary</h3>
+  <dl class="glossary">
+    <dt>duplicate</dt><dd>The same value at two different positions in the list.</dd>
+    <dt>brute force</dt><dd>The simplest correct method, usually trying every possibility.</dd>
+    <dt>O(n), O(n^2), O(n log n)</dt><dd>How the work grows with the list length n: in step, with the square, or a little faster than in step.</dd>
+    <dt>hash set</dt><dd>A collection of unique values that answers "is x in here?" in about one step.</dd>
+    <dt>hashing</dt><dd>Turning a value into a storage position, so a lookup jumps straight there.</dd>
+    <dt>invariant</dt><dd>A fact that stays true at every step of a loop. Here: <code>seen</code> holds exactly the values already walked past.</dd>
+    <dt>early exit</dt><dd>Stopping as soon as the answer is known.</dd>
+    <dt>in place</dt><dd>Changing the input itself instead of building a copy.</dd>
+    <dt>average case</dt><dd>The typical cost, not the unluckiest possible one.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p2-recap">
+  <h2>Recap: the pattern in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Pattern:</strong> arrays and hashing. Trade memory for time: remember what you have seen, so each later question is one lookup.</p>
+    <p><strong>Trigger signals:</strong> "have I seen this before?", repeats, counting, O(n) wanted where two nested loops are obvious.</p>
+    <p><strong>Template:</strong> <code>seen = set()</code>; one pass; check before you add; return early when the answer is known.</p>
+    <p><strong>Cost:</strong> pairs O(n^2) time; sort O(n log n) time; set O(n) time on average and O(n) space.</p>
+  </div>
+  <div class="checkpoint">
+    <p>How did it go? Pick one, then race your own lists in the sandbox.</p>
+    <div class="outcome-row" data-slot="2">
+      <button class="btn btn-sm" type="button" data-outcome="alone">Solved it alone</button>
+      <button class="btn btn-sm" type="button" data-outcome="hints">Solved with hints</button>
+      <button class="btn btn-sm" type="button" data-outcome="solution">Read the solution</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" onclick="switchLesson(3)">Next: Two Sum</button>
+    </div>
+  </div>
+</section>
+</div>

@@ -1,0 +1,396 @@
+<div class="lesson-content xp" id="lesson12">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Heap and Priority Queue</h1>
+    <p class="lesson-subtitle">Goal: learn the structure that always hands you the smallest (or largest) item next, in O(log n), without sorting everything. You will see how a tree hides inside a plain list, and why keeping only k items beats sorting all n.</p>
+    <div class="lesson-meta"><span class="badge">Tier 3</span><span class="badge">pattern</span><span class="badge diff-medium">data structure</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Heap lesson"><a href="#p12-s-idea">Triage desk</a><a href="#p12-s-words">Pattern words</a><a href="#p12-s-map">Mental map</a><a href="#p12-s-template">Templates</a><a href="#p12-s-spot">Spot it</a><a href="#p12-s-traps">Traps</a><a href="#p12-s-cost">Cost</a><a href="#p12-s-problems">Problems</a><a href="#p12-s-check">Check yourself</a><a href="#p12-recap">Recap</a></nav>
+
+<section class="step" id="p12-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Always know who is next, without sorting everyone</h2>
+  <p>Many problems keep asking the same question: "which item is the best one right now?" Items arrive and leave as you go.</p>
+  <p>Sorting answers it once, but costs a full sort, and new items break the order. A <dfn class="term" tabindex="0" data-def="A tree-shaped structure, stored in a list, where every parent is smaller than its children (in a min-heap). So the smallest item is always at the top, index 0.">heap</dfn> answers it again and again, cheaply, as items come and go.</p>
+  <div class="card analogy"><strong>Analogy: a hospital triage desk.</strong> Patients do not queue in arrival order. The nurse only needs to know who is the most urgent right now. A new patient is slotted in by urgency; when a doctor is free, the most urgent goes in. Nobody ranks the whole waiting room from first to last.</div>
+  <h3>Try it: the 3 largest of 10 numbers, two ways</h3>
+  <p>The list is <code>[4, 9, 2, 7, 1, 8, 3, 6, 5, 0]</code>. Press <strong>Step</strong> or <strong>Play</strong> on each player and watch the comparison counter.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Pattern: keep a heap of only 3.</strong> Its top is the weakest of the best 3 so far. Each new number is compared with the top: bigger ones replace it, smaller ones are skipped in one comparison.</p>
+      <div id="p12tpA"></div>
+    </div>
+    <div>
+      <p><strong>Slow: sort everything.</strong> A merge sort puts all 10 in order, then takes the last 3. Each frame is one comparison; the blue cells are the part being merged.</p>
+      <div id="p12tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p12roA"><span class="lab">size-3 heap</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+    <div class="ro" id="p12roB"><span class="lab">sort everything</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods on this list, in the page and in <code>measure.py</code> (13 and 25). On 10 numbers the gap is small; section 7 races them on up to 100,000.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>When you only ever need the best one (or the best k), do not sort. Keep a heap: peek at the top in O(1), add or remove in O(log n).</div>
+  <p class="newwords">New words: <span class="chip">heap</span></p>
+</section>
+
+<section class="step" id="p12-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use for the triage desk</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Triage desk</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="An abstract to-do list where you can add items and always remove the one with the best priority. A heap is the usual way to build one.">priority queue</dfn></td><td>Add anything; always take out the best</td><td>The whole desk</td><td><code>heapq</code> on a list</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A heap where every parent is at most its children, so the smallest item is at index 0. Python's heapq is a min-heap.">min-heap</dfn></td><td>Smallest on top</td><td>Lowest number = most urgent</td><td><code>heapq</code> (default)</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A heap where every parent is at least its children, so the largest item is on top. In Python, store negated numbers in a min-heap.">max-heap</dfn></td><td>Largest on top</td><td>Highest score = most urgent</td><td>push <code>-x</code>, read <code>-h[0]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The top of the heap, index 0 in the list. In a min-heap it is the smallest item.">root</dfn></td><td>The top item</td><td>Who goes in next</td><td><code>h[0]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A binary tree with every level full except maybe the last, which fills from the left. That shape is why a heap fits in a plain list with no gaps.">complete binary tree</dfn></td><td>A tree filled level by level, left to right</td><td>Chairs filled row by row</td><td>a list with no gaps</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="In a heap stored as a list, the parent of index i is (i - 1) // 2 and its children are 2i + 1 and 2i + 2.">parent / child index</dfn></td><td>Arithmetic instead of arrows</td><td>Seat numbers</td><td><code>(i - 1) // 2</code>, <code>2*i + 1</code>, <code>2*i + 2</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Move a new item up, swapping with its parent while it is smaller. Used by push. At most one swap per level: O(log n).">sift up</dfn></td><td>A new item climbs while it beats its parent</td><td>A critical patient moves forward</td><td>inside <code>heappush</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Move an item down, swapping with its smaller child while that child is smaller. Used by pop after the last item jumps to the root. O(log n).">sift down</dfn></td><td>The root sinks while a child beats it</td><td>Re-checking after someone left</td><td>inside <code>heappop</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Turn a whole list into a heap in place, by sifting down from the last parent to the root. O(n), cheaper than n separate pushes.">heapify</dfn></td><td>Make a heap from a list at once</td><td>Triage the whole room on opening</td><td><code>heapq.heapify(a)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Problems that ask for the k largest, smallest, closest or most frequent items. The usual tool is a heap holding only k items.">top-k</dfn></td><td>"The best k" questions</td><td>The 3 most urgent</td><td>a heap of size k</td></tr>
+    </tbody>
+  </table>
+  <p>The heap property is only about parents and children. Brothers and cousins are in no order at all, so a heap is <em>not</em> a sorted list (Trap 4).</p>
+  <p class="newwords">New words: <span class="chip">priority queue</span><span class="chip">min-heap</span><span class="chip">max-heap</span><span class="chip">root</span><span class="chip">complete binary tree</span><span class="chip">sift up</span><span class="chip">sift down</span><span class="chip">heapify</span><span class="chip">top-k</span></p>
+</section>
+
+<section class="step" id="p12-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to working code</h2>
+  <p>Read this top to bottom when a problem lands in front of you. It is the "how do I start" checklist.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>"k largest / smallest / closest / most frequent", "k-th largest", a stream of numbers arriving one by one, "repeatedly take the best and put something back", or several sorted lists to combine.</span></li>
+    <li><b>Ask</b><span>"Do I need the whole order, or only the best item, again and again, while the set keeps changing?" If only the best, a heap. Then: "smallest or largest on top?" and "what is the priority of each item?"</span></li>
+    <li><b>Pick</b><span>Choose the variant by its clue in yellow.</span>
+      <ul class="mm-branches">
+        <li><i>"k largest", "k closest"</i>Top-k: a heap of size k whose top is the weakest of the best. For k largest use a min-heap. Kth Largest Element, K Closest Points.</li>
+        <li><i>k sorted lists or streams</i>K-way merge: the heap holds one front item per list as <code>(value, list id, index)</code>. Merge k Sorted Lists.</li>
+        <li><i>"median" of a stream</i>Two heaps: a max-heap for the lower half and a min-heap for the upper half, kept within one item in size. Find Median from Data Stream.</li>
+        <li><i>always do the best next, then it changes</i>Greedy with a heap: pop the best, do it, push back what remains. Last Stone Weight, Task Scheduler (and later, Dijkstra's shortest path).</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>Every parent is at most its children, so <code>h[0]</code> is the minimum. For top-k: the heap holds the k best seen so far, and <code>h[0]</code> is the k-th best.</span></li>
+    <li><b>Steps</b><span>Decide the priority, and negate it if you need the largest first. Build the heap (<code>heapify</code> or pushes). Loop: peek or pop the top, act, push new items. For top-k, push and pop when the size goes over k, or <code>heapreplace</code> when a new item beats the top.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Min or max? Python only has a min-heap; negate numbers for a max-heap (Trap 1). For k largest the heap must be a min-heap (Trap 2).</span></li>
+    <li class="mm-trap"><b>Check</b><span>Tuples compare item by item. Can two priorities tie? Add a counter so Python never compares the payloads (Trap 3).</span></li>
+    <li class="mm-trap"><b>Check</b><span>Edge inputs: k equal to n, k = 1, duplicates, negative numbers, an empty heap before a pop.</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Name the priority, pick min or max, and ask whether you can keep only k items. The rest is <code>heappush</code> and <code>heappop</code>.</div>
+</section>
+
+<section class="step" id="p12-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Templates: the toolbox, the inside, and four variants</h2>
+  <h3>Template A: the heapq toolbox</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">import</span> heapq</code></td><td>A heap is just a Python list; <code>heapq</code> keeps it in heap order.</td></tr>
+      <tr><td><code>heapq.heappush(h, x)</code></td><td>Add x, then sift up. O(log n).</td></tr>
+      <tr><td><code>heapq.heappop(h)</code></td><td>Remove and return the smallest, then sift down. O(log n).</td></tr>
+      <tr><td><code>h[<span class="n">0</span>]</code></td><td>Peek at the smallest without removing it. O(1).</td></tr>
+      <tr><td><code>heapq.heapify(a)</code></td><td>Turn a list into a heap in place. O(n).</td></tr>
+      <tr><td><code>heapq.heapreplace(h, x)</code></td><td>Pop the smallest and push x in one sift. Use it when x must go in anyway.</td></tr>
+      <tr><td><code>heapq.heappush(h, -x)</code>, <code>-h[<span class="n">0</span>]</code></td><td>A max-heap: store negatives, negate again when reading.</td></tr>
+      <tr><td><code>heapq.heappush(h, (prio, n, item))</code></td><td>Tuples compare by the first field, then the next. A running counter <code>n</code> breaks ties.</td></tr>
+      <tr><td><code>heapq.nlargest(k, a)</code></td><td>A ready-made top-k for one-off use.</td></tr>
+    </tbody>
+  </table>
+<pre><code><span class="c"># == 4. Templates (from measure.py) ==</span>
+max via negation: -heappop(...) on [3, 1, 4, 1, 5] = 5
+heapq.nsmallest(2, [(3, 'c'), (1, 'a'), (2, 'b')]) = [(1, 'a'), (2, 'b')]</code></pre>
+
+  <h3>Template B: inside the heap (play with it)</h3>
+  <p>The tree is stored level by level in a plain list. Node i has its parent at <code>(i - 1) // 2</code> and children at <code>2i + 1</code> and <code>2i + 2</code>. Push and pop each fix one path from top to bottom, so they cost at most one swap per level.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>h.append(x)</code></td><td>Push: the new item takes the first free seat, at the bottom.</td></tr>
+      <tr><td><code><span class="k">if</span> h[i] &lt; h[p]: swap, i = p</code></td><td>Sift up: while it is smaller than its parent, swap upwards.</td></tr>
+      <tr><td><code>top, h[<span class="n">0</span>] = h[<span class="n">0</span>], last</code></td><td>Pop: take the root, move the last item into the hole.</td></tr>
+      <tr><td><code>c = smaller child of i</code></td><td>Sift down: find the smaller child (one comparison if there are two)...</td></tr>
+      <tr><td><code><span class="k">if</span> h[c] &lt; h[i]: swap, i = c</code></td><td>...and swap while that child is smaller (one more comparison).</td></tr>
+    </tbody>
+  </table>
+  <p>Type a number and <strong>Push</strong>, or <strong>Pop</strong> the minimum. Every press adds its steps to the player, drawn as the tree and as the array at the same time. Before you press, predict where the item will end up.</p>
+  <div class="control-group">
+    <label for="p12pgIn">number to push</label>
+    <input type="text" id="p12pgIn" value="4" autocomplete="off" spellcheck="false" style="max-width:140px">
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary btn-sm" type="button" id="p12pgPush">Push</button>
+    <button class="btn btn-sm" type="button" id="p12pgPop">Pop the minimum</button>
+    <button class="btn btn-sm" type="button" id="p12pgPre">Load preset: push 5, 3, 8, 1, 9, 2</button>
+    <button class="btn btn-sm" type="button" id="p12pgClr">Empty the heap</button>
+  </div>
+  <p class="sb-error" id="p12pgErr" role="alert"></p>
+  <div id="p12tpP"></div>
+  <div class="readout" id="p12pgOut" aria-live="polite"></div>
+<pre><code><span class="c"># == 3. Heap playground preset (from measure.py) ==</span>
+push 5: [5]  comparisons so far = 0
+push 3: [3, 5]  comparisons so far = 1
+push 8: [3, 5, 8]  comparisons so far = 2
+push 1: [1, 3, 8, 5]  comparisons so far = 4
+push 9: [1, 3, 8, 5, 9]  comparisons so far = 5
+push 2: [1, 3, 2, 5, 9, 8]  comparisons so far = 7
+pop -> 1: [2, 3, 8, 5, 9]  comparisons so far = 9
+heapq gives the same array for these pushes: [1, 3, 2, 5, 9, 8]</code></pre>
+
+  <h3>Template C: top-k with a heap of size k</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>heap = []</code></td><td>A min-heap that will hold the best k seen so far.</td></tr>
+      <tr><td><code><span class="k">for</span> x <span class="k">in</span> nums:</code></td><td>One pass over the data. It also works on a stream.</td></tr>
+      <tr><td><code><span class="k">if</span> len(heap) &lt; k: heapq.heappush(heap, x)</code></td><td>Fill up to k items.</td></tr>
+      <tr><td><code><span class="k">elif</span> x &gt; heap[<span class="n">0</span>]:</code></td><td>Does x beat the weakest of the best? One comparison; most items fail it and are skipped.</td></tr>
+      <tr><td><code>heapq.heapreplace(heap, x)</code></td><td>Throw out the weakest, let x in. O(log k).</td></tr>
+      <tr><td><code><span class="k">return</span> heap</code></td><td>The k largest, in heap order. <code>heap[0]</code> is the k-th largest.</td></tr>
+    </tbody>
+  </table>
+  <div id="p12tpC"></div>
+  <p>For "k smallest" or "k closest", flip it: keep a <em>max</em>-heap of size k (store <code>-distance</code>) so the worst of the best is on top.</p>
+
+  <h3>Template D: merge k sorted lists</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>heap = [(lst[<span class="n">0</span>], i, <span class="n">0</span>) <span class="k">for</span> i, lst <span class="k">in</span> enumerate(lists) <span class="k">if</span> lst]</code></td><td>The front item of every list, with which list and which position it came from.</td></tr>
+      <tr><td><code>heapq.heapify(heap)</code></td><td>The smallest front item is now on top.</td></tr>
+      <tr><td><code>val, i, j = heapq.heappop(heap)</code></td><td>Take the overall smallest.</td></tr>
+      <tr><td><code><span class="k">if</span> j + <span class="n">1</span> &lt; len(lists[i]): heappush(heap, (lists[i][j + <span class="n">1</span>], i, j + <span class="n">1</span>))</code></td><td>Its list sends its next item. The heap never holds more than k items.</td></tr>
+    </tbody>
+  </table>
+<pre><code>merge_k([[1, 4, 7], [2, 5, 8], [3, 6, 9]]) = [1, 2, 3, 4, 5, 6, 7, 8, 9]  pops = 9  (heap never holds more than 3)</code></pre>
+
+  <h3>Template E: two heaps for a running median</h3>
+  <p>Keep the smaller half in a max-heap <code>low</code> and the bigger half in a min-heap <code>high</code>. Every new number passes through <code>low</code> into <code>high</code>, so the halves stay in order; then the sizes are rebalanced. The middle is always on the tops.</p>
+  <div id="p12tpD"></div>
+<pre><code>medians of [5, 15, 1, 3, 8] = [5, 10.0, 5, 4.0, 5]</code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>A heap of size k for top-k. One item per list for k-way merge. Two heaps facing each other for a median. Pop the best, push back the rest for greedy scheduling.</div>
+</section>
+
+<section class="step" id="p12-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: does a heap help here?</h2>
+  <p>Read each made-up task. Decide: heap or not, and which variant? Then reveal.</p>
+  <div class="predict">
+    <h3>A. A food app has 50,000 restaurants with map positions. Show the 10 nearest to the user.</h3>
+    <textarea aria-label="Does a heap help for task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: top-k.</strong> Signal: "the k nearest". Keep a max-heap of size 10 by distance (store <code>-dist</code>), so the farthest of the 10 is on top. O(n log 10) instead of sorting all 50,000.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. Five servers each write a log file sorted by time. Produce one combined log, in time order.</h3>
+    <textarea aria-label="Does a heap help for task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: k-way merge.</strong> Signal: several sorted lists into one. The heap holds the next line of each file: at most 5 items.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Temperatures arrive every minute. After each reading, report the middle value of all readings so far.</h3>
+    <textarea aria-label="Does a heap help for task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: two heaps.</strong> Signal: a median over a stream. O(log n) per reading and O(1) to read the median.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Find the single tallest person in a list of heights.</h3>
+    <textarea aria-label="Does a heap help for task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> You need the best item once, and the set never changes. One scan with <code>max()</code> is O(n) and needs no extra memory. A heap pays off only when you ask "who is best?" again and again as items come and go.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Print a list of exam scores from lowest to highest.</h3>
+    <textarea aria-label="Does a heap help for task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> You want the whole order, all at once. Just call <code>sorted()</code>: O(n log n). Popping every item from a heap also sorts (heapsort), but it is no faster and more code.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A CPU has jobs of several types. Two jobs of the same type need a gap of n ticks. Finish them all as fast as possible, doing the most common type first.</h3>
+    <textarea aria-label="Does a heap help for task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: greedy with a heap.</strong> Signal: "always do the best available next", and the best keeps changing. Pop the type with the most jobs left, run one, and park it until its cooldown ends. This is LeetCode 621, Task Scheduler.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>"k largest / smallest / closest / frequent", "k-th", streams, merging sorted lists, a median that moves, and "repeatedly take the best". Not a heap: the best item once (scan), or the full order once (sort).</div>
+</section>
+
+<section class="step" id="p12-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: expecting a max-heap</span>
+    <p><code>heapq</code> only knows "smallest on top". Pop from it expecting the largest and you get the smallest.</p>
+<pre><code>heappop on [3, 1, 4] = 1   <span class="c"># wanted the max, 4</span>
+-heappop on negated  = 4</code></pre>
+    <p><strong>Fix:</strong> push <code>-x</code> and negate on the way out. For tuples, negate the priority only: <code>(-count, word)</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: the wrong heap for top-k</span>
+    <p>For the k <em>largest</em>, the item to throw away is the smallest of your k. A max-heap throws away the biggest instead, and you keep the k smallest.</p>
+<pre><code><span class="k">for</span> x <span class="k">in</span> nums:
+    heapq.heappush(h, -x)        <span class="c"># wrong: a max-heap</span>
+    <span class="k">if</span> len(h) &gt; k: heapq.heappop(h)
+
+k largest of [5, 1, 9, 3, 7], k = 2 with a max-heap: [1, 3]
+k largest of [5, 1, 9, 3, 7], k = 2 with a min-heap: [7, 9]</code></pre>
+    <p><strong>Fix:</strong> k largest needs a min-heap; k smallest or closest needs a max-heap. The top is always the one you would throw out next.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: ties that compare the payload</span>
+    <p>Tuples compare field by field. When two priorities tie, Python compares the next field. Dicts, ListNodes and other objects cannot be compared, so the push crashes.</p>
+<pre><code>heapq.heappush(h, (<span class="n">1</span>, {<span class="s">"id"</span>: <span class="s">"a"</span>}))
+heapq.heappush(h, (<span class="n">1</span>, {<span class="s">"id"</span>: <span class="s">"b"</span>}))
+push (1, dict) twice -> TypeError: '&lt;' not supported between instances of 'dict' and 'dict'
+with a counter: (1, 0, {'id': 'a'})</code></pre>
+    <p><strong>Fix:</strong> put a unique tie-breaker second: <code>(prio, next(counter), item)</code> with <code>itertools.count()</code>, or the list index as in Template D.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: treating the heap as sorted</span>
+    <p>Only <code>h[0]</code> is promised. The rest of the list is in heap order, not sorted order.</p>
+<pre><code>heapify([5, 1, 4, 2, 3]) = [1, 2, 4, 5, 3]   h[:3] = [1, 2, 4]   true 3 smallest = [1, 2, 3]</code></pre>
+    <p><strong>Fix:</strong> to get items in order, pop them one by one, or use <code>heapq.nsmallest(k, h)</code>.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>heapq is a min-heap; negate for max. The top is the item you throw out next. Break ties with a counter. Only <code>h[0]</code> is in order.</div>
+</section>
+
+<section class="step" id="p12-s-cost">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>7. Count the comparisons as the list grows</h2>
+  <p>Pick a size. The page makes a list of pseudo-random numbers from 0 to 999 (the same list <code>measure.py</code> makes), finds the 3 largest both ways, and counts every comparison.</p>
+  <div class="card">
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p12n="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p12n="100">n = 100</button>
+      <button class="btn btn-sm" type="button" data-p12n="1000">n = 1000</button>
+      <button class="btn btn-sm" type="button" data-p12n="10000">n = 10,000</button>
+      <button class="btn btn-sm" type="button" data-p12n="100000">n = 100,000</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p12roN"><span class="lab">list size n</span><span class="val">-</span></div>
+      <div class="ro" id="p12roH"><span class="lab">size-3 heap</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+      <div class="ro" id="p12roS"><span class="lab">sort everything</span><span class="val">-</span> <span class="unit">comparisons</span></div>
+      <div class="ro" id="p12roR"><span class="lab">sort / heap</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">Bar lengths, scaled to the sort count:</p>
+    <div style="height:10px;border-radius:5px;background:var(--bg-input);margin:6px 0"><div id="p12barH" style="height:100%;width:10%;border-radius:5px;background:var(--teal)"></div></div>
+    <div style="height:10px;border-radius:5px;background:var(--bg-input);margin:6px 0"><div id="p12barS" style="height:100%;width:100%;border-radius:5px;background:var(--orange)"></div></div>
+  </div>
+<pre><code><span class="c"># == 2. Race: k = 3, pseudo-random values 0..999 (comparisons) ==</span>
+n =     10: heap     15   sort      22   sort / heap = 1.5x
+n =    100: heap    115   sort     543   sort / heap = 4.7x
+n =   1000: heap   1023   sort    8688   sort / heap = 8.5x
+n =  10000: heap  10025   sort  120419   sort / heap = 12.0x
+n = 100000: heap 100025   sort 1536355   sort / heap = 15.4x</code></pre>
+  <p>The heap's count is barely more than n: almost every number fails the one gate test and is skipped. The sort's count grows like n log n.</p>
+  <details class="math"><summary>Step 1: why push and pop cost O(log n)</summary><div>
+    <p>A complete tree doubles its width each level. With n items it has about log<sub>2</sub> n levels below the root: for n = 1000, 9 levels (2<sup>9</sup> = 512 &le; 1000 &lt; 1024). Sift up climbs one path; sift down sinks one path. Each level costs at most one comparison going up, or two going down.</p>
+    <div class="eq">push: at most log2 n comparisons; pop: at most 2 x log2 n</div>
+  </div></details>
+  <details class="math"><summary>Step 2: top-k costs O(n log k), not O(n log n)</summary><div>
+    <p>The heap never holds more than k items, so each replace costs O(log k). Each item costs one gate comparison, plus O(log k) if it gets in. Total: O(n log k) time and O(k) memory. Sorting is O(n log n) time and O(n) memory. With k fixed and small, the heap is close to O(n).</p>
+    <p>The worst case for the heap is an increasing list: every item gets in. <code>measure.py</code> on <code>[1..8]</code> with k = 3 counts 17 heap comparisons against 12 for the sort. On tiny inputs the sort can win; the heap wins as n grows.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: the hidden cost, n pushes vs heapify</summary><div>
+    <p>Building a heap by pushing n items one by one is O(n log n). <code>heapify</code> sifts down from the last parent to the root, and most nodes sit near the bottom with little room to sink, so it is O(n). Counted on a falling list (the worst case for pushes):</p>
+<pre><code>n =  1000: n pushes =   7987 comparisons   heapify =  1982 comparisons
+n = 10000: n pushes = 113631 comparisons   heapify = 19982 comparisons</code></pre>
+  </div></details>
+  <details class="math"><summary>Step 4: the cost table</summary><div>
+    <table>
+      <thead><tr><th>Operation</th><th>Time</th><th>Memory</th></tr></thead>
+      <tbody>
+        <tr><td>peek <code>h[0]</code></td><td>O(1)</td><td>O(1)</td></tr>
+        <tr><td>push, pop, replace</td><td>O(log n)</td><td>O(1)</td></tr>
+        <tr><td>heapify a list</td><td>O(n)</td><td>in place</td></tr>
+        <tr><td>top-k with a size-k heap</td><td>O(n log k)</td><td>O(k)</td></tr>
+        <tr><td>merge k lists, N items in total</td><td>O(N log k)</td><td>O(k)</td></tr>
+        <tr><td>running median, per number</td><td>O(log n)</td><td>O(n) in total</td></tr>
+        <tr><td><code>x in h</code> or removing a middle item</td><td>O(n)</td><td>a heap cannot search</td></tr>
+      </tbody>
+    </table>
+  </div></details>
+</section>
+
+<section class="step" id="p12-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each problem is this pattern in a new costume. The twist column says what makes it worth doing. Their pages arrive in later sessions.</p>
+  <h3>Easy</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>703</td><td><a href="https://leetcode.com/problems/kth-largest-element-in-a-stream/" target="_blank" rel="noopener">Kth Largest Element in a Stream</a></td><td>Template C kept alive between calls: the heap of size k is the object's state.</td><td>coming up</td></tr>
+      <tr><td>1046</td><td><a href="https://leetcode.com/problems/last-stone-weight/" target="_blank" rel="noopener">Last Stone Weight</a></td><td>Greedy with a max-heap: pop two, push back the difference.</td><td>coming up</td></tr>
+    </tbody>
+  </table>
+  <h3>Medium</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>973</td><td><a href="https://leetcode.com/problems/k-closest-points-to-origin/" target="_blank" rel="noopener">K Closest Points to Origin</a></td><td>Top-k smallest: a max-heap of size k on squared distance (no square root needed).</td><td>coming up</td></tr>
+      <tr><td>215</td><td><a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank" rel="noopener">Kth Largest Element in an Array</a></td><td>Heap gives O(n log k); quickselect gives O(n) on average. Know both.</td><td>coming up</td></tr>
+      <tr><td>621</td><td><a href="https://leetcode.com/problems/task-scheduler/" target="_blank" rel="noopener">Task Scheduler</a></td><td>A max-heap of counts plus a queue of tasks cooling down.</td><td>coming up</td></tr>
+      <tr><td>355</td><td><a href="https://leetcode.com/problems/design-twitter/" target="_blank" rel="noopener">Design Twitter</a></td><td>A news feed is a k-way merge of each followee's newest posts.</td><td>coming up</td></tr>
+    </tbody>
+  </table>
+  <h3>Hard</h3>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th><th>Page</th></tr></thead>
+    <tbody>
+      <tr><td>295</td><td><a href="https://leetcode.com/problems/find-median-from-data-stream/" target="_blank" rel="noopener">Find Median from Data Stream</a></td><td>Two heaps facing each other, sizes kept within one (Template E).</td><td>optional extra</td></tr>
+      <tr><td>23</td><td><a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank" rel="noopener">Merge k Sorted Lists</a></td><td>Template D on ListNodes; the index in the tuple stops Python comparing nodes. Also in the Linked List lesson.</td><td>optional extra</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p12-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Push 7, then 2, then 5 into an empty min-heap. What does the list look like?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>[2, 7, 5].</strong> 7 is the root. 2 goes to index 1, beats its parent 7, and swaps to the top. 5 goes to index 2; its parent is 2, so it stays. Not sorted, but a valid heap. <code>measure.py</code> prints the same. Try it in the playground.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. A heap holds 1000 items. At most how many levels can a pushed item climb?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>9.</strong> The tree has 9 levels below the root (2<sup>9</sup> = 512 &le; 1000 &lt; 2<sup>10</sup>), so sift up does at most 9 swaps. That is the O(log n).</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. You want the 3 <em>smallest</em> numbers from a stream of a million. Which heap, of what size, and what is on top?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>A max-heap of size 3</strong> (push <code>-x</code> in Python). Its top is the largest of the 3 smallest so far: the one to throw out when a smaller number arrives. O(n log 3) time and O(3) memory.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>heap</dt><dd>A tree stored in a list where each parent beats its children, so the best item is at index 0.</dd>
+    <dt>priority queue</dt><dd>Add items in any order; always remove the best. Built with a heap.</dd>
+    <dt>min-heap / max-heap</dt><dd>Smallest on top / largest on top. Python's heapq is a min-heap.</dd>
+    <dt>root</dt><dd>The top of the heap, <code>h[0]</code>.</dd>
+    <dt>complete binary tree</dt><dd>Filled level by level, left to right; so it fits in a list with no gaps.</dd>
+    <dt>parent / child index</dt><dd>Parent of i is (i - 1) // 2; children are 2i + 1 and 2i + 2.</dd>
+    <dt>sift up / sift down</dt><dd>Move an item up or down one path, swapping, until the heap order holds.</dd>
+    <dt>heapify</dt><dd>Turn a list into a heap in O(n).</dd>
+    <dt>top-k</dt><dd>Problems asking for the best k items; use a heap of size k.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p12-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> a heap always hands you the smallest (or largest) item: peek in O(1), push and pop in O(log n). Use it when you need the best item again and again while the set changes.</p>
+    <p><strong>Signals:</strong> k largest / smallest / closest / frequent, k-th, streams, merging sorted lists, a running median, "repeatedly take the best".</p>
+    <p><strong>Templates:</strong> <code>heappush</code>, <code>heappop</code>, <code>h[0]</code>, <code>heapify</code>. Top-k: a size-k heap whose top is the one to throw out. K-way merge: one item per list as <code>(value, i, j)</code>. Median: two heaps.</p>
+    <p><strong>Cost:</strong> top-k is O(n log k) time and O(k) memory; sorting is O(n log n). At n = 100,000 and k = 3: 100,025 comparisons against 1,536,355.</p>
+    <p><strong>Traps:</strong> heapq is a min-heap (negate for max); the wrong heap direction for top-k; ties that compare payloads (add a counter); a heap is not sorted.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own numbers and k, and watch the heap of size k decide each one. Try an increasing list to see the heap's worst case.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(12)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

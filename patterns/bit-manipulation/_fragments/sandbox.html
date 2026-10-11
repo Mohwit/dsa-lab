@@ -1,0 +1,37 @@
+<div class="sandbox-container" id="sandbox21">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Bit lab</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Two templates, your input. Count the 1s of any 32-bit number with <code>n &amp;= n - 1</code>, or fold a list with XOR and watch pairs cancel.</p>
+    <div class="control-group">
+      <label for="s21N">n (one whole number, negatives allowed)</label>
+      <input type="text" id="s21N" value="44" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s21n="44">44</button>
+      <button class="btn btn-sm" type="button" data-s21n="0">Zero</button>
+      <button class="btn btn-sm" type="button" data-s21n="255">All eight on</button>
+      <button class="btn btn-sm" type="button" data-s21n="4096">Power of two</button>
+      <button class="btn btn-sm" type="button" data-s21n="-1">Negative: -1</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s21RunN">Count the 1s</button>
+    </div>
+    <div class="control-group" style="margin-top:14px">
+      <label for="s21L">nums for the XOR fold (0 to 65535, up to 25)</label>
+      <input type="text" id="s21L" value="2, 7, 4, 7, 2" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s21l="2, 7, 4, 7, 2">Pairs plus one</button>
+      <button class="btn btn-sm" type="button" data-s21l="9">Just one</button>
+      <button class="btn btn-sm" type="button" data-s21l="1, 1, 2, 2, 3, 3, 8">Single at the end</button>
+      <button class="btn btn-sm" type="button" data-s21l="6, 6, 5, 3">Two singles (breaks it)</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s21RunL">XOR the list</button>
+    </div>
+    <p class="sb-error" id="s21Err" role="alert"></p>
+    <div id="s21Tp"></div>
+    <div class="readout" id="s21Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These match <code>patterns/bit-manipulation/measure.py</code>. Drop steps: 44 takes 3, 0 takes 0, 255 takes 8, 4096 takes 1, -1 takes 32 (after masking); checking all positions is always 32. XOR lists: 4 in 5 steps (dict: 8 ops), 9 in 1 (dict: 2), 8 in 7 (dict: 11). On 6, 6, 5, 3 XOR gives 6 (that is 5 ^ 3) while the dict finds 5: the "pairs plus one" promise is broken.</p>
+  </div>
+</div>

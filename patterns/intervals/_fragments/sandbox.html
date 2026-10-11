@@ -1,0 +1,33 @@
+<div class="sandbox-container" id="sandbox15">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Interval runner</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template and type intervals as start-end pairs, like <code>1-3, 2-5, 8-10</code> (or <code>[1,3],[2,5]</code>). Times go from 0 to 30, and each end must be bigger than its start.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s15m="merge">Merge</button>
+      <button class="btn btn-sm" type="button" data-s15m="rooms">Rooms needed</button>
+      <button class="btn btn-sm" type="button" data-s15m="erase">Remove fewest</button>
+    </div>
+    <div class="control-group">
+      <label for="s15In">intervals (up to 12)</label>
+      <input type="text" id="s15In" value="7-9, 1-3, 2-5, 10-11, 6-8" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s15ex="merge|7-9, 1-3, 2-5, 10-11, 6-8">Lesson example</button>
+      <button class="btn btn-sm" type="button" data-s15ex="merge|1-3, 3-5, 5-7">Touching chain</button>
+      <button class="btn btn-sm" type="button" data-s15ex="merge|1-10, 2-3, 4-5">One swallows all</button>
+      <button class="btn btn-sm" type="button" data-s15ex="merge|1-2, 4-5, 7-8">No overlaps</button>
+      <button class="btn btn-sm" type="button" data-s15ex="rooms|1-5, 2-4, 3-7, 4-6, 8-10">Five meetings</button>
+      <button class="btn btn-sm" type="button" data-s15ex="rooms|1-3, 3-5, 5-7">Back to back</button>
+      <button class="btn btn-sm" type="button" data-s15ex="erase|1-4, 2-3, 3-6, 5-7, 6-8">Remove fewest</button>
+      <button class="btn btn-sm" type="button" data-s15ex="erase|1-10, 2-3, 4-5">Long one first</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s15Run">Run</button>
+    </div>
+    <p class="sb-error" id="s15Err" role="alert"></p>
+    <div class="readout" id="s15Out" aria-live="polite"></div>
+    <div id="s15Tp"></div>
+    <p class="sidebar-hint">For the examples, the counts match <code>patterns/intervals/measure.py</code> (section 7): the lesson example merges with 4 scan checks against 10 pair checks; five meetings need 3 rooms with 10 events against 25 tests; remove fewest drops 2 after 4 checks against 32 sets tried; the touching chain needs 1 room and merges into [1, 7].</p>
+  </div>
+</div>

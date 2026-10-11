@@ -1,0 +1,401 @@
+<div class="lesson-content xp" id="lesson20">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">2D Dynamic Programming</h1>
+    <p class="lesson-subtitle">Goal: handle DP problems where one number is not enough to describe a smaller question. You will name the two numbers, draw the table, and fill it in an order that never reads an empty cell.</p>
+    <div class="lesson-meta"><span class="badge">Tier 5</span><span class="badge">pattern</span><span class="badge diff-medium">after 1D DP</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the 2D dynamic programming lesson"><a href="#p20-s-idea">City map</a><a href="#p20-s-race">Race</a><a href="#p20-s-words">Pattern words</a><a href="#p20-s-map">Mental map</a><a href="#p20-s-template">Templates</a><a href="#p20-s-variants">Variants</a><a href="#p20-s-spot">Spot it</a><a href="#p20-s-traps">Traps</a><a href="#p20-s-cost">Complexity</a><a href="#p20-s-problems">Problems</a><a href="#p20-s-check">Check yourself</a><a href="#p20-recap">Recap</a></nav>
+
+<section class="step" id="p20-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. When one number is not enough, use a table</h2>
+  <p>In 1D DP, one number named each smaller question: "ways to reach step i". Some problems need two numbers. A robot on a grid needs a row <em>and</em> a column. Comparing two words needs a position in each word.</p>
+  <p>Two numbers make a table. Each cell is one smaller question. You fill the cells in an order where every cell's sources are already done.</p>
+  <div class="card analogy"><strong>Analogy: a delivery map of city blocks.</strong> A courier starts at the top-left corner and may only ride right or down. On every corner of the map, write how many routes reach it. Corners on the top street and the left avenue have just 1 route (go straight). Any other corner is reached from the corner above or the corner to the left, so its number is those two added. Fill the map row by row and the bottom-right corner holds the answer.</div>
+  <h3>Try it: the same 3 x 4 map, two ways</h3>
+  <p>How many right-or-down routes go from the top-left to the bottom-right of a 3 row, 4 column grid?</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: plain recursion.</strong> Each cell counts how many times the recursion visits it. Watch the same cells get asked again and again.</p>
+      <div id="p20tpA"></div>
+    </div>
+    <div>
+      <p><strong>Fast: fill the map.</strong> Each new cell (teal) adds the cell above and the cell to the left (blue). Each cell is filled once.</p>
+      <div id="p20tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p20roA"><span class="lab">plain recursion</span><span class="val">-</span> <span class="unit">calls</span></div>
+    <div class="ro" id="p20roB"><span class="lab">table</span><span class="val">-</span> <span class="unit">cells</span></div>
+  </div>
+  <p class="caption">Both give 10 routes. <code>measure.py</code> prints 19 calls and 12 cells, and the same visit counts per cell: the cells next to the start are asked 3 times each.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Same recipe as 1D DP, with two numbers in the state: dp[r][c] or dp[i][j]. Draw the table first; the code is just the drawing.</div>
+  <p class="newwords">New words: <span class="chip">2D state</span><span class="chip">dp table</span></p>
+</section>
+
+<section class="step" id="p20-s-race">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. Race: grow the map</h2>
+  <p>Drag the sliders. The page runs the plain recursion and counts its calls, and counts the table's cells.</p>
+  <div class="card">
+    <label class="slider">Rows <output id="p20outR">5</output><input type="range" id="p20rngR" min="2" max="12" step="1" value="5" aria-label="Rows"></label>
+      <label class="slider">Columns <output id="p20outC">5</output><input type="range" id="p20rngC" min="2" max="12" step="1" value="5" aria-label="Columns"></label>
+    <div class="readouts">
+      <div class="ro" id="p20roP"><span class="lab">routes</span><span class="val">-</span></div>
+      <div class="ro" id="p20roN"><span class="lab">plain calls</span><span class="val">-</span></div>
+      <div class="ro" id="p20roT"><span class="lab">table cells</span><span class="val">-</span></div>
+      <div class="ro" id="p20roX"><span class="lab">calls / cells</span><span class="val">-</span></div>
+    </div>
+    <canvas id="p20cvA" role="img" aria-label="Bars comparing the plain recursion's calls with the table's cells for the chosen grid"></canvas>
+    <p class="caption">The bar scale is the call count, so the teal table bar shrinks to a sliver as the grid grows.</p>
+  </div>
+<pre><code><span class="c"># == 2. Grid race (rows x cols): naive calls vs table cells ==</span>
+ 3 x 3 : paths =       6   naive calls =        11   cells =   9
+ 5 x 5 : paths =      70   naive calls =       139   cells =  25
+10 x 10: paths =  48,620   naive calls =    97,239   cells = 100
+12 x 12: paths = 705,432   naive calls = 1,410,863   cells = 144</code></pre>
+  <details class="math"><summary>Why the calls are 2 x routes - 1</summary><div>
+    <p>Every route ends at a base cell on the top row or left column, and each call there returns 1. So the recursion has exactly one leaf call per route. Each other call makes two calls, so the tree has one fewer inner call than leaves:</p>
+    <div class="eq">calls = routes + (routes - 1) = 2 x routes - 1</div>
+    <p>The number of routes is "choose which of the (rows - 1) + (cols - 1) moves go down": C(22, 11) = 705,432 on a 12 x 12 grid. That grows exponentially. The table has rows x cols cells: 144.</p>
+  </div></details>
+  <p class="newwords">New words: <span class="chip">overlapping subproblems</span></p>
+</section>
+
+<section class="step" id="p20-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A DP state named by two numbers, such as a row and a column, or a position in each of two strings.">2D state</dfn></td><td>Two numbers name one smaller question</td><td>dp[i][j] = LCS of the first i letters of a and the first j of b</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The grid of stored answers, one cell per state.">dp table</dfn></td><td>The grid of stored answers</td><td>(len(a) + 1) x (len(b) + 1) cells</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A string made of the first i characters of another, written s[:i]. The empty prefix (i = 0) is a real state with its own answer.">prefix</dfn></td><td>The first i letters of a word</td><td>"sto" is the length-3 prefix of "stone"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The extra row 0 and column 0 of a two-strings table, standing for the empty prefix. It holds the base cases and removes the need for i - 1 &lt; 0 checks.">empty-prefix row</dfn></td><td>Row 0 and column 0: one word is still empty</td><td>LCS with "" is 0; edit distance from "" to "abc" is 3</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The cells a transition reads to fill the current cell. They must all be filled before it.">source cells</dfn></td><td>The cells a new cell reads</td><td>Above, left, and the diagonal above-left</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The order you visit cells. Row by row works when sources are above and to the left; interval problems fill by length instead.">fill order</dfn></td><td>Which cell comes next</td><td>Row by row, left to right</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Knapsack: choose items under a budget (weight, amount). The state is (how many items considered, budget left).">knapsack</dfn></td><td>Items under a budget</td><td>dp[i][a] = ways to make amount a with the first i coins</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Interval DP: the state is a range [i, j] of the input, filled from short ranges to long ones.">interval DP</dfn></td><td>The state is a range, short ranges first</td><td>is s[i..j] a palindrome?</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A DP where the second number is a small set of modes (holding, not holding, cooling down) and each step moves between modes.">state machine DP</dfn></td><td>Position plus a mode</td><td>Day i, and "holding a share" or not</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Keeping only the previous row (or one row updated in place) when each row reads only the row above. Memory drops from O(m x n) to O(n).">rolling row</dfn></td><td>Keep one row, not the whole table</td><td><code>dp[c] += dp[c - 1]</code></td></tr>
+    </tbody>
+  </table>
+  <p class="newwords">New words: <span class="chip">prefix</span><span class="chip">empty-prefix row</span><span class="chip">source cells</span><span class="chip">knapsack</span><span class="chip">interval DP</span><span class="chip">state machine DP</span><span class="chip">rolling row</span></p>
+</section>
+
+<section class="step" id="p20-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: find the two numbers, then draw the table</h2>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>A DP smell (count ways, min / max, true / false) plus one of: a grid, two strings or lists, a list and a budget, a range inside one string, or a "mode" that changes as you go.</span></li>
+    <li><b>Ask</b><span>"What two things change as I make choices?" Try to finish "dp[_][_] is the answer for ...". If one number would do, stay 1D.</span></li>
+    <li><b>Pick the variant</b><span>The two numbers tell you the family.</span>
+      <ul class="mm-branches">
+        <li><i>a grid, moves right / down</i>grid paths: (row, col), sources above and left</li>
+        <li class="is-pick"><i>two strings or lists</i>two prefixes: (i in a, j in b), sources above, left, diagonal</li>
+        <li><i>items and a budget or target</i>knapsack: (items used, amount left)</li>
+        <li><i>a range inside one string or row</i>interval: (left, right), fill by length</li>
+        <li><i>days with a mode: holding, cooling</i>state machine: (day, mode), a few rolling numbers</li>
+        <li><i>a grid with moves in any direction</i>not plain DP: BFS, or DFS with memo when values strictly increase</li>
+      </ul>
+    </li>
+    <li><b>Draw</b><span>Rows = first number, columns = second. Add row 0 / column 0 for "empty" when the state is a prefix. Write the base row and column. Point arrows from each cell to its sources.</span></li>
+    <li><b>Invariant</b><span>A cell is filled only after all its source cells are final. The arrows decide the fill order: row by row, by length, or backwards.</span></li>
+    <li><b>Write it</b><span>Two loops in the fill order, the transition inside, the answer in the corner (or the max over the table). Then ask: does each row read only the row above? If yes, keep one row.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Is the table (m + 1) x (n + 1) with the empty row? Does any cell read a cell not yet filled? With one row, does the loop direction reuse an item by mistake? For counting with coins, does the loop order count orders or combinations?</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p20-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Templates: grid, two strings, budget, one row</h2>
+  <h3>Template A: grid paths</h3>
+  <table>
+    <thead><tr><th style="width:48%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> unique_paths(m, n):</code></td><td>Routes on an m-row, n-column grid.</td></tr>
+      <tr><td><code>    dp = [[<span class="n">1</span>] * n <span class="k">for</span> _ <span class="k">in</span> range(m)]</code></td><td>Start every cell at 1. The top row and left column keep it: one straight route. Build rows with a loop, never <code>[[1] * n] * m</code> (that copies one row m times).</td></tr>
+      <tr><td><code>    <span class="k">for</span> r <span class="k">in</span> range(<span class="n">1</span>, m):</code></td><td>Rows top to bottom...</td></tr>
+      <tr><td><code>        <span class="k">for</span> c <span class="k">in</span> range(<span class="n">1</span>, n):</code></td><td>... and columns left to right, so above and left are ready.</td></tr>
+      <tr><td><code>            dp[r][c] = dp[r - <span class="n">1</span>][c] + dp[r][c - <span class="n">1</span>]</code></td><td>Arrive from above or from the left.</td></tr>
+      <tr><td><code>    <span class="k">return</span> dp[m - <span class="n">1</span>][n - <span class="n">1</span>]</code></td><td>The bottom-right corner.</td></tr>
+    </tbody>
+  </table>
+  <h3>Play: drop rocks on the map</h3>
+  <p>Click a cell to place or remove a rock. A rock cell has 0 routes. Every other cell still adds above and left, and the whole table updates at once. Can you make the answer exactly 1? Can you block it completely with two rocks?</p>
+  <div class="card">
+    <div id="p20rock" style="overflow-x:auto"></div>
+    <div class="readouts">
+      <div class="ro" id="p20roK"><span class="lab">routes to the bottom-right</span><span class="val">-</span></div>
+      <div class="ro" id="p20roQ"><span class="lab">rocks</span><span class="val">-</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" id="p20rockA">Two rocks in the middle</button>
+      <button class="btn btn-sm" type="button" id="p20rockB">Wall off the start</button>
+      <button class="btn btn-sm" type="button" id="p20rockC">No rocks</button>
+    </div>
+    <p class="caption" id="p20rockMsg" role="status"></p>
+  </div>
+  <p class="caption">With no rocks a 4 x 5 map has 35 routes; with rocks at (1, 1) and (2, 3) it has 7; rocks right of and below the start leave 0. All three come from <code>measure.py</code>.</p>
+
+  <h3>Template B: two strings (longest common subsequence)</h3>
+  <p>A <dfn class="term" tabindex="0" data-def="Longest common subsequence (LCS): the longest list of letters that appears, in order but not necessarily side by side, in both strings.">longest common subsequence</dfn> is the longest run of letters that appears in both words in the same order, gaps allowed. "stone" and "tones" share "tone".</p>
+  <table>
+    <thead><tr><th style="width:48%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>    m, n = len(a), len(b)</code></td><td>Lengths of the two words.</td></tr>
+      <tr><td><code>    dp = [[<span class="n">0</span>] * (n + <span class="n">1</span>) <span class="k">for</span> _ <span class="k">in</span> range(m + <span class="n">1</span>)]</code></td><td>dp[i][j] = LCS of a[:i] and b[:j]. The +1 adds the empty-prefix row and column, all 0.</td></tr>
+      <tr><td><code>    <span class="k">for</span> i <span class="k">in</span> range(<span class="n">1</span>, m + <span class="n">1</span>):</code></td><td>One more letter of a each row.</td></tr>
+      <tr><td><code>        <span class="k">for</span> j <span class="k">in</span> range(<span class="n">1</span>, n + <span class="n">1</span>):</code></td><td>One more letter of b each column.</td></tr>
+      <tr><td><code>            <span class="k">if</span> a[i - <span class="n">1</span>] == b[j - <span class="n">1</span>]:</code></td><td>The last letters of both prefixes match. (Cell i stands for the letter at index i - 1.)</td></tr>
+      <tr><td><code>                dp[i][j] = dp[i - <span class="n">1</span>][j - <span class="n">1</span>] + <span class="n">1</span></code></td><td>Use that letter: one more than both prefixes without it (the diagonal).</td></tr>
+      <tr><td><code>            <span class="k">else</span>:</code></td><td>They differ: one of the two last letters is not used.</td></tr>
+      <tr><td><code>                dp[i][j] = max(dp[i - <span class="n">1</span>][j], dp[i][j - <span class="n">1</span>])</code></td><td>Drop a's last letter (above) or b's (left), keep the better.</td></tr>
+      <tr><td><code>    <span class="k">return</span> dp[m][n]</code></td><td>Both whole words.</td></tr>
+    </tbody>
+  </table>
+  <p>Step through it. Row labels are letters of "stone", column labels are letters of "tones"; <code>""</code> is the empty prefix.</p>
+  <div id="p20tpC"></div>
+  <p class="caption">25 cells computed, answer 4. The final table matches <code>measure.py</code> row by row.</p>
+  <p><strong>Edit distance</strong> uses the same table with a different transition: the fewest single-letter inserts, deletes or replacements that turn a into b. Row 0 is j (insert j letters), column 0 is i (delete i letters). On a match, copy the diagonal. Otherwise take 1 + the smallest of: above (delete), left (insert), diagonal (replace).</p>
+<pre><code><span class="k">if</span> a[i - <span class="n">1</span>] == b[j - <span class="n">1</span>]:
+    dp[i][j] = dp[i - <span class="n">1</span>][j - <span class="n">1</span>]
+<span class="k">else</span>:
+    dp[i][j] = <span class="n">1</span> + min(dp[i - <span class="n">1</span>][j], dp[i][j - <span class="n">1</span>], dp[i - <span class="n">1</span>][j - <span class="n">1</span>])
+<span class="c"># edit("flaw", "lawn") = 2: delete f, insert n</span></code></pre>
+
+  <h3>Template C: position x budget (coin change II)</h3>
+  <p>How many different <em>combinations</em> of coins worth 1, 2 and 3 make 4? Row i means "using only the first i coin types". Column a is the amount.</p>
+  <table>
+    <thead><tr><th style="width:48%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>    dp[i][<span class="n">0</span>] = <span class="n">1</span></code> for every i</td><td>One way to make 0: take nothing.</td></tr>
+      <tr><td><code>    c = coins[i - <span class="n">1</span>]</code></td><td>The coin type this row adds.</td></tr>
+      <tr><td><code>            dp[i][a] = dp[i - <span class="n">1</span>][a]</code></td><td>Ways that do not use coin c at all: the row above.</td></tr>
+      <tr><td><code>            <span class="k">if</span> a &gt;= c: dp[i][a] += dp[i][a - c]</code></td><td>Ways that use c at least once: take one c, then any way to make a - c <em>in this same row</em> (c may be used again).</td></tr>
+    </tbody>
+  </table>
+  <div id="p20tpD"></div>
+  <p class="caption">4 combinations: 1+1+1+1, 1+1+2, 2+2, 1+3. Reading the same row is what makes coins reusable; reading the row above would allow each coin once (0/1 knapsack).</p>
+
+  <h3>Template D: shrink the table to one row</h3>
+  <p>If a row reads only itself and the row above, one row is enough. Overwrite it in place:</p>
+  <table>
+    <thead><tr><th style="width:48%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>    dp = [<span class="n">1</span>] * n</code></td><td>The top row of the grid.</td></tr>
+      <tr><td><code>    <span class="k">for</span> _ <span class="k">in</span> range(<span class="n">1</span>, m):</code></td><td>Each pass turns the row into the next row.</td></tr>
+      <tr><td><code>        <span class="k">for</span> c <span class="k">in</span> range(<span class="n">1</span>, n):</code></td><td>Left to right.</td></tr>
+      <tr><td><code>            dp[c] += dp[c - <span class="n">1</span>]</code></td><td>Before the update, <code>dp[c]</code> still holds "above". <code>dp[c - 1]</code> is already the new "left".</td></tr>
+      <tr><td><code>    <span class="k">return</span> dp[-<span class="n">1</span>]</code></td><td>O(m x n) time, O(n) memory.</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>When you shrink to one row, the loop direction decides what "old" and "new" mean. Left to right reads the new left value (items reusable). Right to left reads only old values (each item once). See trap 2.</div>
+  <p class="newwords">New words: <span class="chip">longest common subsequence</span><span class="chip">edit distance</span><span class="chip">0/1 knapsack</span></p>
+</section>
+
+<section class="step" id="p20-s-variants">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>6. The variants and how to spot their two numbers</h2>
+  <table class="approaches">
+    <thead><tr><th>Variant</th><th>The two numbers</th><th>Sources</th><th>Fill order</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Grid paths</td><td>row, column</td><td>above, left</td><td>row by row</td><td>Unique Paths</td></tr>
+      <tr class="is-best"><td>Two strings</td><td>prefix of a, prefix of b</td><td>above, left, diagonal</td><td>row by row</td><td>LCS, Edit Distance, Interleaving String, Distinct Subsequences</td></tr>
+      <tr><td>Knapsack</td><td>items considered, budget</td><td>row above (0/1) or same row (unbounded)</td><td>item by item</td><td>Coin Change II, Target Sum, Partition Equal Subset Sum</td></tr>
+      <tr><td>Interval</td><td>left end, right end</td><td>shorter ranges inside</td><td>by length, or left end backwards</td><td>Palindromic Substrings, Burst Balloons</td></tr>
+      <tr><td>State machine</td><td>day, mode</td><td>yesterday's modes</td><td>day by day</td><td>Stock with Cooldown</td></tr>
+      <tr><td>Grid with memo DFS</td><td>row, column</td><td>bigger neighbours</td><td>whatever order recursion visits</td><td>Longest Increasing Path in a Matrix</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">The highlighted row is the most common in interviews. Once you see "two strings", the table nearly draws itself.</p>
+  <h3>A state machine in three numbers</h3>
+  <p>Buy and sell a share many times, but after a sale you must wait one day. Each day you are in one of three modes. Keep the best profit for each:</p>
+<pre><code>hold, sold, rest = float(<span class="s">"-inf"</span>), <span class="n">0</span>, <span class="n">0</span>
+<span class="k">for</span> p <span class="k">in</span> prices:
+    hold, sold, rest = max(hold, rest - p), hold + p, max(rest, sold)
+<span class="k">return</span> max(sold, rest)
+<span class="c"># prices [3, 1, 4, 2, 5, 0, 3]: 6, and a brute force over every action list agrees</span></code></pre>
+  <p>The table is days x 3 modes, but each day reads only yesterday, so three rolling numbers are enough. The moves: hold (keep holding, or buy after resting), sold (sell what you hold), rest (wait, which ends any cooldown).</p>
+  <h3>Grid with arrows in all directions</h3>
+  <p>If moves can go up, down, left and right, there is no row-by-row order. Longest Increasing Path still works with memoised DFS, because each step must climb to a bigger value, so no path loops back. Without that "always increasing" rule you need BFS or a graph algorithm instead.</p>
+</section>
+
+<section class="step" id="p20-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>7. Spot the pattern: 2D DP, and which two numbers?</h2>
+  <div class="predict">
+    <h3>A. A spell checker suggests the dictionary word that needs the fewest letter changes (add, remove or swap one letter) to become what you typed.</h3>
+    <textarea aria-label="Is task A 2D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, two strings.</strong> Edit distance between the typed word and each candidate: dp[i][j] over prefixes of both.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A hiker packs items, each with a weight and a joy score, and the bag holds at most 15 kg. Each item can be packed once. Maximise total joy.</h3>
+    <textarea aria-label="Is task B 2D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, 0/1 knapsack.</strong> dp[i][w] = most joy from the first i items within weight w. One row works if you loop w backwards.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A robot in a maze can step up, down, left or right. Find the fewest steps to the exit.</h3>
+    <textarea aria-label="Is task C 2D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, this is BFS.</strong> It looks like a grid DP, but moves go in every direction, so a cell's answer can depend on cells that depend on it. No fill order exists. Fewest steps on an unweighted grid means BFS (graphs lesson).</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Two recipe step lists must be merged into one schedule that keeps each recipe's order. Can a given schedule be such a merge?</h3>
+    <textarea aria-label="Is task D 2D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, two strings.</strong> dp[i][j] = can the first i + j steps of the schedule be made from i steps of the first recipe and j of the second. This is Interleaving String.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Climb a staircase with steps of 1 or 2; each step has a cost. Find the cheapest way to the top.</h3>
+    <textarea aria-label="Is task E 2D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>DP, but 1D.</strong> Only one thing changes: which step you are on. A second number would add nothing. Do not reach for a table when a list will do.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Put + or - in front of each number in a list so the total hits a target. How many ways?</h3>
+    <textarea aria-label="Is task F 2D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, knapsack.</strong> dp[i][s] = ways to reach sum s with the first i numbers. Sums can be negative, so shift them or use a dict per row. This is Target Sum.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Two strings, a grid with one-way moves, items with a budget, a range [i, j], or a day plus a mode. Not 2D DP: moves in every direction (BFS), or only one thing changing (1D).</div>
+</section>
+
+<section class="step" id="p20-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>8. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: reading a cell that is not filled yet</span>
+    <p>Counting palindromic substrings with <code>pal[i][j] = s[i] == s[j] and pal[i + 1][j - 1]</code>. The source is in row i + 1, the row <em>below</em>. Loop i upward from 0 and that row is still all False:</p>
+<pre><code><span class="k">for</span> i <span class="k">in</span> range(n):                  <span class="c"># wrong: row i + 1 not filled yet</span>
+<span class="c"># == 9. Trap: interval fill order, count palindromic substrings ==</span>
+'aaaa': right order (i from the end) = 10   wrong order (i from 0) = 7</code></pre>
+    <p>Fix: follow the arrows. Sources below mean <code>for i in range(n - 1, -1, -1)</code>, or loop by length, shortest first.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: one row, wrong direction</span>
+    <p>Subset sum ("can some items, each used once, add up to T?") in one row. Looping the target upward lets an item read a cell it just updated, so it gets used twice:</p>
+<pre><code><span class="k">for</span> t <span class="k">in</span> range(x, target + <span class="n">1</span>):       <span class="c"># wrong for 0/1</span>
+    dp[t] = dp[t] <span class="k">or</span> dp[t - x]
+forwards  = True   <span class="c"># nums [3], target 6: used the 3 twice</span>
+backwards = False</code></pre>
+    <p>Fix: for "each item once", loop <code>range(target, x - 1, -1)</code>. For "reuse allowed" (coin change), forwards is exactly right.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: loop order counts orders instead of combinations</span>
+    <p>Coin change II with coins outside counts each mix once. Put the amount loop outside and 1 + 2 and 2 + 1 count as two:</p>
+<pre><code><span class="c"># == 7. Trap: loop order in coin change II, coins [1, 2], amount 3 ==</span>
+coins outer (combinations) = 2
+amount outer (orders)      = 3</code></pre>
+    <p>Fix: decide whether order matters. Combinations: coins outer. Orders (like the stairs, or Combination Sum IV): amount outer.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: no empty-prefix row, and Python wraps -1</span>
+    <p>Build the LCS table as m x n without row 0 and column 0. At i = 0, <code>dp[i - 1]</code> is <code>dp[-1]</code>: Python quietly reads the <em>last</em> row. No error, just a wrong answer:</p>
+<pre><code>dp = [[<span class="n">0</span>] * n <span class="k">for</span> _ <span class="k">in</span> range(m)]      <span class="c"># wrong: no empty row</span>
+...  dp[i][j] = dp[i - <span class="n">1</span>][j - <span class="n">1</span>] + <span class="n">1</span>
+smallest failing pair found: ('a', 'aa') -> 2 instead of 1</code></pre>
+    <p>With one row, dp[-1] is row 0 itself, which already holds the 1 from the first match, so the second "a" counts it again. Fix: size the table (m + 1) x (n + 1), let row 0 and column 0 mean "empty", and read letters with <code>a[i - 1]</code>.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Draw the arrows, then loop so every arrow points at a filled cell. Add the empty row. In one row, the direction is part of the meaning.</div>
+</section>
+
+<section class="step" id="p20-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>9. Complexity: cells x work per cell</h2>
+  <details class="math"><summary>Two strings of length 10, then 1000</summary><div>
+    <p>Plain LCS recursion on two 10-letter words with no letter in common: <strong>369,511</strong> calls (2 x C(20, 10) - 1, the worst case). The table: 11 x 11 = 121 cells.</p>
+    <p>For two 1000-letter strings: 1,002,001 cells, 1,000,000 of them computed, each in O(1). That is O(m x n) time: a million small steps, which Python handles. Memory O(m x n), or O(n) with a rolling row if you only need the number (not the actual subsequence).</p>
+  </div></details>
+  <details class="math"><summary>Knapsack and the "pseudo-polynomial" catch</summary><div>
+    <p>Coin change II and subset sum have (items + 1) x (budget + 1) cells: O(k x T). That depends on the <em>value</em> of the budget T, not on how many digits it has. A target of 10<sup>9</sup> makes the table far too big even with few items. Interviewers sometimes ask about this: it is called pseudo-polynomial.</p>
+  </div></details>
+  <details class="math"><summary>Interval DP costs more</summary><div>
+    <p>Palindromic substrings: n<sup>2</sup> / 2 cells, O(1) each, so O(n<sup>2</sup>). Burst Balloons: n<sup>2</sup> ranges, and each tries every last balloon in the range, so O(n<sup>3</sup>). Count the inner loop, not just the table.</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Time = number of cells x work per cell. Memory = the table, or one row when each row reads only the row above.</div>
+</section>
+
+<section class="step" id="p20-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>10. The problems in this pattern</h2>
+  <p>Their pages come in later sessions; the links open LeetCode. Hard ones marked "extra" are optional.</p>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-easy">easy</span></td></tr>
+      <tr><td></td><td colspan="2">None: 2D DP starts at medium. Warm up with the 1D lesson first.</td></tr>
+      <tr><td colspan="3"><span class="badge diff-medium">medium</span></td></tr>
+      <tr><td>62</td><td><a href="https://leetcode.com/problems/unique-paths/" target="_blank" rel="noopener">Unique Paths</a></td><td>This lesson's map; also a one-line maths answer, C(m + n - 2, m - 1).</td></tr>
+      <tr><td>1143</td><td><a href="https://leetcode.com/problems/longest-common-subsequence/" target="_blank" rel="noopener">Longest Common Subsequence</a></td><td>The two-strings template itself.</td></tr>
+      <tr><td>309</td><td><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/" target="_blank" rel="noopener">Best Time to Buy and Sell Stock with Cooldown</a></td><td>State machine: day x (hold, sold, rest).</td></tr>
+      <tr><td>518</td><td><a href="https://leetcode.com/problems/coin-change-ii/" target="_blank" rel="noopener">Coin Change II</a></td><td>Count combinations: coins in the outer loop.</td></tr>
+      <tr><td>494</td><td><a href="https://leetcode.com/problems/target-sum/" target="_blank" rel="noopener">Target Sum</a></td><td>Knapsack over sums that can be negative; a dict per row, or turn it into subset sum.</td></tr>
+      <tr><td>97</td><td><a href="https://leetcode.com/problems/interleaving-string/" target="_blank" rel="noopener">Interleaving String</a></td><td>Two strings, and the third string's position is i + j for free.</td></tr>
+      <tr><td>72</td><td><a href="https://leetcode.com/problems/edit-distance/" target="_blank" rel="noopener">Edit Distance</a></td><td>Two strings, three neighbours: insert, delete, replace.</td></tr>
+      <tr><td colspan="3"><span class="badge diff-hard">hard</span></td></tr>
+      <tr><td>329</td><td><a href="https://leetcode.com/problems/longest-increasing-path-in-a-matrix/" target="_blank" rel="noopener">Longest Increasing Path in a Matrix</a></td><td>Extra. Moves in four directions: memoised DFS works because values must increase.</td></tr>
+      <tr><td>115</td><td><a href="https://leetcode.com/problems/distinct-subsequences/" target="_blank" rel="noopener">Distinct Subsequences</a></td><td>Extra. Two strings, counting: on a match, add the diagonal and the "skip this letter" cell.</td></tr>
+      <tr><td>312</td><td><a href="https://leetcode.com/problems/burst-balloons/" target="_blank" rel="noopener">Burst Balloons</a></td><td>Extra. Interval DP: pick the balloon that pops <em>last</em> in a range.</td></tr>
+      <tr><td>10</td><td><a href="https://leetcode.com/problems/regular-expression-matching/" target="_blank" rel="noopener">Regular Expression Matching</a></td><td>Extra. Two strings, where a star can match zero letters (look two columns back).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p20-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>11. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. How many right-or-down routes cross a 3 x 7 grid? How many calls would the plain recursion make?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>28 routes, 55 calls</strong> (2 x 28 - 1), against 21 table cells. Set the race sliders to 3 and 7 to check.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Edit distance from "sit" to "kiss"? What is the size of the table?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>3</strong> (replace s with k, replace t with s, insert s). The table is 4 x 5: one row per prefix of "sit" including the empty one, one column per prefix of "kiss". Run it in the sandbox to watch.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Coins worth 2 and 3, amount 5. How many combinations? And in one row, which way does the amount loop run?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>1</strong> (2 + 3). The amount loop runs <strong>forwards</strong>, because coins may be reused. Backwards would be for "each item once".</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>2D state</dt><dd>A smaller question named by two numbers: dp[i][j].</dd>
+    <dt>dp table</dt><dd>The grid of stored answers, one cell per state.</dd>
+    <dt>prefix</dt><dd>The first i letters of a word; the empty prefix has i = 0.</dd>
+    <dt>empty-prefix row</dt><dd>Row 0 and column 0 for "nothing yet"; they hold the base cases.</dd>
+    <dt>source cells</dt><dd>The cells a transition reads; they must be filled first.</dd>
+    <dt>fill order</dt><dd>The visiting order that keeps every source filled before it is read.</dd>
+    <dt>longest common subsequence</dt><dd>The longest in-order (gaps allowed) run of letters found in both strings.</dd>
+    <dt>edit distance</dt><dd>The fewest single-letter inserts, deletes and replacements that turn one string into the other.</dd>
+    <dt>knapsack</dt><dd>Choosing items under a budget; 0/1 means each item at most once, unbounded means reuse allowed.</dd>
+    <dt>interval DP</dt><dd>The state is a range [i, j]; fill short ranges first.</dd>
+    <dt>state machine DP</dt><dd>A position plus a small mode (holding, cooling); each step moves between modes.</dd>
+    <dt>rolling row</dt><dd>Keep one row instead of the table when each row reads only the row above.</dd>
+    <dt>pseudo-polynomial</dt><dd>Cost that grows with a number's value (like a budget), not with the input's length.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p20-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> when a smaller question needs two numbers to describe it, store the answers in a table and fill it so every cell's sources are ready.</p>
+    <p><strong>Signals:</strong> two strings, a grid with one-way moves, items and a budget, a range [i, j], a day plus a mode.</p>
+    <p><strong>Template:</strong> <code>dp = [[0] * (n + 1) for _ in range(m + 1)]</code>; base row and column; two loops in the fill order; the transition reads above / left / diagonal; answer in the corner.</p>
+    <p><strong>Cost:</strong> cells x work per cell, usually O(m x n). Memory O(n) with one rolling row. A 12 x 12 grid: 1,410,863 plain calls against 144 cells.</p>
+    <p><strong>Traps:</strong> reading unfilled cells (follow the arrows), one-row loop direction (backwards for each-item-once), loop order (combinations vs orders), the missing empty row (Python's -1 wraps silently).</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type two words and watch the LCS or edit distance table fill, with the plain recursion's call count beside it. Try a word against itself, and against the empty word.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(20)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

@@ -1,0 +1,34 @@
+<div class="sandbox-container" id="sandbox17">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Graph explorer</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type edges as pairs joined by a dash, separated by commas. Pick a start node, then run BFS, DFS or a topological sort and step through it.</p>
+    <div class="control-group">
+      <label for="s17Edges">edges (up to 24, at most 12 nodes)</label>
+      <input type="text" id="s17Edges" value="A-B, A-C, A-D, B-E, C-E, C-F, D-F, E-G, F-G" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s17Start">start node (BFS and DFS)</label>
+      <input type="text" id="s17Start" value="A" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="s17Dir">
+      <label for="s17Dir" style="margin:0">one-way edges (A-B means A to B only)</label>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s17ex="A-B, B-C, C-D, D-E, E-F, F-A|A|0">Ring</button>
+      <button class="btn btn-sm" type="button" data-s17ex="A-B, B-C, D-E|A|0">Two groups</button>
+      <button class="btn btn-sm" type="button" data-s17ex="H-A, H-B, H-C, H-D, H-E|H|0" data-s17run="dfs">Star (DFS)</button>
+      <button class="btn btn-sm" type="button" data-s17ex="under-pants, pants-shoes, socks-shoes, pants-belt, shirt-belt, shirt-tie, tie-coat, belt-coat|under|1" data-s17run="topo">Getting dressed</button>
+      <button class="btn btn-sm" type="button" data-s17ex="a-b, b-c, c-a, c-d|a|1" data-s17run="topo">One-way cycle</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s17Bfs">Run BFS</button>
+      <button class="btn btn-sm" type="button" id="s17Dfs">Run DFS</button>
+      <button class="btn btn-sm" type="button" id="s17Topo">Run topological sort</button>
+    </div>
+    <p class="sb-error" id="s17Err" role="alert"></p>
+    <div id="s17Tp"></div>
+    <div class="readout" id="s17Out" aria-live="polite"></div>
+    <p class="sidebar-hint">These match <code>patterns/graphs/measure.py</code>: the ring gives BFS A B F C E D and DFS A B C D E F (12 checks each); two groups reaches only A B C; getting dressed sorts to under, socks, shirt, pants, tie, shoes, belt, coat. In the one-way cycle nothing has in-degree 0, so no order exists.</p>
+  </div>
+</div>

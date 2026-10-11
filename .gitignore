@@ -1,0 +1,8 @@
+# generated: the GitHub Action rebuilds the page on every push
+site/index.html
+# tooling and caches
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+_site/

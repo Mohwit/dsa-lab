@@ -1,0 +1,38 @@
+<div class="sandbox-container" id="sandbox8">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Prefix lab</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type an array of whole numbers. Count the stretches that sum to k with the prefix count map, or ask range-sum questions with the prefix array.</p>
+    <div class="btn-row" role="group" aria-label="Which template to run">
+      <button class="btn btn-sm" type="button" data-s8m="count">Count sums equal to k</button>
+      <button class="btn btn-sm" type="button" data-s8m="range">Range sums</button>
+    </div>
+    <div class="control-group">
+      <label for="s8Nums">nums (up to 20 numbers)</label>
+      <input type="text" id="s8Nums" value="1, 2, 3, -2, 2" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group" id="s8KGroup">
+      <label for="s8K">k</label>
+      <input type="text" id="s8K" value="3" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group" id="s8QGroup" hidden>
+      <label for="s8Q">questions as "l r", separated by ;</label>
+      <input type="text" id="s8Q" value="1 4; 0 7; 2 5; 3 6" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s8ex="count|1, 2, 3, -2, 2|3">Mixed signs</button>
+      <button class="btn btn-sm" type="button" data-s8ex="count|1, 1, 1, 1|2">All ones</button>
+      <button class="btn btn-sm" type="button" data-s8ex="count|0, 0, 0|0">Zeros, k = 0</button>
+      <button class="btn btn-sm" type="button" data-s8ex="count|3, -3, 3, -3|0">Negatives</button>
+      <button class="btn btn-sm" type="button" data-s8ex="count|5, 6, 7|4">No answer</button>
+      <button class="btn btn-sm" type="button" data-s8ex="range|3, 1, 4, 1, 5, 9, 2, 6|1 4; 0 7; 2 5; 3 6">Four questions</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s8Run">Run</button>
+    </div>
+    <p class="sb-error" id="s8Err" role="alert"></p>
+    <div id="s8Tp"></div>
+    <div class="readout" id="s8Out" aria-live="polite"></div>
+    <p class="sidebar-hint">For the count examples, these match <code>patterns/prefix-sums/measure.py</code>: found 4, 3, 6, 4 and 0, in 5, 4, 3, 4 and 3 map steps, against 15, 10, 6, 10 and 6 brute-force sums. The four questions cost 12 operations with prefix sums and 20 by re-adding.</p>
+  </div>
+</div>

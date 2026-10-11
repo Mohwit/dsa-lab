@@ -1,0 +1,349 @@
+<div class="lesson-content xp" id="lesson8">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Prefix Sums</h1>
+    <p class="lesson-subtitle">Goal: store running totals once, so the sum of any stretch of an array is a single subtraction. Then add a hash map, and you can count stretches with a given sum in one pass.</p>
+    <div class="lesson-meta"><span class="badge">Tier 1</span><span class="badge">pattern</span><span class="badge diff-easy">start with 303</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Prefix Sums lesson"><a href="#p8-s-idea">Odometer</a><a href="#p8-s-race">Race</a><a href="#p8-s-words">Pattern words</a><a href="#p8-s-map">Mental map</a><a href="#p8-s-template">Templates</a><a href="#p8-s-spot">Spot it</a><a href="#p8-s-traps">Traps</a><a href="#p8-s-cost">Complexity</a><a href="#p8-s-problems">Problems</a><a href="#p8-s-check">Check yourself</a><a href="#p8-recap">Recap</a></nav>
+
+<section class="step" id="p8-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Keep a running total, then subtract</h2>
+  <p>Many problems ask the same thing again and again: "what is the sum of the numbers from position l to position r?"</p>
+  <p>The slow way adds the stretch up from scratch for every question. The fast way does one pass first, writing down the total so far at every position. After that, every question is one subtraction.</p>
+  <div class="card analogy"><strong>Analogy: a car's odometer.</strong> The odometer shows the total distance since the car was new. You never measure a trip with a tape. You read the odometer when you leave and when you arrive, and subtract. A 3-hour drive and a 3-minute drive cost the same: two readings and one subtraction.</div>
+  <h3>Try it: four questions on the same array</h3>
+  <p>The array is <code>[3, 1, 4, 1, 5, 9, 2, 6]</code>. The questions ask for the sums of index 1..4, 0..7, 2..5 and 3..6 (both ends included).</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: re-add every stretch.</strong> For each question, walk from l to r and add. One operation per number added.</p>
+      <div id="p8tpA"></div>
+    </div>
+    <div>
+      <p><strong>Fast: odometer first.</strong> Build the running totals once (8 additions). Then each question is one subtraction.</p>
+      <div id="p8tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p8roA"><span class="lab">re-adding</span><span class="val">-</span> <span class="unit">operations</span></div>
+    <div class="ro" id="p8roB"><span class="lab">prefix sums</span><span class="val">-</span> <span class="unit">operations</span></div>
+  </div>
+  <p class="caption">Both counts come from running the code, here and in <code>measure.py</code>: 20 against 12. The answers are 11, 31, 19 and 17 either way. With 4 short questions the gap is small; the race below makes it big.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span><code>prefix[i]</code> is the sum of the first i numbers. The sum of index l..r is <code>prefix[r + 1] - prefix[l]</code>.</div>
+  <p class="newwords">New words: <span class="chip">prefix sum</span><span class="chip">range sum</span></p>
+</section>
+
+<section class="step" id="p8-s-race">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. The race: many questions on a long array</h2>
+  <p>Pick the array length n and the number of questions q. Every question asks for the whole array, the <dfn class="term" tabindex="0" data-def="The input that makes a method do the most work. Big-O usually describes this case.">worst case</dfn> for re-adding. Both racers do one operation per tick.</p>
+  <div class="card">
+    <label class="slider">array length n <output id="p8nOut">100</output><input type="range" id="p8nIn" min="10" max="1000" step="10" value="100" aria-label="Array length n"></label>
+    <label class="slider">number of questions q <output id="p8qOut">100</output><input type="range" id="p8qIn" min="1" max="1000" step="1" value="100" aria-label="Number of questions q"></label>
+    <canvas id="p8cvA" role="img" aria-label="Race between re-adding every range and prefix sums: two bars that fill as each method counts its operations"></canvas>
+    <div class="btn-row"><button class="btn btn-primary btn-sm" type="button" id="p8go">Start the race</button></div>
+    <div class="readouts">
+      <div class="ro" id="p8roS"><span class="lab">re-adding (q x n)</span><span class="val">-</span></div>
+      <div class="ro" id="p8roP"><span class="lab">prefix (n + q)</span><span class="val">-</span></div>
+      <div class="ro" id="p8roR"><span class="lab">re-adding / prefix</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">The page runs both methods with a counter for your n and q. The bar scale is the re-adding count, so with many questions the teal bar is a sliver.</p>
+  </div>
+<pre><code><span class="c"># == 2. measure.py, worst case ==</span>
+n =    100, q =    100: re-adding =         10,000   prefix =     200   ratio = 50.0x
+n =   1000, q =   1000: re-adding =      1,000,000   prefix =   2,000   ratio = 500.0x
+n = 100000, q = 100000: re-adding = 10,000,000,000   prefix = 200,000   ratio = 50,000.0x</code></pre>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Re-adding costs O(n) per question: O(q x n) in total. Prefix sums cost O(n) once, then O(1) per question: O(n + q).</div>
+</section>
+
+<section class="step" id="p8-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words for running totals</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Odometer</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="An array where prefix[i] holds the sum of the first i items of nums. prefix[0] = 0. It has one more slot than nums.">prefix sum</dfn></td><td>Total of the first i numbers</td><td>The reading at mile i</td><td><code>prefix[i + <span class="n">1</span>] = prefix[i] + nums[i]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The sum of a contiguous stretch nums[l..r]. With prefix sums it is prefix[r + 1] - prefix[l].">range sum</dfn></td><td>Sum of one stretch, l to r</td><td>Length of one trip</td><td><code>prefix[r + <span class="n">1</span>] - prefix[l]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A contiguous stretch of an array: neighbours only, no gaps, in order. [4, 1, 5] is a subarray of [3, 1, 4, 1, 5]; [3, 4] is not.">subarray</dfn></td><td>A stretch of neighbours, no gaps</td><td>One trip, start to stop</td><td><code>nums[l:r + <span class="n">1</span>]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The leading prefix[0] = 0. It stands for 'nothing added yet', so a stretch that starts at index 0 can be measured too.">zero seed</dfn></td><td>The reading before you start: 0</td><td>The new car</td><td><code>prefix = [<span class="n">0</span>] * (n + <span class="n">1</span>)</code>, <code>{<span class="n">0</span>: <span class="n">1</span>}</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A dict from each running total seen so far to how many times it was seen. It answers 'how many earlier positions had total prefix - k?' in O(1).">prefix count map</dfn></td><td>How many times each running total appeared</td><td>A log of every reading</td><td><code>counts[prefix] += <span class="n">1</span></code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Turning two kinds of item into +1 and -1, so 'as many of each' becomes 'the stretch sums to 0'.">balance trick</dfn></td><td>Count one kind as +1, the other as -1</td><td>Driving forward and backward</td><td><code>bal += <span class="n">1</span> <span class="k">if</span> b <span class="k">else</span> -<span class="n">1</span></code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The reverse of a prefix sum: store only the change at each start and end of an update, then one running total rebuilds the whole array.">difference array</dfn></td><td>Store changes; a running total rebuilds values</td><td>Notes like "speed +2 from mile 1"</td><td><code>diff[l] += v; diff[r + <span class="n">1</span>] -= v</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Ranges written as [l, r): l is included, r is not. Python's range and slices use this. prefix[r] - prefix[l] is the sum of the half-open range [l, r).">half-open range</dfn></td><td>Start included, end not</td><td>Leave at l, arrive at r</td><td><code>range(l, r)</code>, <code>nums[l:r]</code></td></tr>
+    </tbody>
+  </table>
+  <p class="newwords">New words: <span class="chip">prefix sum</span><span class="chip">range sum</span><span class="chip">subarray</span><span class="chip">zero seed</span><span class="chip">prefix count map</span><span class="chip">balance trick</span><span class="chip">difference array</span><span class="chip">half-open range</span></p>
+</section>
+
+<section class="step" id="p8-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: from a blank page to working code</h2>
+  <p>Read this list top to bottom when a problem mentions sums of stretches.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>"Sum of the elements between l and r", many such questions, "subarray sum equals k", "as many 0s as 1s", "left sum equals right sum", or many "add v to every slot from l to r" updates.</span></li>
+    <li><b>Ask</b><span>"Can I write the sum of any stretch as one running total minus an earlier one?" If yes, store the running totals (or a map of them) and the question becomes a lookup.</span></li>
+    <li><b>Pick</b><span>Choose the variant by what is asked. The clue for each sits in yellow.</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>many range-sum questions, array never changes</i>Prefix array: build once, answer with <code>prefix[r + 1] - prefix[l]</code>. Range Sum Query.</li>
+        <li><i>"left side equals right side"</i>Total minus left: walk once with a running left sum; right = total - left - x. Find Pivot Index.</li>
+        <li><i>count stretches with sum k, negatives allowed</i>Prefix count map: <code>found += counts[prefix - k]</code>, seeded with <code>{0: 1}</code>. Subarray Sum Equals K.</li>
+        <li><i>"equal number of two kinds"</i>Balance trick: +1 / -1, then the longest stretch with total 0. Keep the <em>first</em> index of each balance. Contiguous Array.</li>
+        <li><i>"divisible by k"</i>Map of remainders: two equal <code>prefix % k</code> values mark a stretch divisible by k.</li>
+        <li><i>many range updates, read at the end</i>Difference array: +v at l, -v at r + 1, one running total at the end.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span><code>prefix[i]</code> is the sum of <code>nums[0..i-1]</code>. So <code>sum(nums[l..r]) = prefix[r + 1] - prefix[l]</code>. In the map version: before index i is counted, the map holds every running total of the stretches that end before i, including the empty start (0).</span></li>
+    <li><b>Steps</b><span>Seed with 0. Loop once, updating the running total. Ask the question (subtract, or look up <code>prefix - k</code>). Then record the current total. Return the answer.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Off by one: the prefix array has n + 1 slots, and the range l..r uses <code>r + 1</code>.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Did you seed the map with <code>{0: 1}</code> (or <code>{0: -1}</code> for "first index")? Without it, stretches that start at index 0 are missed.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Ask before you record, or the empty stretch counts itself when k = 0.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Negative numbers? Then a sliding window is wrong for "sum equals k": the sum no longer only grows when the window grows.</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Stretch sum = later total minus earlier total. Seed with 0, ask, then record.</div>
+</section>
+
+<section class="step" id="p8-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Templates</h2>
+  <h3>Template A: build once, answer many</h3>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> range_sums(nums, queries):</code></td><td>Answer many "sum of l..r" questions.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;prefix = [<span class="n">0</span>] * (len(nums) + <span class="n">1</span>)</code></td><td>n + 1 slots. <code>prefix[0] = 0</code> is the zero seed.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">for</span> i <span class="k">in</span> range(len(nums)):</code></td><td>One pass over the array.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;prefix[i + <span class="n">1</span>] = prefix[i] + nums[i]</code></td><td>The next reading = this reading + the next number.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;answers = []</code></td><td>One answer per question.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">for</span> l, r <span class="k">in</span> queries:</code></td><td>Each question, l and r both included.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;answers.append(prefix[r + <span class="n">1</span>] - prefix[l])</code></td><td>Reading after r minus reading before l. O(1).</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">return</span> answers</code></td><td>O(n + q) time, O(n) extra space.</td></tr>
+    </tbody>
+  </table>
+  <p>Step through it on <code>[3, 1, 4, 1, 5]</code> with the questions 1..3 and 0..4.</p>
+  <div id="p8tpC"></div>
+  <p class="caption"><code>measure.py</code> prints <code>prefix = [0, 3, 4, 8, 9, 14]</code>, and the sum of index 1..3 is 9 - 3 = 6.</p>
+
+  <h3>Template B: count stretches that sum to k (prefix count map)</h3>
+  <p>A stretch ending at i sums to k exactly when an earlier running total equals <code>prefix - k</code>. So count how often each running total has appeared, and look up <code>prefix - k</code>.</p>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> count_sum_k(nums, k):</code></td><td>How many subarrays sum to exactly k?</td></tr>
+      <tr><td><code>&nbsp;&nbsp;counts = {<span class="n">0</span>: <span class="n">1</span>}</code></td><td>The zero seed: the empty start has total 0, seen once.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;prefix = <span class="n">0</span></code></td><td>The running total so far.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;found = <span class="n">0</span></code></td><td>The answer counter.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">for</span> x <span class="k">in</span> nums:</code></td><td>One pass.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;prefix += x</code></td><td>Update the reading.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;found += counts.get(prefix - k, <span class="n">0</span>)</code></td><td>Ask first: how many earlier readings are exactly k below this one? Each is a stretch ending here.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;counts[prefix] = counts.get(prefix, <span class="n">0</span>) + <span class="n">1</span></code></td><td>Then record this reading.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">return</span> found</code></td><td>O(n) time, O(n) space. Works with negative numbers.</td></tr>
+    </tbody>
+  </table>
+  <p>Step through <code>nums = [1, 2, 3, -2, 2]</code>, <code>k = 3</code>. Watch the map of readings fill up.</p>
+  <div id="p8tpD"></div>
+  <p class="caption">From <code>measure.py</code>: 4 stretches found in 5 map steps. The brute force adds 15 sums to get the same 4. At n = 10,000 it is 10,000 map steps against 50,005,000 sums.</p>
+
+  <h3>Template C: the balance trick (+1 / -1)</h3>
+  <p>"As many 0s as 1s" becomes "the stretch sums to 0" if a 1 counts +1 and a 0 counts -1. Two equal balances mark such a stretch. For the <em>longest</em> one, remember the <em>first</em> index of each balance.</p>
+  <table>
+    <thead><tr><th style="width:50%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> longest_balanced(bits):</code></td><td>Longest stretch with equal 0s and 1s.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;first = {<span class="n">0</span>: -<span class="n">1</span>}</code></td><td>Balance 0 is "seen" just before index 0.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;balance = <span class="n">0</span></code></td><td>Running +1 / -1 total.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;best = <span class="n">0</span></code></td><td>Longest length so far.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">for</span> i, b <span class="k">in</span> enumerate(bits):</code></td><td>One pass.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;balance += <span class="n">1</span> <span class="k">if</span> b == <span class="n">1</span> <span class="k">else</span> -<span class="n">1</span></code></td><td>A 1 steps up, a 0 steps down.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">if</span> balance <span class="k">in</span> first:</code></td><td>Seen this balance before?</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;best = max(best, i - first[balance])</code></td><td>Then everything after that index, up to i, is balanced.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">else</span>:</code></td><td>New balance:</td></tr>
+      <tr><td><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;first[balance] = i</code></td><td>record its first index only.</td></tr>
+      <tr><td><code>&nbsp;&nbsp;<span class="k">return</span> best</code></td><td>O(n) time, O(n) space.</td></tr>
+    </tbody>
+  </table>
+  <div id="p8tpE"></div>
+  <p class="caption">From <code>measure.py</code>: <code>[0, 1, 1, 0, 1, 1, 1, 0]</code> gives 4 (index 0..3), the same as the brute force.</p>
+
+  <h3>Template D: two more shapes</h3>
+  <div class="grid2">
+    <div class="card"><span class="callout-title" style="color:var(--teal)">Total minus left (pivot)</span>
+<pre><code>total, left = sum(nums), <span class="n">0</span>
+<span class="k">for</span> i, x <span class="k">in</span> enumerate(nums):
+    <span class="k">if</span> left == total - left - x:
+        <span class="k">return</span> i
+    left += x
+<span class="k">return</span> -<span class="n">1</span></code></pre>
+      <p>No array needed: the right side is <code>total - left - x</code>. On <code>[2, 3, -1, 8, 4]</code> it returns 3: left 4, right 4.</p></div>
+    <div class="card"><span class="callout-title" style="color:var(--teal)">Difference array (updates)</span>
+<pre><code>diff = [<span class="n">0</span>] * (n + <span class="n">1</span>)
+<span class="k">for</span> l, r, v <span class="k">in</span> updates:
+    diff[l] += v
+    diff[r + <span class="n">1</span>] -= v
+<span class="c"># one running total of diff = final values</span></code></pre>
+      <p>Updates (1..3, +2), (2..5, +3), (0..1, +1) on 6 zeros give <code>[1, 3, 5, 5, 3, 3]</code>.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Array of totals for range questions. Map of totals for "how many" or "how long" questions. Same seed of 0 in both.</div>
+</section>
+
+<section class="step" id="p8-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>6. Spot the pattern: running totals or not?</h2>
+  <p>Decide yes or no, and name the variant. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A fitness app stores the steps you walked each day for a year. It must answer thousands of "how many steps between day a and day b?" questions.</h3>
+    <textarea aria-label="Does prefix sums fit task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: prefix array.</strong> Fixed data, many range-sum questions. Build once, then <code>prefix[b + 1] - prefix[a]</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A bank account log has deposits (positive) and withdrawals (negative). Count the stretches of back-to-back entries whose total is exactly zero.</h3>
+    <textarea aria-label="Does prefix sums fit task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: prefix count map with k = 0.</strong> Every repeated running balance marks a zero-sum stretch. Negative numbers rule out a sliding window.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A football match log lists each goal as "home" or "away". Find the longest stretch of goals where both teams scored equally often.</h3>
+    <textarea aria-label="Does prefix sums fit task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: balance trick.</strong> home = +1, away = -1, keep the first index of each balance, longest gap wins.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. All numbers are positive. Find the shortest stretch whose sum is at least 50.</h3>
+    <textarea aria-label="Does prefix sums fit task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern (look-alike).</strong> "At least", and only positive numbers: growing the stretch only raises its sum. That is a sliding window: O(n) with O(1) memory, no map needed.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. A list of prices; find two prices (anywhere, not neighbours) that add up to 100.</h3>
+    <textarea aria-label="Does prefix sums fit task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Not this pattern (look-alike).</strong> It says "sum", but the two items are not a stretch of neighbours. That is a complement lookup in a hash map (Two Sum).</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A concert hall gets 10,000 bookings, each "seats l to r, add 2 people". After all bookings, report how many people sit in each seat.</h3>
+    <textarea aria-label="Does prefix sums fit task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: difference array.</strong> Each booking is two writes, <code>diff[l] += 2</code> and <code>diff[r + 1] -= 2</code>; one running total at the end gives every seat.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Sums of contiguous stretches, asked many times; "sum equals k" with negatives; equal counts of two kinds; left versus right totals; many range updates. Not: positive-only "at least / at most" (window), or pairs anywhere (hash map).</div>
+</section>
+
+<section class="step" id="p8-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>7. Classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: off by one</span>
+<pre><code>prefix = [<span class="n">0</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">8</span>, <span class="n">9</span>, <span class="n">14</span>]       <span class="c"># nums = [3, 1, 4, 1, 5]</span>
+prefix[<span class="n">3</span>] - prefix[<span class="n">1</span>]   <span class="c"># 5: wrong, misses nums[3]</span>
+prefix[<span class="n">4</span>] - prefix[<span class="n">1</span>]   <span class="c"># 6: right, index 1..3 = 1 + 4 + 1</span></code></pre>
+    <p><strong>Fix:</strong> say it out loud: "reading after r, minus reading before l": <code>prefix[r + 1] - prefix[l]</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: no zero seed in the map</span>
+<pre><code>counts = {}                 <span class="c"># should be {0: 1}</span></code></pre>
+    <p>On <code>[1, 2, 3]</code> with k = 3, the stretch <code>[1, 2]</code> starts at index 0. Its earlier reading is the empty start, 0, which was never stored. <code>measure.py</code>: buggy 1, right 2. <strong>Fix:</strong> <code>counts = {0: 1}</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: recording before asking</span>
+<pre><code>counts[prefix] = counts.get(prefix, <span class="n">0</span>) + <span class="n">1</span>   <span class="c"># recorded first ...</span>
+found += counts.get(prefix - k, <span class="n">0</span>)            <span class="c"># ... so with k = 0 it finds itself</span></code></pre>
+    <p>On <code>[1, 2]</code> with k = 0 the right answer is 0, but this counts 2: each reading matches itself, an empty stretch. <strong>Fix:</strong> ask, then record.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: a sliding window when numbers can be negative</span>
+    <p>A window shrinks while its sum is too big. That only works if adding a number never lowers the sum. On <code>[1, -1, 0]</code> with k = 0, the window finds 1 stretch; the right answer is 3 (<code>[1, -1]</code>, <code>[1, -1, 0]</code>, <code>[0]</code>). On all-positive <code>[1, 2, 3]</code>, k = 3, both say 2. <strong>Fix:</strong> any negative numbers, use the prefix count map.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 5: keeping the last index in the balance trick</span>
+<pre><code>first[balance] = i          <span class="c"># overwrites the earlier index every time</span></code></pre>
+    <p>For the longest stretch you need the <em>earliest</em> start. On <code>[0, 1, 1, 0, 1, 1, 1, 0]</code> this returns 2 instead of 4. <strong>Fix:</strong> only store a balance the first time you see it.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span><code>r + 1</code>. Seed with 0. Ask, then record. Negatives mean map, not window. First index for "longest".</div>
+</section>
+
+<section class="step" id="p8-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>8. Complexity: count it, then name it</h2>
+  <details class="math"><summary>Step 1: re-adding vs prefix for q questions</summary><div>
+    <p>Re-adding a whole-array question costs n additions, so q questions cost q x n. Prefix sums cost n additions to build and 1 subtraction per question: n + q.</p>
+    <div class="eq">n = q = 1000: 1,000,000 against 2,000 (500 times fewer)</div>
+    <p>Big-O: O(q x n) against O(n + q). Extra space: O(n) for the prefix array.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: counting stretches, brute force vs map</summary><div>
+    <p>An array of n numbers has n x (n + 1) / 2 stretches. The brute force adds each one up incrementally: 15 sums for n = 5, 50,005,000 for n = 10,000.</p>
+    <p>The map version does one step per number: n steps, each with a dict lookup and a dict update, O(1) on average. So O(n) time and up to n + 1 map entries: O(n) space.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: why it cannot be faster, and the hidden costs</summary><div>
+    <p>Every number can change the answer, so any correct method must read all n of them: O(n) is the floor. Hidden costs to watch: <code>sum(nums[l:r + 1])</code> inside a loop looks like one line but is O(n) per call, and Python's <code>itertools.accumulate(nums, initial=0)</code> builds the prefix array in one line, still O(n).</p>
+  </div></details>
+</section>
+
+<section class="step" id="p8-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>9. The problems in this pattern, easiest first</h2>
+  <p>The first four are the core list. The rest are extra practice for the variants on the mental map. Links open LeetCode in a new tab.</p>
+  <table class="approaches">
+    <thead><tr><th>Level</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge diff-easy">easy</span></td><td><a href="https://leetcode.com/problems/range-sum-query-immutable/" target="_blank" rel="noopener">303 Range Sum Query - Immutable</a></td><td>Template A inside a class: build in the constructor, subtract in each query.</td></tr>
+      <tr><td><span class="badge diff-easy">easy</span></td><td><a href="https://leetcode.com/problems/find-pivot-index/" target="_blank" rel="noopener">724 Find Pivot Index</a></td><td>No prefix array at all: total minus left minus the middle.</td></tr>
+      <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank" rel="noopener">560 Subarray Sum Equals K</a></td><td>Negatives kill the window; the prefix count map with <code>{0: 1}</code> wins.</td></tr>
+      <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/contiguous-array/" target="_blank" rel="noopener">525 Contiguous Array</a></td><td>Balance trick, plus "first index" instead of "count".</td></tr>
+      <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/subarray-sums-divisible-by-k/" target="_blank" rel="noopener">974 Subarray Sums Divisible by K</a> (extra)</td><td>Count equal remainders of the running total. Python's <code>%</code> is never negative; in other languages, fix negative remainders first.</td></tr>
+      <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/range-sum-query-2d-immutable/" target="_blank" rel="noopener">304 Range Sum Query 2D - Immutable</a> (extra)</td><td>Prefix sums of rectangles: add two, subtract the overlap.</td></tr>
+      <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/corporate-flight-bookings/" target="_blank" rel="noopener">1109 Corporate Flight Bookings</a> (extra)</td><td>Difference array, 1-based seats.</td></tr>
+      <tr><td><span class="badge diff-hard">hard</span></td><td><a href="https://leetcode.com/problems/shortest-subarray-with-sum-at-least-k/" target="_blank" rel="noopener">862 Shortest Subarray with Sum at Least K</a> (extra)</td><td>Negatives again, so prefix sums plus a monotonic deque (after the stack lesson).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p8-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>10. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Build the prefix array of <code>[2, -1, 3, 5]</code>. What is the sum of index 1..3?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><code>prefix = [0, 2, 1, 4, 9]</code>. Sum of 1..3 = <code>prefix[4] - prefix[1]</code> = 9 - 2 = <strong>7</strong> (-1 + 3 + 5). From <code>measure.py</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. How many subarrays of <code>[1, 1, 1]</code> sum to 2?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>2</strong>: index 0..1 and index 1..2. The readings are 1, 2, 3; at 2 the map has 0 once, at 3 it has 1 once. Run it in the sandbox to watch.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. What is the longest balanced stretch of <code>[0, 0, 1, 0, 1, 1]</code>?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>6</strong>, the whole array: three 0s and three 1s. The balance returns to 0 at index 5, and 0 was first seen at -1, so 5 - (-1) = 6. Brute force agrees in <code>measure.py</code>.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>prefix sum</dt><dd><code>prefix[i]</code> = sum of the first i numbers; <code>prefix[0] = 0</code>.</dd>
+    <dt>range sum</dt><dd>Sum of <code>nums[l..r]</code> = <code>prefix[r + 1] - prefix[l]</code>.</dd>
+    <dt>subarray</dt><dd>A stretch of neighbours with no gaps.</dd>
+    <dt>zero seed</dt><dd>The starting 0 reading, so stretches from index 0 count.</dd>
+    <dt>prefix count map</dt><dd>Running total : how many times it was seen. Answers "sum equals k".</dd>
+    <dt>balance trick</dt><dd>+1 for one kind, -1 for the other; equal counts means total 0.</dd>
+    <dt>difference array</dt><dd>Store +v at l and -v at r + 1; a running total rebuilds the values.</dd>
+    <dt>half-open range</dt><dd>[l, r): l included, r not, as in Python slices.</dd>
+    <dt>worst case</dt><dd>The input that costs the most work.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p8-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> like an odometer, store running totals once; the sum of any stretch is a later reading minus an earlier one.</p>
+    <p><strong>Signals:</strong> many range-sum questions; "subarray sum equals k" (especially with negatives); equal counts of two kinds; left total versus right total; many range updates.</p>
+    <p><strong>Templates:</strong> <code>prefix[i + 1] = prefix[i] + nums[i]</code>, then <code>prefix[r + 1] - prefix[l]</code>. Counting: <code>counts = {0: 1}</code>; <code>found += counts.get(prefix - k, 0)</code>; then record. Longest: <code>first = {0: -1}</code>, keep first index only.</p>
+    <p><strong>Cost:</strong> O(n) to build, O(1) per question; the map version is O(n) time and space. At n = q = 1000: 2,000 operations against 1,000,000.</p>
+    <p><strong>Traps:</strong> <code>r + 1</code>; the zero seed; ask before recording; negatives rule out a window; first index, not last.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own array and k, and watch the map of readings. Try one with negative numbers and one with zeros.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(8)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

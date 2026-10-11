@@ -1,0 +1,30 @@
+<div class="sandbox-container" id="sandbox10">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Chain workshop</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type the node values, separated by commas. Pick what to run: reverse it, find its middle, or check it for a loop.</p>
+    <div class="control-group">
+      <label for="s10In">node values (up to 7)</label>
+      <input type="text" id="s10In" value="1, 2, 3, 4, 5" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s10Pos">pos: the index the tail links back to (-1 means no loop)</label>
+      <input type="text" id="s10Pos" value="-1" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s10ex="1, 2, 3, 4, 5" data-s10pos="-1" data-s10m="reverse">Reverse five nodes</button>
+      <button class="btn btn-sm" type="button" data-s10ex="4, 8, 15, 16, 23, 42" data-s10pos="-1" data-s10m="middle">Middle of an even list</button>
+      <button class="btn btn-sm" type="button" data-s10ex="7" data-s10pos="-1" data-s10m="reverse">One node</button>
+      <button class="btn btn-sm" type="button" data-s10ex="1, 2, 3, 4, 5, 6" data-s10pos="2" data-s10m="cycle">Loop back to index 2</button>
+      <button class="btn btn-sm" type="button" data-s10ex="3, 1, 4, 1, 5" data-s10pos="0" data-s10m="cycle">Tail to head</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" data-s10mode="reverse">Reverse</button>
+      <button class="btn btn-primary btn-sm" type="button" data-s10mode="middle">Find the middle</button>
+      <button class="btn btn-primary btn-sm" type="button" data-s10mode="cycle">Detect a loop</button>
+    </div>
+    <p class="sb-error" id="s10Err" role="alert"></p>
+    <div id="s10Tp"></div>
+    <div class="readout" id="s10Out" aria-live="polite"></div>
+    <p class="sidebar-hint">For the example buttons, these counts match <code>patterns/linked-list/measure.py</code>: five nodes reverse in 5 hops (10 the slow way); the even list's middle is 16 after 3 rounds; the index-2 loop is caught after 4 rounds (start value 3); tail to head after 5 rounds.</p>
+  </div>
+</div>

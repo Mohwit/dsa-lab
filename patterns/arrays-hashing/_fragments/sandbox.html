@@ -1,0 +1,23 @@
+<div class="sandbox-container" id="sandbox1">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Seen-it scanner</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Type a list of whole numbers, separated by commas. Run it to watch the set fill up and stop at the first repeat.</p>
+    <div class="control-group">
+      <label for="s1In">nums (up to 25 numbers)</label>
+      <input type="text" id="s1In" value="3, 8, 1, 9, 4, 6" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s1ex="3, 8, 1, 9, 4, 6">No repeats</button>
+      <button class="btn btn-sm" type="button" data-s1ex="2, 9, 2, 6, 4, 7">Early repeat</button>
+      <button class="btn btn-sm" type="button" data-s1ex="6, 1, 8, 3, 9, 4, 4">Late repeat</button>
+      <button class="btn btn-sm" type="button" data-s1ex="7, 7, 7, 7, 7">All same</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s1Run">Run</button>
+    </div>
+    <p class="sb-error" id="s1Err" role="alert"></p>
+    <div id="s1Tp"></div>
+    <div class="readout" id="s1Out" aria-live="polite"></div>
+    <p class="sidebar-hint">For the four example lists, these counts match <code>patterns/arrays-hashing/measure.py</code>: 6 vs 15, 3 vs 2, 7 vs 21, and 2 vs 1 (steps vs comparisons). On a lucky early repeat the brute force can win on tiny lists. Big-O is about how the worst case grows.</p>
+  </div>
+</div>

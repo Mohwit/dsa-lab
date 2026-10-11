@@ -1,0 +1,377 @@
+<div class="lesson-content xp" id="lesson5">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Two Pointers</h1>
+    <p class="lesson-subtitle">Goal: put one finger at each end of the data and move them with a rule. Every move throws away a whole batch of answers that cannot work, so one walk replaces a check of every pair.</p>
+    <div class="lesson-meta"><span class="badge">Tier 1</span><span class="badge">pattern</span><span class="badge diff-easy">after arrays and hashing</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Two Pointers lesson"><a href="#p5-s-idea">The idea</a><a href="#p5-s-words">Pattern words</a><a href="#p5-s-map">Mental map</a><a href="#p5-s-template">Templates</a><a href="#p5-s-spot">Spot it</a><a href="#p5-s-traps">Traps</a><a href="#p5-s-cost">Complexity</a><a href="#p5-s-problems">Problems</a><a href="#p5-s-check">Check yourself</a><a href="#p5-recap">Recap</a></nav>
+
+<section class="step" id="p5-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Two fingers, and every move throws away a whole row of answers</h2>
+  <p>You have a sorted list of numbers and a target. Find two numbers that add up to the target.</p>
+  <p>The slow way tries every pair. The two pointer way puts a finger on the smallest number and a finger on the biggest, then moves one finger per check.</p>
+  <div class="card analogy"><strong>Analogy: two people on one sorted bookshelf.</strong> One starts at the thin books on the left, one at the thick books on the right. Together they need a stack exactly 14 cm wide. Too thin? The left person swaps for the next thicker book. Too thick? The right person swaps for a thinner one. They meet in the middle, and nobody ever goes back.</div>
+  <p>Why is a move safe? Say the smallest number plus the biggest number is still too small. Then the smallest number is too small with <em>every</em> partner, because the biggest one was its best hope. So the whole row of pairs that use it can go, in one move.</p>
+  <h3>Try it: the same list, two ways</h3>
+  <p>The list is <code>[1, 3, 5, 6, 8, 10, 12]</code> and the target is <code>14</code>. The grid has one cell per pair: <code>?</code> is a pair not yet ruled out, a number is a sum that was checked, and <code>x</code> is a pair thrown away without checking.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Two pointers.</strong> Check the pair at <code>l</code> and <code>r</code>. Too small: move <code>l</code> right, and a whole row turns to <code>x</code>. Too big: move <code>r</code> left, and a whole column goes.</p>
+      <div id="p5tpA"></div>
+    </div>
+    <div>
+      <p><strong>Brute force: try every pair.</strong> Take each number and add it to every number after it. The grid fills one cell per check, row by row.</p>
+      <div id="p5tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p5roA"><span class="lab">two pointers</span><span class="val">-</span> <span class="unit">pair checks</span></div>
+    <div class="ro" id="p5roB"><span class="lab">try every pair</span><span class="val">-</span> <span class="unit">pair checks</span></div>
+    <div class="ro" id="p5roC"><span class="lab">pairs in the grid</span><span class="val">-</span></div>
+  </div>
+  <p class="caption">Counts come from running both methods on this list, in the page and in <code>measure.py</code> (6 checks against 16, out of 21 pairs). Six checks settle all 21 pairs, because each check that misses rules out a full row or column.</p>
+
+  <h3>Your turn: be the pointers</h3>
+  <p>A new sorted list and target appear below. You move the fingers. Each press is one check. Follow the rule and you always find the pair; break it and you might throw the answer away.</p>
+  <div class="card" id="p5game">
+    <p id="p5gTask" aria-live="polite">Loading a puzzle...</p>
+    <div class="tp-arr" id="p5gArr" aria-label="The sorted list with the two pointers"></div>
+    <div class="readouts">
+      <div class="ro" id="p5gSum"><span class="lab">nums[l] + nums[r]</span><span class="val">-</span></div>
+      <div class="ro" id="p5gCmp"><span class="lab">compared with target</span><span class="val">-</span></div>
+      <div class="ro" id="p5gMoves"><span class="lab">your moves</span><span class="val">0</span></div>
+      <div class="ro" id="p5gRule"><span class="lab">moves the rule needs</span><span class="val">-</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" id="p5gL">Move l right</button>
+      <button class="btn btn-sm" type="button" id="p5gR">Move r left</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p5gNew">New puzzle</button>
+    </div>
+    <p class="caption" id="p5gMsg" aria-live="polite">Tip: compare the sum with the target first, then decide which finger is the one that cannot be part of the answer.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Each step, ask: "which of my two items can no longer be part of any answer?" Move that pointer. Sorted order is what lets you answer that question with one comparison.</div>
+  <p class="newwords">New words: <span class="chip">pointer</span><span class="chip">search space</span><span class="chip">brute force</span></p>
+</section>
+
+<section class="step" id="p5-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Bookshelf</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A pointer here is just an index into the list, such as l or r. It points at one item; moving it means adding or subtracting 1.">pointer</dfn></td><td>An index you move, not a memory address</td><td>A finger on one book</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Two pointers that start at both ends and walk towards each other until they meet. Used on sorted lists and for mirror checks such as palindromes.">opposite ends</dfn> (converging)</td><td>Start at both ends, walk inwards</td><td>Two people meeting in the middle</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Two pointers that both walk left to right. One reads every item (fast), the other marks where the next kept item goes (slow). Also called reader and writer.">same direction</dfn> (fast and slow)</td><td>A reader runs ahead, a writer follows</td><td>One person reads titles, another shelves the keepers</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="All the answers that are still possible. Two pointers shrinks it every step: for a pair search, it is every pair with both items between l and r.">search space</dfn></td><td>Every answer still possible</td><td>The books still between the two people</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A fact that is true before and after every step of a loop. For pair sum: if an answer exists, it lies between l and r.">invariant</dfn></td><td>A promise every step keeps</td><td>"If the right stack exists, it is between us"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Changing the list itself instead of building a new one, using O(1) extra memory.">in place</dfn></td><td>Fix the list itself, no copy</td><td>Rearrange the shelf, no second shelf</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A word or sentence that reads the same backwards, often after ignoring case, spaces and punctuation.">palindrome</dfn></td><td>Same forwards and backwards</td><td>The shelf looks the same from either end</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Finding k numbers with a given sum. Fix k - 2 of them with loops, then run the two pointer pair search on the rest. 3Sum is k = 3.">k-sum</dfn></td><td>Fix some items, pair search the rest</td><td>One person holds a book still while two others search</td></tr>
+    </tbody>
+  </table>
+  <p>A <dfn class="term" tabindex="0" data-def="The plain method that tries every possibility, such as checking every pair. Correct but often too slow.">brute force</dfn> is still worth saying out loud first. Then say what each pointer move lets you skip.</p>
+  <p class="newwords">New words: <span class="chip">opposite ends</span><span class="chip">same direction</span><span class="chip">invariant</span><span class="chip">in place</span><span class="chip">palindrome</span><span class="chip">k-sum</span></p>
+</section>
+
+<section class="step" id="p5-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to two pointers</h2>
+  <p>Read this when a new problem looks familiar and you do not know how to start.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The input is sorted (or you may sort it). The task is about a pair or triple with a target, a mirror check, or "do it in place with O(1) extra memory".</span></li>
+    <li><b>Ask</b><span>"After one comparison, can I prove that one of my two items is useless for every remaining answer?" If yes, you can move that pointer and never come back.</span></li>
+    <li><b>Pick the variant</b><span>Each shape has its own tell-tale sign.</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>sorted + pair to target</i>Opposite ends: <code>l = 0</code>, <code>r = n - 1</code>, move the side that is too small or too big.</li>
+        <li class="is-pick"><i>reads the same both ways</i>Opposite ends, no sort needed: compare the mirror pair, step both inwards.</li>
+        <li class="is-pick"><i>in place, remove or keep</i>Same direction: fast reads every item, slow marks where the next keeper goes.</li>
+        <li class="is-pick"><i>triples, k numbers</i>Fixed <code>i</code> plus inner pair: sort, loop <code>i</code>, pair search on the right of <code>i</code>.</li>
+        <li class="is-pick"><i>two sorted lists</i>One pointer per list: always move the one with the smaller item (merge).</li>
+        <li><i>unsorted, need original indices</i>Not this: a hash map finds the partner in O(n) without sorting.</li>
+        <li><i>contiguous stretch</i>Not this: a sliding window (the two pointers bound a window).</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>If an answer exists, it lies between <code>l</code> and <code>r</code>. For same direction: everything left of <code>slow</code> is the finished output.</span></li>
+    <li><b>Steps</b><span>Set the pointers. Loop while <code>l &lt; r</code>. Compare once. Record the answer or move exactly the pointer the comparison rules out. Return after the loop.</span></li>
+    <li class="mm-trap"><b>Check</b><span><code>&lt;</code> or <code>&lt;=</code>? Is the input really sorted? Repeated values (3Sum)? Empty list and one item? Inner skip loops need their own <code>l &lt; r</code>.</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p5-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Four templates, one idea</h2>
+  <h3>Template A: opposite ends on sorted input</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> pair_sum(nums, target):</code></td><td>Return the indices of two numbers that add up to target, or None. <code>nums</code> must be sorted.</td></tr>
+      <tr><td><code>l, r = <span class="n">0</span>, len(nums) - <span class="n">1</span></code></td><td>One finger on the smallest item, one on the biggest. The search space is every pair between them.</td></tr>
+      <tr><td><code><span class="k">while</span> l &lt; r:</code></td><td>Strictly less: a pair needs two different items.</td></tr>
+      <tr><td><code>s = nums[l] + nums[r]</code></td><td>One check. This is the count shown in the players.</td></tr>
+      <tr><td><code><span class="k">if</span> s == target: <span class="k">return</span> [l, r]</code></td><td>Found it.</td></tr>
+      <tr><td><code><span class="k">if</span> s &lt; target: l += <span class="n">1</span></code></td><td>Too small even with the biggest partner left: <code>nums[l]</code> is useless. Drop its row.</td></tr>
+      <tr><td><code><span class="k">else</span>: r -= <span class="n">1</span></code></td><td>Too big even with the smallest partner left: <code>nums[r]</code> is useless. Drop its column.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="k">None</span></code></td><td>The pointers met: the search space is empty.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Template B: opposite ends as a mirror check</h3>
+  <p>No sorting here. The rule is simpler: the two ends must match, so compare them and step both in. Skip anything that is not a letter or a digit.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">while</span> l &lt; r:</code></td><td>Stop when the fingers meet: a middle letter has no partner to check.</td></tr>
+      <tr><td><code><span class="k">if not</span> s[l].isalnum(): l += <span class="n">1</span></code></td><td>Skip a space or a mark on the left. One skip per loop turn, so the <code>l &lt; r</code> test guards it.</td></tr>
+      <tr><td><code><span class="k">elif not</span> s[r].isalnum(): r -= <span class="n">1</span></code></td><td>The same on the right.</td></tr>
+      <tr><td><code><span class="k">elif</span> s[l].lower() != s[r].lower(): <span class="k">return False</span></code></td><td>A mirror pair differs: not a palindrome.</td></tr>
+      <tr><td><code><span class="k">else</span>: l += <span class="n">1</span>; r -= <span class="n">1</span></code></td><td>They match: both step in.</td></tr>
+    </tbody>
+  </table>
+  <p>Step through <code>"Top spot!"</code>. It needs 3 comparisons; <code>"race a car"</code> fails on the 4th (both counts from <code>measure.py</code>).</p>
+  <div id="p5tpC"></div>
+
+  <h3>Template C: same direction, reader and writer</h3>
+  <p>Remove repeats from a sorted list in place. The reader <code>i</code> visits every item. The writer <code>k</code> marks where the next new value goes. Everything left of <code>k</code> is the finished answer.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">if not</span> nums: <span class="k">return</span> <span class="n">0</span></code></td><td>An empty list keeps nothing.</td></tr>
+      <tr><td><code>k = <span class="n">1</span></code></td><td>The first item is always kept, so the writer starts at slot 1.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(<span class="n">1</span>, len(nums)):</code></td><td>The reader walks every other item once.</td></tr>
+      <tr><td><code><span class="k">if</span> nums[i] != nums[k - <span class="n">1</span>]:</code></td><td>Is this value new compared with the last kept one?</td></tr>
+      <tr><td><code>nums[k] = nums[i]; k += <span class="n">1</span></code></td><td>Write it into the next free slot and move the writer.</td></tr>
+      <tr><td><code><span class="k">return</span> k</code></td><td>How many items are kept. The tail after <code>k</code> is leftover junk you ignore.</td></tr>
+    </tbody>
+  </table>
+  <div id="p5tpD"></div>
+  <p class="caption">On <code>[1, 1, 2, 2, 2, 3, 4, 4]</code> it returns <code>k = 4</code> and the list ends as <code>[1, 2, 3, 4, 2, 3, 4, 4]</code>: only the first 4 slots matter (<code>measure.py</code>).</p>
+
+  <h3>Template D: fix one, pair search the rest (3Sum)</h3>
+  <p>Sort. For each <code>i</code>, run Template A on the part to its right with target <code>-nums[i]</code>. Skip a value of <code>i</code> you already used, and after a hit skip repeats of <code>nums[l]</code>, so no triple is reported twice.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>nums.sort()</code></td><td>O(n log n), cheap next to the O(n<sup>2</sup>) loop below.</td></tr>
+      <tr><td><code><span class="k">for</span> i <span class="k">in</span> range(len(nums) - <span class="n">2</span>):</code></td><td>The fixed first number of the triple.</td></tr>
+      <tr><td><code><span class="k">if</span> i &gt; <span class="n">0</span> <span class="k">and</span> nums[i] == nums[i - <span class="n">1</span>]: <span class="k">continue</span></code></td><td>Same first number as last time: every triple it makes was already found.</td></tr>
+      <tr><td><code>l, r = i + <span class="n">1</span>, len(nums) - <span class="n">1</span></code></td><td>The inner pair search starts on both ends of the rest.</td></tr>
+      <tr><td><code>s = nums[i] + nums[l] + nums[r]</code></td><td>One check. Below zero: <code>l += 1</code>. Above zero: <code>r -= 1</code>.</td></tr>
+      <tr><td><code>out.append(...); l += <span class="n">1</span>; r -= <span class="n">1</span></code></td><td>A hit: record it and move both pointers.</td></tr>
+      <tr><td><code><span class="k">while</span> l &lt; r <span class="k">and</span> nums[l] == nums[l - <span class="n">1</span>]: l += <span class="n">1</span></code></td><td>Skip copies of the value just used, or the same triple appears again.</td></tr>
+    </tbody>
+  </table>
+  <div id="p5tpE"></div>
+  <p class="caption">On <code>[-3, -1, -1, 0, 1, 2, 4]</code>: 4 triples after 9 checks. Trying every triple takes 35 checks for the same answer (<code>measure.py</code>).</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Opposite ends when order tells you which side to drop. Same direction when you keep some items and drop others in place. For triples, fix one and reuse the pair search.</div>
+</section>
+
+<section class="step" id="p5-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: two pointers or not?</h2>
+  <p>Read each made-up task. Decide yes or no, name the variant and the clue. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A list of parcel weights is sorted from light to heavy. Find two parcels that weigh exactly 50 kg together, using O(1) extra memory.</h3>
+    <textarea aria-label="Does two pointers fit task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, opposite ends.</strong> Clues: sorted, a pair with a target, O(1) memory. Template A.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. Decide if a shop sign still reads the same when the letters are reversed, ignoring spaces, commas and capitals.</h3>
+    <textarea aria-label="Does two pointers fit task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, opposite ends as a mirror check.</strong> No sorting needed. Template B.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A playlist is in random order. Return the positions of two songs whose lengths add up to exactly 30 minutes.</h3>
+    <textarea aria-label="Does two pointers fit task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: a hash map.</strong> It looks like Template A, but the list is not sorted and you need the original positions. Sorting would shuffle them and cost O(n log n). A dict of "length seen at position" answers in one O(n) pass.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A form has blank answers scattered through it. Squeeze out the blanks in the same list, keeping the other answers in order.</h3>
+    <textarea aria-label="Does two pointers fit task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, same direction.</strong> Clues: in place, keep some items, keep the order. The reader skips blanks, the writer copies keepers. Template C with a different keep test.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Daily rainfall is in a list. Find the longest run of back-to-back days whose total rain is at most 20 mm.</h3>
+    <textarea aria-label="Does two pointers fit task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: a sliding window.</strong> It uses a left and a right index too, but the clue is a <em>contiguous</em> run with a condition. The two indices bound a window, grow it on the right and shrink it on the left. That is the next lesson.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. List every different group of three temperatures that adds up to zero.</h3>
+    <textarea aria-label="Does two pointers fit task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, fixed one plus inner pair.</strong> Clues: triples, a target sum, "different" (skip repeats). Template D, O(n<sup>2</sup>).</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. Two guest lists are each sorted by name. Make one sorted list of everyone.</h3>
+    <textarea aria-label="Does two pointers fit task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, one pointer per list.</strong> Compare the two front names, take the smaller, move that pointer. O(n + m), the merge step of merge sort.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Sorted input, a pair or triple with a target, a mirror check, "in place" or "O(1) extra memory", two sorted inputs. Not sorted and positions matter: think hash map. Contiguous run: think sliding window.</div>
+</section>
+
+<section class="step" id="p5-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: <code>while l &lt;= r</code> in a pair search</span>
+    <p>With <code>&lt;=</code> the loop runs once more when both pointers sit on the same item, so one number is added to itself.</p>
+<pre><code><span class="c"># == 4. Trap 1: `while l &lt;= r` uses one item twice ==</span>
+pair_le([2, 5, 9], 10)  = [1, 1]   <span class="c"># 5 + 5, the same item twice</span>
+pair_sum([2, 5, 9], 10) = None</code></pre>
+    <p><strong>Fix:</strong> <code>while l &lt; r</code> for pairs. (Binary search is the one that uses <code>&lt;=</code>, because there a single item is a valid answer.)</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: running Template A on unsorted input</span>
+    <p>"Too small, so drop the left item" is only true when the right item is the biggest one left. Without sorting, the proof is gone and the pair can be skipped.</p>
+<pre><code><span class="c"># == 5. Trap 2: unsorted input ==</span>
+pair_sum([1, 9, 4, 3], 7)           = None     <span class="c"># 4 + 3 = 7 exists</span>
+pair_sum(sorted -&gt; [1, 3, 4, 9], 7) = [1, 2]</code></pre>
+    <p><strong>Fix:</strong> sort first (O(n log n)) if you may, and remember sorting changes the positions. If the original positions are the answer, use a hash map instead.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: 3Sum without skipping repeats</span>
+    <p>Equal values make the same triple twice: once with the first 0 and 2, once with the second.</p>
+<pre><code><span class="c"># == 6. Trap 3: 3Sum without skipping repeats ==</span>
+noskip([-2, 0, 0, 2, 2])    = [[-2, 0, 2], [-2, 0, 2]]
+three_sum([-2, 0, 0, 2, 2]) = [[-2, 0, 2]]</code></pre>
+    <p><strong>Fix:</strong> skip <code>i</code> when <code>nums[i] == nums[i - 1]</code>, and after each hit move <code>l</code> past copies of the value just used. Sorting is what puts copies next to each other.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: an inner skip loop with no fence</span>
+    <p>A tempting palindrome check skips punctuation with <code>while not s[l].isalnum(): l += 1</code>. On a string with no letters at all, <code>l</code> runs off the end.</p>
+<pre><code><span class="c"># == 7. Trap 4: inner skip loop without a bound ==</span>
+pal_buggy('?!') -&gt; IndexError: string index out of range
+is_palindrome('?!') = True</code></pre>
+    <p><strong>Fix:</strong> every inner loop that moves a pointer also checks <code>l &lt; r</code>, or (as in Template B) skip one character per turn of the main loop.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Strict <code>l &lt; r</code> for pairs. Sorted, or the "drop a side" proof breaks. Skip repeats on purpose. Fence every inner loop.</div>
+</section>
+
+<section class="step" id="p5-s-cost">
+  <span class="lvl lvl-math">Maths</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>7. Complexity: count the checks</h2>
+  <p>Both racers below do one check per tick. The list is <code>0, 1, ..., n - 1</code> and the target is <code>-1</code>, so no pair works and both must finish (the <dfn class="term" tabindex="0" data-def="The input that makes a method do the most work. Big-O usually describes this case.">worst case</dfn>).</p>
+  <div class="card">
+    <canvas id="p5cvA" role="img" aria-label="Race between two pointers and trying every pair: two bars that fill as each method counts its checks"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p5n="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p5n="100">n = 100</button>
+      <button class="btn btn-sm" type="button" data-p5n="1000">n = 1000</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p5raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p5roN"><span class="lab">list size n</span><span class="val">10</span></div>
+      <div class="ro" id="p5roS"><span class="lab">two pointer checks</span><span class="val">9</span></div>
+      <div class="ro" id="p5roP"><span class="lab">every pair checks</span><span class="val">45</span></div>
+      <div class="ro" id="p5roR"><span class="lab">pairs / pointers</span><span class="val">5.0x</span></div>
+    </div>
+    <p class="caption">The page runs both methods with a counter. The bar scale is the pair count, so at n = 1000 the teal bar is a sliver.</p>
+  </div>
+<pre><code><span class="c"># == 2. Race, no pair adds up (worst case) : nums = 0..n-1, target = -1 ==</span>
+n =   10: two pointer checks =    9   brute pair checks =     45   ratio = 5.0x
+n =  100: two pointer checks =   99   brute pair checks =   4950   ratio = 50.0x
+n = 1000: two pointer checks =  999   brute pair checks = 499500   ratio = 500.0x</code></pre>
+  <details class="math"><summary>Step 1: why two pointers makes at most n - 1 checks</summary><div>
+    <p>The gap <code>r - l</code> starts at n - 1. Every check that misses moves one pointer, so the gap shrinks by exactly 1. The loop stops when the gap reaches 0.</p>
+    <div class="eq">checks &lt;= (n - 1)        n = 1000  -&gt;  at most 999</div>
+    <p>So the pair search is <strong>O(n) time</strong> and <strong>O(1) extra memory</strong>: just two integers.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: the hidden cost is the sort</summary><div>
+    <p>If the input is not sorted yet, sorting costs O(n log n), which is more than the O(n) walk. The total is then O(n log n). <code>sorted(nums)</code> also makes a copy (O(n) memory); <code>nums.sort()</code> sorts in place, though Python's sort may still borrow up to about n / 2 slots while merging.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: 3Sum is O(n<sup>2</sup>), not O(n<sup>3</sup>)</summary><div>
+    <p>For each of about n choices of <code>i</code>, the inner pair search makes at most n checks. Trying every triple is n x (n - 1) x (n - 2) / 6. On 1, 2, ..., n (no triple adds to 0):</p>
+<pre><code><span class="c"># == 8. 3Sum cost, no triple sums to 0 (nums = 1..n) ==</span>
+n =  10: two pointer checks =     36   brute triple checks =      120   ratio = 3.3x
+n = 100: two pointer checks =   4851   brute triple checks =   161700   ratio = 33.3x
+n = 200: two pointer checks =  19701   brute triple checks =  1313400   ratio = 66.7x</code></pre>
+    <p>Doubling n from 100 to 200 multiplies the two pointer count by about 4 (O(n<sup>2</sup>)) and the brute count by about 8 (O(n<sup>3</sup>)).</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Pair search: O(n) after sorting, O(n log n) with it. Each extra fixed number adds a factor of n: 3Sum O(n<sup>2</sup>), 4Sum O(n<sup>3</sup>).</div>
+</section>
+
+<section class="step" id="p5-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each one is a template above in a new costume. Links open LeetCode in a new tab. Problems marked "extra" are short warm-ups for the same-direction variant.</p>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:34%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-easy">easy</span></td></tr>
+      <tr><td>125</td><td><a href="https://leetcode.com/problems/valid-palindrome/" target="_blank" rel="noopener">Valid Palindrome</a></td><td>Template B: skip anything that is not a letter or digit, and ignore capitals.</td></tr>
+      <tr><td>26</td><td><a href="https://leetcode.com/problems/remove-duplicates-from-sorted-array/" target="_blank" rel="noopener">Remove Duplicates from Sorted Array</a> (extra)</td><td>Template C exactly: return how many values are kept.</td></tr>
+      <tr><td>283</td><td><a href="https://leetcode.com/problems/move-zeroes/" target="_blank" rel="noopener">Move Zeroes</a> (extra)</td><td>Same direction, but swap instead of copy so the zeroes end up at the back.</td></tr>
+    </tbody>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-medium">medium</span></td></tr>
+      <tr><td>167</td><td><a href="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/" target="_blank" rel="noopener">Two Sum II: Input Array Is Sorted</a></td><td>Template A itself; the answer uses positions counted from 1.</td></tr>
+      <tr><td>15</td><td><a href="https://leetcode.com/problems/3sum/" target="_blank" rel="noopener">3Sum</a></td><td>Template D: the hard part is skipping repeats so each triple appears once.</td></tr>
+      <tr><td>11</td><td><a href="https://leetcode.com/problems/container-with-most-water/" target="_blank" rel="noopener">Container With Most Water</a></td><td>Not sorted, yet opposite ends work: always move the shorter wall, because the taller one can only do worse with a narrower gap.</td></tr>
+    </tbody>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-hard">hard</span></td></tr>
+      <tr><td>42</td><td><a href="https://leetcode.com/problems/trapping-rain-water/" target="_blank" rel="noopener">Trapping Rain Water</a></td><td>Water above a bar depends on the lower of the tallest walls on each side; move the pointer whose side has the lower wall so far.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">Problem pages for this pattern are built in later sessions. Try the extras now with the sandbox on the right.</p>
+</section>
+
+<section class="step" id="p5-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Run Template A on <code>[1, 2, 4, 7, 11]</code> with target 15. Which indices come back, and after how many checks?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong><code>[2, 4]</code> after 3 checks.</strong> 1 + 11 = 12 (small, l moves), 2 + 11 = 13 (small, l moves), 4 + 11 = 15. <code>measure.py</code> prints <code>([2, 4], 3)</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Template C runs on <code>[0, 0, 1, 1, 1, 2]</code>. What is <code>k</code>, and what are the first <code>k</code> items?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong><code>k = 3</code>, and they are <code>[0, 1, 2]</code>.</strong> The writer only moves when the reader finds a value different from the last kept one.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. 3Sum on the 100 numbers 1, 2, ..., 100. About how many checks does trying every triple make, and how many does Template D make?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>161,700 against 4,851</strong>, about 33 times fewer. Every sum is positive, so each inner search only moves <code>r</code>: 98 + 97 + ... + 1 checks. Both numbers come from <code>measure.py</code>.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>pointer</dt><dd>An index into a list that you move one step at a time.</dd>
+    <dt>two pointers</dt><dd>A pattern that moves two indices by a rule so each step rules out answers for good.</dd>
+    <dt>opposite ends</dt><dd>Start at index 0 and n - 1, walk towards each other. Pair sums on sorted lists, mirror checks.</dd>
+    <dt>same direction</dt><dd>A fast reader and a slow writer both walk left to right. In-place filtering and compaction.</dd>
+    <dt>search space</dt><dd>All the answers still possible. Each pointer move shrinks it.</dd>
+    <dt>invariant</dt><dd>A fact true before and after every loop step: "if an answer exists, it is between l and r".</dd>
+    <dt>in place</dt><dd>Changing the input list itself, with O(1) extra memory.</dd>
+    <dt>palindrome</dt><dd>Text that reads the same forwards and backwards.</dd>
+    <dt>k-sum</dt><dd>Find k numbers with a target sum: fix k - 2 with loops, pair search the rest.</dd>
+    <dt>brute force</dt><dd>Try everything, such as every pair. Correct, often too slow.</dd>
+    <dt>worst case</dt><dd>The input that makes a method work hardest.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p5-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> two indices move by a rule. One comparison proves an item useless for every remaining answer, so its whole row of pairs is dropped in one step.</p>
+    <p><strong>Signals:</strong> sorted input, a pair or triple with a target, a mirror check, "in place" or O(1) memory, two sorted inputs.</p>
+    <p><strong>Templates:</strong> opposite ends <code>l, r = 0, n - 1; while l &lt; r</code>, move the side that is too small or too big. Same direction: reader <code>i</code>, writer <code>k</code>. 3Sum: sort, fix <code>i</code>, pair search the rest, skip repeats.</p>
+    <p><strong>Cost:</strong> O(n) time and O(1) memory for a pair (plus O(n log n) if you sort); 3Sum O(n<sup>2</sup>). At n = 1000: 999 checks against 499,500.</p>
+    <p><strong>Traps:</strong> <code>&lt;=</code> pairs an item with itself; unsorted input breaks the proof; repeats in 3Sum; inner skip loops without <code>l &lt; r</code>.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, run the pair search on your own sorted list, then flip to the palindrome check and try a sentence with punctuation.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(5)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

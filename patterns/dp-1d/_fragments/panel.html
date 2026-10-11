@@ -1,0 +1,423 @@
+<div class="lesson-content xp" id="lesson19">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">1D Dynamic Programming</h1>
+    <p class="lesson-subtitle">Goal: stop solving the same small question again and again. Write each small answer down once, then build the big answer from the small ones. You will learn a five-question recipe that turns "this looks impossible" into a short loop.</p>
+    <div class="lesson-meta"><span class="badge">Tier 4</span><span class="badge">pattern</span><span class="badge diff-medium">core interview topic</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the 1D dynamic programming lesson"><a href="#p19-s-idea">Stairs</a><a href="#p19-s-tree">Repeats</a><a href="#p19-s-words">Pattern words</a><a href="#p19-s-map">Mental map</a><a href="#p19-s-template">Templates</a><a href="#p19-s-variants">Variants</a><a href="#p19-s-spot">Spot it</a><a href="#p19-s-traps">Traps</a><a href="#p19-s-cost">Complexity</a><a href="#p19-s-problems">Problems</a><a href="#p19-s-check">Check yourself</a><a href="#p19-recap">Recap</a></nav>
+
+<section class="step" id="p19-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Write the answer on each step, then read it back</h2>
+  <p>You climb a staircase. Each move takes you up 1 step or 2 steps. In how many different ways can you reach step n?</p>
+  <p>To stand on step 5, your last move came from step 4 or from step 3. So the ways to reach 5 are the ways to reach 4 plus the ways to reach 3. The big question is made of two smaller copies of itself.</p>
+  <div class="card analogy"><strong>Analogy: chalk on the stairs.</strong> Walk up from the bottom with a piece of chalk. On each step, write how many ways reach it. To fill a step, read the two numbers just below it and add them. You never climb back down to recount. Each number is worked out once and then only read.</div>
+  <p>That is the whole pattern. <dfn class="term" tabindex="0" data-def="Dynamic programming (DP): solve a problem by solving smaller versions of it, storing each small answer once, and building bigger answers from the stored ones.">Dynamic programming</dfn> (DP) means: find the smaller copies, store each answer once, and build up.</p>
+  <h3>Try it: the same question, two ways</h3>
+  <p>Both players answer "how many ways to reach step 5?". Step through them and watch the counters.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: plain recursion.</strong> Each call asks its two smaller copies, which ask theirs. Faded nodes are calls still to come. Orange rings are calls whose answer was already worked out earlier.</p>
+      <div id="p19tpA"></div>
+    </div>
+    <div>
+      <p><strong>Fast: the chalk table.</strong> Fill <code>dp</code> left to right. The blue cells are the two answers each new cell reads.</p>
+      <div id="p19tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p19roA"><span class="lab">plain recursion</span><span class="val">-</span> <span class="unit">calls</span></div>
+    <div class="ro" id="p19roB"><span class="lab">chalk table</span><span class="val">-</span> <span class="unit">cells filled</span></div>
+  </div>
+  <p class="caption">Both counts come from running the two methods (in the page and in <code>measure.py</code>, which prints 9 calls and 5 cells for n = 5). The answer is 8 either way. The gap looks small here. The next section shows how fast it grows.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>If a problem's answer is built from answers to smaller copies of the same problem, and those smaller copies repeat, store them. That is DP.</div>
+  <p class="newwords">New words: <span class="chip">dynamic programming</span><span class="chip">subproblem</span></p>
+</section>
+
+<section class="step" id="p19-s-tree">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. Grow the staircase: watch the repeats explode</h2>
+  <p>Drag the slider. The tree shows every call the plain recursion makes. A node with an orange ring asks a question that was already answered earlier in the tree: wasted work.</p>
+  <div class="card">
+    <label class="slider">Staircase height n <output id="p19out">6</output><input type="range" id="p19rng" min="3" max="30" step="1" value="6" aria-label="Staircase height n"></label>
+    <label class="check"><input type="checkbox" id="p19memo"> Turn on memory: fade every call a stored answer would skip</label>
+    <div id="p19svg" role="img" aria-label="Recursion tree of the plain staircase function for the chosen n"></div>
+    <div class="readouts">
+      <div class="ro" id="p19roN"><span class="lab">plain calls</span><span class="val">-</span></div>
+      <div class="ro" id="p19roD"><span class="lab">different questions</span><span class="val">-</span></div>
+      <div class="ro" id="p19roW"><span class="lab">repeated calls</span><span class="val">-</span></div>
+      <div class="ro" id="p19roM"><span class="lab">calls with memory</span><span class="val">-</span></div>
+      <div class="ro" id="p19roC"><span class="lab">table cells</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">The tree is drawn up to n = 9. Past that the page still runs the plain recursion and counts its calls, it just cannot fit the picture.</p>
+  </div>
+  <p>There are only n different questions ("how many ways to reach step k?"), but the plain recursion asks them over and over. <code>measure.py</code> prints the same counts:</p>
+<pre><code><span class="c"># == 3. Operation counts (naive calls / memo calls / bottom-up cells) ==</span>
+n =  5: ways =           8  naive =           9  memo =  7  cells = 5
+n = 10: ways =          89  naive =         109  memo = 17  cells = 10
+n = 20: ways =      10,946  naive =      13,529  memo = 37  cells = 20
+n = 30: ways =   1,346,269  naive =   1,664,079  memo = 57  cells = 30
+n = 40: ways = 165,580,141  naive = 204,668,309  memo = 77  cells = 40</code></pre>
+  <p>These repeats have a name: <dfn class="term" tabindex="0" data-def="Overlapping subproblems: the same smaller question comes up many times inside one big problem. This is what makes storing answers pay off.">overlapping subproblems</dfn>. When you see them, DP turns exponential work into linear work.</p>
+  <details class="math"><summary>Why the plain calls grow so fast</summary><div>
+    <p>Let calls(n) be the number of calls for height n. One call for n itself, plus all the calls for n - 1 and for n - 2:</p>
+    <div class="eq">calls(n) = 1 + calls(n - 1) + calls(n - 2),   calls(1) = calls(2) = 1</div>
+    <p>That is the same shape as the answer itself, so it grows like the answer: each step up multiplies the work by about 1.6. Ten more steps means about 120 times more calls (13,529 at n = 20 against 1,664,079 at n = 30). Big-O calls this O(1.6<sup>n</sup>), which is exponential.</p>
+    <p>With memory, each height is worked out once and asked at most twice: <code>measure.py</code> confirms 2n - 3 calls for every n from 3 to 39.</p>
+  </div></details>
+  <p class="newwords">New words: <span class="chip">overlapping subproblems</span><span class="chip">exponential</span></p>
+</section>
+
+<section class="step" id="p19-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>On the stairs</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="A smaller version of the same problem, such as 'ways to reach step 3' inside 'ways to reach step 5'.">subproblem</dfn></td><td>A smaller copy of the question</td><td>Ways to reach step 3</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="What dp[i] means, said in one sentence. Everything else follows from it.">state</dfn></td><td>What one stored number means</td><td>dp[i] = ways to reach step i</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The rule that builds dp[i] from smaller states, also called the recurrence.">transition</dfn></td><td>How a cell is built from earlier cells</td><td>dp[i] = dp[i - 1] + dp[i - 2]</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The smallest states, whose answers you know without any rule. Every chain of transitions must end at one.">base case</dfn></td><td>Answers you know without thinking</td><td>dp[1] = 1, dp[2] = 2</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Top-down DP: write the plain recursion, then store each result (with @cache or a dict) so it is computed only once.">memoization</dfn> (top-down)</td><td>Recursion plus a notebook of answers</td><td>Ask about step 5; remember each answer on the way</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Bottom-up DP: fill a table from the base cases upward with a loop, so every cell you read is already filled.">tabulation</dfn> (bottom-up)</td><td>A loop that fills a table from the smallest end</td><td>The chalk walk from step 1 upward</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The order you fill cells in. It must make every cell you read already filled.">fill order</dfn></td><td>Which cell to fill next</td><td>Left to right</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Optimal substructure: the best answer for the big problem is built from best answers for smaller ones. It lets min/max problems use DP.">optimal substructure</dfn></td><td>The best big answer uses best small answers</td><td>The cheapest way to step 5 goes through the cheapest way to step 4 or 3</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Keeping only the last few cells a transition reads, instead of the whole table. Turns O(n) memory into O(1) when dp[i] reads only a fixed number of earlier cells.">rolling variables</dfn></td><td>Keep only the cells you still need</td><td>Two numbers instead of a whole list</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Where the odd name comes from</span>Richard Bellman picked "dynamic programming" in the 1950s partly because it sounded impressive to his funders. "Programming" here means planning with a table, not writing code. Think "table filling".</div>
+  <p class="newwords">New words: <span class="chip">state</span><span class="chip">transition</span><span class="chip">base case</span><span class="chip">memoization</span><span class="chip">tabulation</span><span class="chip">fill order</span><span class="chip">optimal substructure</span><span class="chip">rolling variables</span></p>
+</section>
+
+<section class="step" id="p19-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: from a blank page to a DP loop</h2>
+  <p>Read this when a new problem smells like DP. The middle of it is the five-question recipe; answer all five before you write code.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>"How many ways", "minimum cost", "maximum total", "can you reach", "longest ..." over a line of things. Choices at one spot change what is allowed later. A brute force would try every combination.</span></li>
+    <li><b>Ask</b><span>"If I knew the answer for every smaller prefix (or smaller amount), could I get the answer for this one with a simple rule?" If yes, it is DP.</span></li>
+    <li><b>Pick the variant</b><span>The shape of the last choice tells you the transition.</span>
+      <ul class="mm-branches">
+        <li><i>"how many ways", fixed moves</i>count ways: add the smaller answers (stairs, decode ways)</li>
+        <li><i>"cheapest" or "most"</i>min / max cost: take the best of the options (min cost stairs)</li>
+        <li><i>"cannot take two neighbours"</i>take or skip: <code>max(skip, take + dp[i - 2])</code> (house robber)</li>
+        <li><i>"use any item again", a target amount</i>unbounded choices: loop over items for each amount (coin change)</li>
+        <li><i>"subsequence" or "subarray ending here"</i>ends at i: dp[i] = best that ends exactly at i, answer is <code>max(dp)</code> (LIS, max product)</li>
+        <li><i>"split the string into valid pieces"</i>string partition: dp[i] = can the first i letters be split (word break, decode ways)</li>
+        <li><i>"can I pick a subset that sums to T"</i>subset sum: a row of booleans over sums 0..T, loop sums backwards (partition equal subset sum)</li>
+      </ul>
+    </li>
+    <li><b>Recipe</b><span>1. <strong>State:</strong> finish the sentence "dp[i] is ...". 2. <strong>Transition:</strong> how dp[i] comes from smaller cells. 3. <strong>Base cases:</strong> the cells you know outright. 4. <strong>Fill order:</strong> so every read cell is ready. 5. <strong>Answer:</strong> which cell (dp[n], or max over all).</span></li>
+    <li><b>Invariant</b><span>When you fill dp[i], every cell it reads is already final. Nothing is ever recomputed.</span></li>
+    <li><b>Write it</b><span>First the plain recursion with <code>@cache</code> (fastest to get right). Then turn it into a loop. Then keep only the cells you still read.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Does the state sentence really cover the question? Is the base case right for the empty input (dp[0])? Does the order read only filled cells? Is the answer in dp[n] or in max(dp)? Could a greedy rule do it instead (then prove it, or stay with DP)?</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Say it in an interview</span>"Let dp[i] be ... . To get dp[i] I look at the last choice, which leaves me with ... . The base case is ... . I fill left to right and the answer is ... ." Those five sentences are most of a DP interview.</div>
+</section>
+
+<section class="step" id="p19-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Three templates: top-down, bottom-up, two variables</h2>
+  <p>Write them in this order. Each one is a small, safe change from the one before.</p>
+  <h3>Template A: top-down with @cache</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">from</span> functools <span class="k">import</span> cache</code></td><td>Python's built-in notebook for function answers.</td></tr>
+      <tr><td><code>@cache</code></td><td>Remember every result by its arguments. A repeated call returns the stored answer at once.</td></tr>
+      <tr><td><code><span class="k">def</span> climb(n):</code></td><td>The state: climb(n) = ways to reach step n.</td></tr>
+      <tr><td><code>    <span class="k">if</span> n &lt;= <span class="n">2</span>:</code></td><td>Base cases: 1 way to reach step 1, 2 ways to reach step 2.</td></tr>
+      <tr><td><code>        <span class="k">return</span> n</code></td><td>Stops the recursion.</td></tr>
+      <tr><td><code>    <span class="k">return</span> climb(n - <span class="n">1</span>) + climb(n - <span class="n">2</span>)</code></td><td>The transition: the last move came from one step or two steps below.</td></tr>
+    </tbody>
+  </table>
+  <p>Here is what <code>@cache</code> does for you, written out with a dict. Watch the memo fill and the call stack grow and shrink.</p>
+  <div id="p19tpC"></div>
+  <p class="caption">7 calls instead of 9 for n = 5 (the 2n - 3 rule), and the stack is 4 calls deep at its deepest. That depth is the hidden cost of top-down: about n frames.</p>
+  <h3>Template B: bottom-up table</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> climb(n):</code></td><td>Same question, no recursion.</td></tr>
+      <tr><td><code>    <span class="k">if</span> n &lt;= <span class="n">2</span>: <span class="k">return</span> n</code></td><td>Small inputs answer directly (and keep <code>dp[2]</code> below in range).</td></tr>
+      <tr><td><code>    dp = [<span class="n">0</span>] * (n + <span class="n">1</span>)</code></td><td>One cell per step, 0 to n. Size n + 1 so <code>dp[n]</code> exists.</td></tr>
+      <tr><td><code>    dp[<span class="n">1</span>], dp[<span class="n">2</span>] = <span class="n">1</span>, <span class="n">2</span></code></td><td>Write the base cases first.</td></tr>
+      <tr><td><code>    <span class="k">for</span> i <span class="k">in</span> range(<span class="n">3</span>, n + <span class="n">1</span>):</code></td><td>Fill order: left to right, so i - 1 and i - 2 are ready.</td></tr>
+      <tr><td><code>        dp[i] = dp[i - <span class="n">1</span>] + dp[i - <span class="n">2</span>]</code></td><td>The same transition, now reading the table.</td></tr>
+      <tr><td><code>    <span class="k">return</span> dp[n]</code></td><td>The answer lives in the last cell.</td></tr>
+    </tbody>
+  </table>
+  <h3>Template C: keep only what you read</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>    prev, cur = <span class="n">1</span>, <span class="n">2</span></code></td><td>dp[i - 2] and dp[i - 1]. Nothing older is ever read again.</td></tr>
+      <tr><td><code>    <span class="k">for</span> _ <span class="k">in</span> range(<span class="n">3</span>, n + <span class="n">1</span>):</code></td><td>Same loop.</td></tr>
+      <tr><td><code>        prev, cur = cur, prev + cur</code></td><td>Slide both forward one step. Python assigns both at once, so no temporary is needed.</td></tr>
+      <tr><td><code>    <span class="k">return</span> cur</code></td><td>O(n) time, O(1) memory.</td></tr>
+    </tbody>
+  </table>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Get it right top-down, then make it a loop, then shrink it. In an interview, a correct <code>@cache</code> solution is already a strong answer; mention the loop and the O(1) version as follow-ups.</div>
+  <p class="newwords">New words: <span class="chip">@cache</span><span class="chip">call stack</span></p>
+</section>
+
+<section class="step" id="p19-s-variants">
+  <span class="lvl lvl-code">Code</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>6. The variants, each with its state sentence</h2>
+  <p>Every variant is the same recipe. Only the state sentence and the transition change.</p>
+  <table class="approaches">
+    <thead><tr><th>Variant</th><th>State sentence</th><th>Transition</th><th>Answer</th></tr></thead>
+    <tbody>
+      <tr><td>Count ways (stairs)</td><td>dp[i] = ways to reach i</td><td><code>dp[i-1] + dp[i-2]</code></td><td><code>dp[n]</code></td></tr>
+      <tr><td>Min cost (min cost stairs)</td><td>dp[i] = cheapest way to stand on i</td><td><code>min(dp[i-1] + cost[i-1], dp[i-2] + cost[i-2])</code></td><td><code>dp[n]</code></td></tr>
+      <tr class="is-best"><td>Take or skip (house robber)</td><td>dp[i] = most loot from the first i houses</td><td><code>max(dp[i-1], dp[i-2] + nums[i-1])</code></td><td><code>dp[n]</code></td></tr>
+      <tr><td>Unbounded choices (coin change)</td><td>dp[a] = fewest coins that make amount a</td><td><code>min(dp[a-c] + 1 for c in coins)</code></td><td><code>dp[amount]</code></td></tr>
+      <tr><td>Ends at i (LIS)</td><td>dp[i] = longest rising run that ends at nums[i]</td><td><code>max(dp[j] + 1)</code> over j &lt; i with nums[j] &lt; nums[i]</td><td><code>max(dp)</code></td></tr>
+      <tr><td>String partition (word break)</td><td>ok[i] = the first i letters split into words</td><td>any j with <code>ok[j]</code> and <code>s[j:i]</code> a word</td><td><code>ok[n]</code></td></tr>
+    </tbody>
+  </table>
+  <p class="caption">The highlighted row is the one most interviews start from. Its "take or skip" choice is the heart of many DP problems.</p>
+
+  <h3>Play: rob the street (take or skip)</h3>
+  <p>A robber cannot rob two houses side by side (the alarms are linked). Click houses to rob them. Can you match the best total? Neighbours of a picked house are blocked.</p>
+  <div class="card">
+    <div class="tp-arr" id="p19rob" aria-label="Houses: click to rob or unrob"></div>
+    <div class="readouts">
+      <div class="ro" id="p19roR"><span class="lab">your loot</span><span class="val">0</span></div>
+      <div class="ro" id="p19roT"><span class="lab">best possible</span><span class="val">?</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" id="p19robEven">Every other house from the left</button>
+      <button class="btn btn-sm" type="button" id="p19robGreedy">Biggest houses first</button>
+      <button class="btn btn-sm" type="button" id="p19robClear">Clear</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p19robShow">Show the DP table</button>
+    </div>
+    <p class="caption" id="p19robMsg" role="status"></p>
+    <div id="p19robTable"></div>
+  </div>
+  <p>Both easy rules lose here: every other house gets 16, biggest first gets 16, and the best is 18 (houses worth 4, 7 and 7). <code>measure.py</code> prints all three. DP wins because at each house it keeps both futures alive: "I skipped this one" and "I took this one".</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> rob(nums):</code></td><td>Most loot from a street.</td></tr>
+      <tr><td><code>    dp = [<span class="n">0</span>] * (len(nums) + <span class="n">1</span>)</code></td><td>dp[i] = most loot from the first i houses. dp[0] = 0: no houses, no loot.</td></tr>
+      <tr><td><code>    <span class="k">if</span> nums: dp[<span class="n">1</span>] = nums[<span class="n">0</span>]</code></td><td>One house: rob it.</td></tr>
+      <tr><td><code>    <span class="k">for</span> i <span class="k">in</span> range(<span class="n">2</span>, len(nums) + <span class="n">1</span>):</code></td><td>Houses left to right.</td></tr>
+      <tr><td><code>        dp[i] = max(dp[i - <span class="n">1</span>], dp[i - <span class="n">2</span>] + nums[i - <span class="n">1</span>])</code></td><td>Skip house i (keep dp[i - 1]) or take it (its value plus the best that stops two houses back).</td></tr>
+      <tr><td><code>    <span class="k">return</span> dp[-<span class="n">1</span>]</code></td><td>The whole street.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Watch: coin change fills amounts 0 to 6</h3>
+  <p>Coins worth 1, 3 and 4, any number of each. What is the fewest coins that make 6? Each amount tries every coin and reads the amount that coin leaves (blue).</p>
+  <div id="p19tpD"></div>
+  <p class="caption">dp ends as [0, 1, 2, 1, 1, 2, 2]: 6 needs 2 coins (3 + 3), after 13 coin tries. The same numbers come out of <code>measure.py</code>.</p>
+
+  <h3>Ends at i: the longest rising subsequence</h3>
+  <p>For <code>[2, 5, 3, 7, 1, 8]</code>, let dp[i] be the longest rising run that <em>ends exactly at</em> index i. Each i looks back at every smaller earlier number:</p>
+<pre><code>dp = [<span class="n">1</span>] * len(nums)
+<span class="k">for</span> i <span class="k">in</span> range(len(nums)):
+    <span class="k">for</span> j <span class="k">in</span> range(i):
+        <span class="k">if</span> nums[j] &lt; nums[i]:
+            dp[i] = max(dp[i], dp[j] + <span class="n">1</span>)
+<span class="k">return</span> max(dp)
+<span class="c"># dp = [1, 2, 2, 3, 1, 4]: answer 4, after 15 comparisons</span></code></pre>
+  <p>"Ends at i" states are the trick for subsequences and subarrays: the best run could end anywhere, so the answer is the max over all cells, not the last one.</p>
+
+  <h3>String partition: word break</h3>
+  <p>Can <code>"sunflowerpot"</code> be cut into words from {sun, flower, sunflower, pot, flow}? Let ok[i] say whether the first i letters can be cut cleanly. ok[0] = True: the empty start is always fine.</p>
+<pre><code>ok = [<span class="k">True</span>] + [<span class="k">False</span>] * len(s)
+<span class="k">for</span> i <span class="k">in</span> range(<span class="n">1</span>, len(s) + <span class="n">1</span>):
+    <span class="k">for</span> j <span class="k">in</span> range(i):
+        <span class="k">if</span> ok[j] <span class="k">and</span> s[j:i] <span class="k">in</span> words:
+            ok[i] = <span class="k">True</span>
+            <span class="k">break</span>
+<span class="k">return</span> ok[-<span class="n">1</span>]
+<span class="c"># True: ok is True at 0, 3 (sun), 7 (sunflow), 9 (sunflower) and 12</span></code></pre>
+  <p>Without the final "t" (<code>"sunflowerpo"</code>), <code>measure.py</code> prints False: no cut ends at the last letter.</p>
+  <p class="newwords">New words: <span class="chip">take or skip</span><span class="chip">ends at i</span><span class="chip">subsequence</span></p>
+</section>
+
+<section class="step" id="p19-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>7. Spot the pattern: is it 1D DP, and which variant?</h2>
+  <p>Read each made-up task. Decide, name the variant and the state sentence, then reveal.</p>
+  <div class="predict">
+    <h3>A. A frog crosses a row of stones. It can hop 1, 2 or 3 stones at a time. In how many ways can it reach the last stone?</h3>
+    <textarea aria-label="Is task A 1D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, count ways.</strong> dp[i] = ways to reach stone i; dp[i] = dp[i-1] + dp[i-2] + dp[i-3]. The stairs with one more move.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A vending machine takes coins of 5, 7 and 11 cents, as many as you like. What is the fewest coins for exactly 40 cents?</h3>
+    <textarea aria-label="Is task B 1D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, unbounded choices (coin change).</strong> dp[a] = fewest coins for a cents. Greedy is not safe for odd coin sets like this one.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Show every different way to climb 10 stairs with steps of 1 or 2, written out as lists of moves.</h3>
+    <textarea aria-label="Is task C 1D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, this is backtracking.</strong> It looks like the stairs, but it asks you to <em>list</em> every way, not count them. There are 89 lists for 10 stairs and writing them all out is the real cost. DP counts; backtracking lists.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A runner logs a score each day. Find the longest stretch of days (not necessarily back to back) where each score beats the one before.</h3>
+    <textarea aria-label="Is task D 1D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, ends at i (LIS).</strong> "Not necessarily back to back" means subsequence. dp[i] = longest rising run ending on day i; answer max(dp).</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Daily temperatures are in a list. For each day, find the highest temperature in the 7 days that end on it.</h3>
+    <textarea aria-label="Is task E 1D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, this is a sliding window</strong> (with a monotonic deque). Each answer is about a fixed-size window, not built from a smaller answer to the same question.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. A text message was turned into digits with a = 1 ... z = 26 and no spaces. How many messages could "2612" have been?</h3>
+    <textarea aria-label="Is task F 1D DP?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, string partition that counts.</strong> dp[i] = ways to read the first i digits. Add dp[i-1] if the last digit is 1-9, and dp[i-2] if the last two form 10-26. This is Decode Ways.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Count ways, minimum or maximum, "can you reach / make", longest subsequence, and choices that block later choices. Not DP: "list every ...", or a window over a fixed range.</div>
+</section>
+
+<section class="step" id="p19-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>8. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: a greedy rule that only looks right</span>
+    <p>"Always take the biggest coin that fits" works for normal money. It fails for coins 1, 3, 4 and amount 6:</p>
+<pre><code><span class="c"># == 7. Coin change [1, 3, 4] -> 6 ==</span>
+dp answer = 2   dp = [0, 1, 2, 1, 1, 2, 2]   coin tries = 13
+greedy biggest-first = [4, 1, 1]          <span class="c"># 3 coins, but 3 + 3 uses 2</span></code></pre>
+    <p>Fix: use DP unless you can prove the greedy rule. One small counterexample is enough to rule greedy out.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: a wrong base case</span>
+    <p>For coin change every cell starts at infinity. Forget <code>dp[0] = 0</code> ("zero coins make zero") and nothing can ever be built:</p>
+<pre><code>dp = [float(<span class="s">"inf"</span>)] * (amount + <span class="n">1</span>)
+<span class="c"># missing: dp[0] = 0</span>
+trap: forgot dp[0] = 0 -> answer -1   dp = [inf, inf, inf, inf, inf, inf, inf]</code></pre>
+    <p>Fix: ask "what is the answer for the empty input?" It is usually 0 (cost, coins) or 1 (one way to do nothing, as in decode ways and word break).</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: the answer is not always the last cell</span>
+    <p>With an "ends at i" state, the best run may end early. For <code>[3, 4, 1]</code>:</p>
+<pre><code>lis([3, 4, 1]) = 2   dp = [1, 2, 1]   dp[-1] = 1   <span class="c"># return dp[-1] gives 1: wrong</span></code></pre>
+    <p>Fix: say the state sentence out loud. "dp[i] = longest that ends at i" means the answer is <code>max(dp)</code>. "dp[i] = best among the first i" means it is <code>dp[n]</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: top-down on a long input hits the recursion limit</span>
+    <p>Python stops at about 1000 nested calls. <code>@cache</code> does not change the depth:</p>
+<pre><code><span class="c"># == 11. Recursion depth trap ==</span>
+recursion limit: 1000
+climb_c(5000) -> RecursionError: maximum recursion depth exceeded in comparison
+two-variable climb(5000) has 1045 digits</code></pre>
+    <p>Fix: for n in the thousands, use the bottom-up loop. (Raising the limit with <code>sys.setrecursionlimit</code> works sometimes but can crash Python.)</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Prove greedy or use DP. Check dp[0]. Match the answer to the state sentence. Loops beat recursion for long inputs.</div>
+</section>
+
+<section class="step" id="p19-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>9. Complexity: count states times work per state</h2>
+  <p>One formula covers almost every DP: <strong>time = number of states x work to fill one state</strong>. Memory = the cells you keep.</p>
+  <details class="math"><summary>Stairs at n = 30: three ways to do it</summary><div>
+    <p>Plain recursion: 1,664,079 calls, about O(1.6<sup>n</sup>). Memoised: 57 calls (2n - 3), O(n) time, O(n) memory plus an n-deep stack. Bottom-up: 30 cells, O(n) time and memory. Two variables: O(n) time, O(1) memory.</p>
+    <p>On this laptop (Apple M5, Python 3.10.20) <code>measure.py</code> timed the plain recursion for n = 30 at <strong>0.11 s</strong> and the two-variable loop at <strong>0.59 us</strong>. Your machine will differ, the gap will not.</p>
+  </div></details>
+  <details class="math"><summary>Coin change: amount x coins</summary><div>
+    <p>States: amounts 0 to A, so A + 1 cells. Work per cell: one try per coin. Time O(A x k) for k coins, memory O(A).</p>
+    <p>For coins 1, 3, 4 and A = 6 there were 13 tries (a coin is skipped when it is bigger than the amount).</p>
+  </div></details>
+  <details class="math"><summary>LIS and word break: a loop inside a loop</summary><div>
+    <p>LIS has n states and each looks back at every earlier one: n x (n - 1) / 2 comparisons. For n = 1000 that is 499,500. O(n<sup>2</sup>) time, O(n) memory. (A cleverer O(n log n) version uses binary search; it is a classic follow-up.)</p>
+    <p>Word break has n + 1 states and tries up to i cut points each, so O(n<sup>2</sup>) checks. Hidden cost: <code>s[j:i]</code> copies the slice, which costs up to n more. That makes it O(n<sup>3</sup>) in the worst case unless you cap j by the longest word length.</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Count the states, multiply by the work per state. If dp[i] reads only a fixed few earlier cells, memory can drop to O(1).</div>
+</section>
+
+<section class="step" id="p19-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>10. The problems in this pattern, easiest first</h2>
+  <p>Each one is the recipe in a new costume. Their pages come in later sessions; the links open LeetCode.</p>
+  <table>
+    <thead><tr><th>#</th><th>Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-easy">easy</span></td></tr>
+      <tr><td>70</td><td><a href="https://leetcode.com/problems/climbing-stairs/" target="_blank" rel="noopener">Climbing Stairs</a></td><td>This lesson's staircase: count ways, two moves.</td></tr>
+      <tr><td>746</td><td><a href="https://leetcode.com/problems/min-cost-climbing-stairs/" target="_blank" rel="noopener">Min Cost Climbing Stairs</a></td><td>Same stairs, but add a cost and take the min instead of the sum.</td></tr>
+      <tr><td colspan="3"><span class="badge diff-medium">medium</span></td></tr>
+      <tr><td>198</td><td><a href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">House Robber</a></td><td>Take or skip: neighbours block each other.</td></tr>
+      <tr><td>213</td><td><a href="https://leetcode.com/problems/house-robber-ii/" target="_blank" rel="noopener">House Robber II</a></td><td>The street is a circle: run House Robber twice, once without the first house and once without the last.</td></tr>
+      <tr><td>5</td><td><a href="https://leetcode.com/problems/longest-palindromic-substring/" target="_blank" rel="noopener">Longest Palindromic Substring</a></td><td>Grow outward from each center; DP over (start, end) also works.</td></tr>
+      <tr><td>647</td><td><a href="https://leetcode.com/problems/palindromic-substrings/" target="_blank" rel="noopener">Palindromic Substrings</a></td><td>Count instead of find longest: same expand-around-center idea.</td></tr>
+      <tr><td>91</td><td><a href="https://leetcode.com/problems/decode-ways/" target="_blank" rel="noopener">Decode Ways</a></td><td>Stairs where a step is only allowed if the digits make a letter; zeros are the trap.</td></tr>
+      <tr><td>322</td><td><a href="https://leetcode.com/problems/coin-change/" target="_blank" rel="noopener">Coin Change</a></td><td>Unbounded choices, min coins, -1 when impossible.</td></tr>
+      <tr><td>152</td><td><a href="https://leetcode.com/problems/maximum-product-subarray/" target="_blank" rel="noopener">Maximum Product Subarray</a></td><td>Ends at i, but keep both the max and the min: a negative flips them.</td></tr>
+      <tr><td>139</td><td><a href="https://leetcode.com/problems/word-break/" target="_blank" rel="noopener">Word Break</a></td><td>String partition: ok[i] from any earlier clean cut.</td></tr>
+      <tr><td>300</td><td><a href="https://leetcode.com/problems/longest-increasing-subsequence/" target="_blank" rel="noopener">Longest Increasing Subsequence</a></td><td>Ends at i, answer is max(dp); follow-up is O(n log n).</td></tr>
+      <tr><td>416</td><td><a href="https://leetcode.com/problems/partition-equal-subset-sum/" target="_blank" rel="noopener">Partition Equal Subset Sum</a></td><td>Subset sum to half the total: a row of booleans, filled backwards.</td></tr>
+      <tr><td colspan="3"><span class="badge diff-hard">hard</span></td></tr>
+      <tr><td></td><td colspan="2">None in this list. The hard DP problems need two state numbers; they are in the 2D Dynamic Programming lesson.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p19-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>11. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. How many calls does the plain recursion make for climb(7)? And with @cache?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>25 plain calls, 11 with memory</strong> (2 x 7 - 3). calls(7) = 1 + calls(6) + calls(5) = 1 + 15 + 9. Set the slider in section 2 to 7 to check.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. House robber on <code>[5, 1, 1, 5]</code>. What is the best loot, and what is the dp table?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>10</strong> (the two 5s, which are not neighbours). dp = [0, 5, 5, 6, 10]. Note that "every other house" gives only 6 here.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Min cost climbing stairs: <code>cost = [5, 10, 3, 8]</code>, you may start on step 0 or 1 and pay a step's cost to leave it. What is dp, and the answer?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p>dp[i] = cheapest way to stand on step i, with dp[0] = dp[1] = 0. dp = [0, 0, 5, 8, 8], so the answer is <strong>8</strong> (pay 5, jump to step 2, pay 3, jump to the top).</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>dynamic programming</dt><dd>Solve smaller copies of a problem once each, store them, build up the big answer.</dd>
+    <dt>subproblem</dt><dd>A smaller copy of the question.</dd>
+    <dt>overlapping subproblems</dt><dd>The same small question comes up many times; storing it pays off.</dd>
+    <dt>optimal substructure</dt><dd>The best big answer is built from best small answers.</dd>
+    <dt>state</dt><dd>What dp[i] means, in one sentence.</dd>
+    <dt>transition</dt><dd>The rule that builds a cell from smaller cells (the recurrence).</dd>
+    <dt>base case</dt><dd>The smallest states, known without any rule.</dd>
+    <dt>fill order</dt><dd>The order cells are filled, chosen so every read cell is ready.</dd>
+    <dt>memoization (top-down)</dt><dd>Recursion that stores each result, for example with @cache.</dd>
+    <dt>tabulation (bottom-up)</dt><dd>A loop that fills the table from the base cases upward.</dd>
+    <dt>rolling variables</dt><dd>Keep only the few cells the transition still reads: O(1) memory.</dd>
+    <dt>call stack</dt><dd>The chain of calls waiting for an answer; Python allows about 1000.</dd>
+    <dt>exponential</dt><dd>Work that multiplies by a fixed factor each time n grows by one.</dd>
+    <dt>subsequence</dt><dd>Items picked in order but not necessarily side by side.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p19-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> the answer for n is built from answers for smaller n. Store each one so it is computed once. That turns exponential recursion (1,664,079 calls for n = 30) into a linear loop (30 cells).</p>
+    <p><strong>Signals:</strong> count ways, min or max cost, "can you make / reach", longest subsequence, choices that block later choices.</p>
+    <p><strong>Recipe:</strong> state sentence, transition, base cases, fill order, answer location. Write <code>@cache</code> recursion first, then a bottom-up loop, then rolling variables.</p>
+    <p><strong>Variants:</strong> count ways, min / max cost, take or skip, unbounded choices, ends at i (answer max(dp)), string partition.</p>
+    <p><strong>Cost:</strong> states x work per state. Usually O(n) or O(n x k) time; O(n<sup>2</sup>) for "look back at every earlier i".</p>
+    <p><strong>Traps:</strong> greedy that only looks right, wrong dp[0], answer in the wrong cell, recursion depth on long inputs.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, run the stairs, house robber and coin change templates on your own input and compare the table with the plain recursion's call count. Try coins that cannot make the amount.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(19)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

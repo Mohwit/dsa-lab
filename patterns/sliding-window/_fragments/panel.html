@@ -1,0 +1,366 @@
+<div class="lesson-content xp" id="lesson6">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Sliding Window</h1>
+    <p class="lesson-subtitle">Goal: answer questions about back-to-back stretches of a list or a string without recounting each stretch from scratch. When the stretch moves by one, update its summary by one item in and one item out.</p>
+    <div class="lesson-meta"><span class="badge">Tier 1</span><span class="badge">pattern</span><span class="badge diff-easy">after two pointers</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Sliding Window lesson"><a href="#p6-s-idea">The idea</a><a href="#p6-s-words">Pattern words</a><a href="#p6-s-map">Mental map</a><a href="#p6-s-template">Templates</a><a href="#p6-s-spot">Spot it</a><a href="#p6-s-traps">Traps</a><a href="#p6-s-cost">Complexity</a><a href="#p6-s-problems">Problems</a><a href="#p6-s-check">Check yourself</a><a href="#p6-recap">Recap</a></nav>
+
+<section class="step" id="p6-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. One in, one out: never recount the whole stretch</h2>
+  <p>Many questions ask about a <dfn class="term" tabindex="0" data-def="Items that sit next to each other with no gaps, such as nums[2], nums[3], nums[4]. A subarray or substring is contiguous; a subset is not.">contiguous</dfn> stretch: "the best 4 days in a row", "the longest piece of text with no repeated letter".</p>
+  <p>The slow way rebuilds every stretch from nothing. The window way keeps a running summary and fixes it up as the stretch slides along.</p>
+  <div class="card analogy"><strong>Analogy: the view from a train window.</strong> As the train rolls forward, one tree enters the window on the right and one tree leaves on the left. You do not recount the whole forest to know what you can see. You add the newcomer and forget the one that left.</div>
+  <h3>Try it: best total of 4 numbers in a row</h3>
+  <p>The list is <code>[3, 1, 4, 1, 5, 9, 2, 6, 5, 3]</code> and the window holds <code>k = 4</code> numbers. The blue cells are the window. A <dfn class="term" tabindex="0" data-def="Our unit of work in this lesson: reading one number to add it to, or take it away from, a running total.">touch</dfn> is one number added to or taken from a total.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slide the window.</strong> Add up the first 4 once. Then each slide adds the number that enters and takes away the one that leaves: 2 touches.</p>
+      <div id="p6tpA"></div>
+    </div>
+    <div>
+      <p><strong>Brute force: recount each window.</strong> Every window adds its 4 numbers from scratch, even though 3 of them were just added.</p>
+      <div id="p6tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p6roA"><span class="lab">slide</span><span class="val">-</span> <span class="unit">touches</span></div>
+    <div class="ro" id="p6roB"><span class="lab">recount each window</span><span class="val">-</span> <span class="unit">touches</span></div>
+    <div class="ro" id="p6roC"><span class="lab">best total</span><span class="val">-</span></div>
+  </div>
+  <p class="caption">Counts come from running both methods, in the page and in <code>measure.py</code>: 16 touches against 28, both finding 22 (5 + 9 + 2 + 6). The gap grows with k; section 7 lets you race them.</p>
+
+  <h3>Your turn: drive a variable window</h3>
+  <p>Now the window can change size. The rule: <strong>no letter may appear twice</strong> inside it. Grow it on the right. When a repeat sneaks in (red), shrink it from the left until it is valid again. Record the longest valid window you see.</p>
+  <div class="card" id="p6game">
+    <div class="tp-arr" id="p6gArr" aria-label="The string with the window highlighted"></div>
+    <div class="readouts">
+      <div class="ro" id="p6gWin"><span class="lab">window</span><span class="val">-</span></div>
+      <div class="ro" id="p6gOk"><span class="lab">valid?</span><span class="val">-</span></div>
+      <div class="ro" id="p6gBest"><span class="lab">your best valid length</span><span class="val">0</span></div>
+      <div class="ro" id="p6gGoal"><span class="lab">the template finds</span><span class="val">?</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" id="p6gGrow">Grow (r + 1)</button>
+      <button class="btn btn-sm" type="button" id="p6gShrink">Shrink (l + 1)</button>
+      <button class="btn btn-sm" type="button" id="p6gReveal">Show the answer</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p6gNew">New string</button>
+    </div>
+    <p class="caption" id="p6gMsg" aria-live="polite">Press Grow to let the first letter in.</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Keep a summary of the window (a total, a count of each letter). When the window moves, update the summary with what came in and what went out. Never rebuild it.</div>
+  <p class="newwords">New words: <span class="chip">contiguous</span><span class="chip">window</span><span class="chip">touch</span></p>
+</section>
+
+<section class="step" id="p6-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>2. The words interviewers use</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Train window</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="The stretch of items from index l to index r, both included. Its length is r - l + 1.">window</dfn></td><td>The stretch from <code>l</code> to <code>r</code>, length <code>r - l + 1</code></td><td>What you can see right now</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A window whose length never changes, k items. It moves by adding one item on the right and removing one on the left.">fixed-size window</dfn></td><td>Always k items</td><td>A window of a set width</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A window that grows on the right every step and shrinks on the left only while a rule is broken. Used for longest or shortest stretches.">variable-size window</dfn></td><td>Grows and shrinks by a rule</td><td>A window you can stretch</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="What you keep about the window so you never rescan it: a running total, or a dict of counts per item.">window summary</dfn></td><td>A total or a count map you keep up to date</td><td>The list of trees you can see</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="The test the window must pass, such as 'no repeated letter' or 'at most k different letters'. While it fails, shrink from the left.">validity rule</dfn></td><td>The test the window must pass</td><td>"No two oak trees in view"</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Moving l to the right, removing s[l] from the summary, until the window is valid again.">shrink</dfn></td><td>Move <code>l</code> right, remove its item from the summary</td><td>A tree leaves the view</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Moving r to the right and adding s[r] to the summary. In the template, r moves once per loop turn.">expand</dfn></td><td>Move <code>r</code> right, add its item</td><td>A tree enters the view</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A deque (double-ended queue) of indices kept in decreasing order of value, so the front is always the window's maximum. Used for sliding window maximum.">monotonic deque</dfn></td><td>A helper that knows the window's max</td><td>Only the tallest trees are worth noting</td></tr>
+    </tbody>
+  </table>
+  <p>The window is two pointers with a job: everything between them counts. That is why this lesson comes right after <a href="#" onclick="switchLesson(5); return false;">Two Pointers</a>.</p>
+  <p class="newwords">New words: <span class="chip">fixed-size</span><span class="chip">variable-size</span><span class="chip">window summary</span><span class="chip">validity rule</span><span class="chip">shrink</span><span class="chip">expand</span><span class="chip">monotonic deque</span></p>
+</section>
+
+<section class="step" id="p6-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>3. Mental map: from a blank page to a window</h2>
+  <p>Read this when a new problem mentions a stretch and you do not know how to start.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>"Subarray" or "substring" (contiguous), plus longest, shortest, best, or count with a condition. "At most k", "k in a row", "contains all of".</span></li>
+    <li><b>Ask</b><span>"If I add one item on the right or remove one on the left, can I update my summary in O(1)? And if a window breaks the rule, does every bigger window that holds it break it too?"</span></li>
+    <li><b>Pick the variant</b><span>The wording tells you which.</span>
+      <ul class="mm-branches">
+        <li class="is-pick"><i>"k in a row", size given</i>Fixed window: add <code>a[r]</code>, remove <code>a[r - k]</code>, update the answer.</li>
+        <li class="is-pick"><i>longest with a rule</i>Variable window: grow, shrink while invalid, update the answer after the shrink.</li>
+        <li class="is-pick"><i>shortest that reaches a goal</i>Variable window: grow, and while valid record the answer, then shrink.</li>
+        <li class="is-pick"><i>"at most k" of something</i>Count map; shrink while <code>len(count) &gt; k</code>. To count windows with exactly k: count(at most k) minus count(at most k - 1).</li>
+        <li class="is-pick"><i>max or min of each window</i>Fixed window plus a monotonic deque.</li>
+        <li><i>sum equals k, negatives allowed</i>Not this: prefix sums with a hash map. Shrinking is not safe with negatives.</li>
+        <li><i>pick any items, not in a row</i>Not this: subsets need hashing, sorting or DP.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>After the shrink loop, the window <code>[l, r]</code> is valid and is the longest valid window that ends at <code>r</code>.</span></li>
+    <li><b>Steps</b><span>For each <code>r</code>: add <code>a[r]</code> to the summary. While invalid: remove <code>a[l]</code>, <code>l += 1</code>. Update the answer with <code>r - l + 1</code>.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Answer updated at the right moment? Zero counts deleted from the map? Negative numbers (the shrink rule breaks)? Off by one: the length is <code>r - l + 1</code>. Empty input?</span></li>
+  </ol>
+</section>
+
+<section class="step" id="p6-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>4. Templates: one fixed, three variable</h2>
+  <h3>Template A: fixed-size window</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> max_sum_k(nums, k):</code></td><td>The best total of k numbers in a row. Assumes <code>1 &lt;= k &lt;= len(nums)</code>.</td></tr>
+      <tr><td><code>total = sum(nums[:k])</code></td><td>Build the first window once: k touches.</td></tr>
+      <tr><td><code>best = total</code></td><td>The first window is the best so far.</td></tr>
+      <tr><td><code><span class="k">for</span> r <span class="k">in</span> range(k, len(nums)):</code></td><td><code>r</code> is the item entering the window.</td></tr>
+      <tr><td><code>total += nums[r] - nums[r - k]</code></td><td>One in, one out: 2 touches. <code>nums[r - k]</code> is the item that just left.</td></tr>
+      <tr><td><code>best = max(best, total)</code></td><td>Every window of size k is valid, so update every time.</td></tr>
+      <tr><td><code><span class="k">return</span> best</code></td><td>O(n) time, O(1) memory.</td></tr>
+    </tbody>
+  </table>
+  <p>The left player in section 1 runs exactly this.</p>
+
+  <h3>Template B: longest valid window (grow, shrink while invalid, then update)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>count = {}</code></td><td>The summary: how many of each letter are in the window.</td></tr>
+      <tr><td><code>l = best = <span class="n">0</span></code></td><td>The window starts empty at index 0.</td></tr>
+      <tr><td><code><span class="k">for</span> r, ch <span class="k">in</span> enumerate(s):</code></td><td>Expand: every letter enters once.</td></tr>
+      <tr><td><code>count[ch] = count.get(ch, <span class="n">0</span>) + <span class="n">1</span></code></td><td>Add the newcomer to the summary.</td></tr>
+      <tr><td><code><span class="k">while</span> count[ch] &gt; <span class="n">1</span>:</code></td><td>Invalid: <code>ch</code> is now in there twice. Only <code>ch</code> can be repeated, because the window was valid before it came in.</td></tr>
+      <tr><td><code>count[s[l]] -= <span class="n">1</span>; l += <span class="n">1</span></code></td><td>Shrink: the leftmost letter leaves.</td></tr>
+      <tr><td><code>best = max(best, r - l + <span class="n">1</span>)</code></td><td><strong>After</strong> the loop: the window is valid again, so it may count.</td></tr>
+    </tbody>
+  </table>
+  <div id="p6tpC"></div>
+  <p class="caption">On <code>"abcbdab"</code> the longest stretch with no repeat has length 4 (<code>"cbda"</code>). The window makes 11 moves; restarting from every letter reads 22 letters (<code>measure.py</code>).</p>
+
+  <h3>Template C: "at most k different" with a count map</h3>
+  <p>The same shape. Only the rule changes, and one line matters a lot: delete a letter from the map when its count reaches 0, so <code>len(count)</code> is the number of different letters really in the window.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">while</span> len(count) &gt; k:</code></td><td>Too many different letters: invalid.</td></tr>
+      <tr><td><code>left = s[l]; count[left] -= <span class="n">1</span></code></td><td>The leftmost letter leaves.</td></tr>
+      <tr><td><code><span class="k">if</span> count[left] == <span class="n">0</span>: <span class="k">del</span> count[left]</code></td><td>Gone from the window, so gone from the map (trap 2).</td></tr>
+      <tr><td><code>l += <span class="n">1</span></code></td><td>Shrink by one.</td></tr>
+      <tr><td><code>best = max(best, r - l + <span class="n">1</span>)</code></td><td>After the loop, as in Template B.</td></tr>
+    </tbody>
+  </table>
+  <div id="p6tpD"></div>
+  <p class="caption">On <code>"abaccbab"</code> with k = 2 the answer is 3 after 13 window moves (<code>measure.py</code>). This is the template the sandbox runs.</p>
+
+  <h3>Template D: shortest window that reaches a goal (update inside the loop)</h3>
+  <p>Flip the question: the shortest stretch whose total is at least a target. Now a window is "good" when it reaches the target, and you want it as small as possible, so you record it <em>while</em> it is good, then shrink to try for smaller.</p>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>total += x</code></td><td>Expand.</td></tr>
+      <tr><td><code><span class="k">while</span> total &gt;= target:</code></td><td>The window reaches the goal.</td></tr>
+      <tr><td><code>best = min(best, r - l + <span class="n">1</span>)</code></td><td><strong>Inside</strong> the loop: record before shrinking, because after the shrink it may no longer reach the goal.</td></tr>
+      <tr><td><code>total -= nums[l]; l += <span class="n">1</span></code></td><td>Shrink to look for something shorter.</td></tr>
+      <tr><td><code><span class="k">return</span> <span class="n">0</span> <span class="k">if</span> best == float(<span class="s">'inf'</span>) <span class="k">else</span> best</code></td><td>No window ever reached the goal: answer 0.</td></tr>
+    </tbody>
+  </table>
+  <div id="p6tpE"></div>
+  <p class="caption">On <code>[2, 1, 5, 1, 3, 2]</code> with target 8 the answer is 3 (<code>5 + 1 + 3 = 9</code>), after 9 window moves. Only works when every number is 0 or more (trap 3).</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Longest: shrink while invalid, then record. Shortest: while good, record, then shrink. The update line moves; the rest of the template stays the same.</div>
+</section>
+
+<section class="step" id="p6-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>5. Spot the pattern: window or not?</h2>
+  <p>Read each made-up task. Decide yes or no, name the variant and the clue. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A radio station logs which band played each song. Find the longest run of songs where no band plays twice.</h3>
+    <textarea aria-label="Does a sliding window fit task A?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, variable window, longest.</strong> Clues: a run (contiguous), longest, "no repeat" rule. Template B.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A shop has daily sales for a year. Find the best total over any 7 days in a row.</h3>
+    <textarea aria-label="Does a sliding window fit task B?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, fixed window.</strong> Clue: "7 days in a row", the size is given. Template A with k = 7.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. Daily rainfall (never negative) is logged. Find the fewest back-to-back days that together bring at least 50 mm.</h3>
+    <textarea aria-label="Does a sliding window fit task C?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, variable window, shortest.</strong> Clues: back-to-back, fewest, "at least". Never negative, so shrinking is safe. Template D: record inside the loop.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. A bank account has deposits and withdrawals. Count how many stretches of back-to-back transactions add up to exactly zero.</h3>
+    <textarea aria-label="Does a sliding window fit task D?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: prefix sums with a hash map.</strong> It says "back-to-back", but withdrawals are negative. Adding an item can lower the total, so "too big, shrink" proves nothing. Count running totals seen before instead.</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Prices are sorted. Find two prices that add up to exactly 100.</h3>
+    <textarea aria-label="Does a sliding window fit task E?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No: two pointers from opposite ends.</strong> Two items anywhere in the list, not a stretch. Nothing between them matters.</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Does a long text contain any shuffle of the letters of a short code word as one block?</h3>
+    <textarea aria-label="Does a sliding window fit task F?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, fixed window with a count map.</strong> The block has the code word's length. Slide it and compare letter counts (one in, one out).</p></div>
+  </div>
+  <div class="predict">
+    <h3>G. For every 3 hours in a row, report the highest temperature in those 3 hours.</h3>
+    <textarea aria-label="Does a sliding window fit task G?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes, fixed window plus a monotonic deque.</strong> A total can be fixed up by one in and one out, but a maximum cannot: when the max leaves, what is next? The deque keeps the candidates in order.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Contiguous plus longest / shortest / best / count, "k in a row", "at most k". Negatives with "sum equals": prefix sums. Two items anywhere: two pointers or a hash map.</div>
+</section>
+
+<section class="step" id="p6-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>6. Three classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: updating the answer before the window is valid again</span>
+    <p>In a "longest" window, if <code>best = max(...)</code> sits above the shrink loop, it measures a window that still breaks the rule.</p>
+<pre><code><span class="c"># == 4. Trap 1: update the answer before the window is valid again ==</span>
+early('abcc') = 4   <span class="c"># 'abcc' has a repeat</span>
+fixed('abcc') = 3</code></pre>
+    <p><strong>Fix:</strong> for longest, update after the <code>while</code>. For shortest, update inside it, before you shrink (Template D). Ask: "at this line, is the window one I am allowed to count?"</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: a zero count left in the map</span>
+    <p>Lowering a count to 0 does not remove the key. <code>len(count)</code> still counts that letter, the window never looks valid, and <code>l</code> runs off the end.</p>
+<pre><code><span class="c"># == 5. Trap 2: a zero count left in the map ==</span>
+nodelete('abaccbab', 2) -&gt; IndexError: string index out of range
+longest_k_distinct('abaccbab', 2) = 3</code></pre>
+    <p><strong>Fix:</strong> <code>if count[left] == 0: del count[left]</code>. Or keep a separate "different letters" counter that goes up when a count goes 0 to 1 and down when it goes 1 to 0.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: negative numbers</span>
+    <p>Template D assumes growing the window never lowers the total. With a negative number, a window can fail now and succeed after you add more, so the template gives up too early.</p>
+<pre><code><span class="c"># == 6. Trap 3: negative numbers break the shrink rule ==</span>
+shortest_at_least([1, -5, 6], 6) = 0   <span class="c"># but [6] alone works</span>
+shortest_brute([1, -5, 6], 6)    = 1</code></pre>
+    <p><strong>Fix:</strong> check the constraints. With negatives, use prefix sums (with a hash map, or a monotonic deque for "at least").</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Record only windows you are allowed to count. Delete keys whose count hits 0. Shrinking is only safe when "bigger window" means "more of the thing", which needs non-negative numbers.</div>
+</section>
+
+<section class="step" id="p6-s-cost">
+  <span class="lvl lvl-math">Maths</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>7. Complexity: race the slide against the recount</h2>
+  <p>Pick a list size and a window size, then race. Each racer does one touch per tick. Watch what happens when k grows.</p>
+  <div class="card">
+    <label class="slider">list size n <output id="p6oN">1000</output><input type="range" id="p6sN" min="10" max="2000" step="10" value="1000" aria-label="List size n"></label>
+    <label class="slider">window size k <output id="p6oK">100</output><input type="range" id="p6sK" min="1" max="1000" step="1" value="100" aria-label="Window size k"></label>
+    <canvas id="p6cvA" role="img" aria-label="Race between sliding the window and recounting every window: two bars that fill as each method counts touches"></canvas>
+    <div class="btn-row"><button class="btn btn-primary btn-sm" type="button" id="p6raceGo">Start the race</button></div>
+    <div class="readouts">
+      <div class="ro" id="p6roS"><span class="lab">slide touches</span><span class="val">-</span></div>
+      <div class="ro" id="p6roP"><span class="lab">recount touches</span><span class="val">-</span></div>
+      <div class="ro" id="p6roR"><span class="lab">recount / slide</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">The page runs both methods with a counter. Slide: k + 2 x (n - k). Recount: (n - k + 1) x k. The recount is worst when k is about n / 2.</p>
+  </div>
+<pre><code><span class="c"># == 2. Race: number touches, fixed window ==</span>
+n =   10, k =   4: slide =    16   brute =     28   ratio = 1.8x
+n =  100, k =  10: slide =   190   brute =    910   ratio = 4.8x
+n = 1000, k = 100: slide =  1900   brute =  90100   ratio = 47.4x
+n = 1000, k = 500: slide =  1500   brute = 250500   ratio = 167.0x</code></pre>
+  <details class="math"><summary>Step 1: why a variable window is O(n), even with a loop inside a loop</summary><div>
+    <p>The inner <code>while</code> looks like it could make this O(n<sup>2</sup>). It cannot. <code>r</code> moves right n times. <code>l</code> only moves right, and never past <code>r</code>, so it moves at most n times <em>in total</em>, across all turns of the outer loop.</p>
+    <div class="eq">window moves &lt;= n (adds) + n (removes) = 2n</div>
+    <p>Counted on random strings over 10 letters (seed 7):</p>
+<pre><code><span class="c"># == 7. Cost of the variable window ==</span>
+n =   100: window moves =   198 (at most 2n =   200)   brute reads =    479
+n =  1000: window moves =  1995 (at most 2n =  2000)   brute reads =   4584
+n = 10000: window moves = 19997 (at most 2n = 20000)   brute reads =  46474</code></pre>
+  </div></details>
+  <details class="math"><summary>Step 2: when the brute force really hurts</summary><div>
+    <p>On random text over 10 letters the restart-from-every-letter brute force breaks within about 10 reads, so it is only a few times slower. Its true cost shows when windows rarely break. A string of only <code>a</code> and <code>b</code> with "at most 2 different" never breaks, so the brute reads n x (n + 1) / 2 letters:</p>
+<pre><code>two letters, k = 2, n =  100: window moves =  100   brute reads =   5050
+two letters, k = 2, n = 1000: window moves = 1000   brute reads = 500500</code></pre>
+    <p>Big-O is about this worst case: brute O(n<sup>2</sup>), window O(n).</p>
+  </div></details>
+  <details class="math"><summary>Step 3: memory and hidden costs</summary><div>
+    <p>A total is O(1) memory. A count map holds at most one key per different item in the window: O(alphabet), which is O(1) for 26 letters and up to O(n) for numbers. Slicing such as <code>sum(nums[l:r + 1])</code> inside the loop secretly rescans the window and brings back O(n x k).</p>
+  </div></details>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Each index enters once and leaves once: O(n) time. Memory is the summary: O(1) for a total, O(different items) for a count map.</div>
+</section>
+
+<section class="step" id="p6-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>8. The problems in this pattern, easiest first</h2>
+  <p>Each one is a template above in a new costume. Links open LeetCode in a new tab. Problems marked "extra" are short warm-ups.</p>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:34%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-easy">easy</span></td></tr>
+      <tr><td>121</td><td><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" target="_blank" rel="noopener">Best Time to Buy and Sell Stock</a></td><td>The window runs from the cheapest day so far to today; <code>l</code> jumps to <code>r</code> whenever a new low appears.</td></tr>
+      <tr><td>643</td><td><a href="https://leetcode.com/problems/maximum-average-subarray-i/" target="_blank" rel="noopener">Maximum Average Subarray I</a> (extra)</td><td>Template A, then divide the best total by k.</td></tr>
+    </tbody>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-medium">medium</span></td></tr>
+      <tr><td>3</td><td><a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/" target="_blank" rel="noopener">Longest Substring Without Repeating Characters</a></td><td>Template B. Faster still: store each letter's last index and jump <code>l</code> past it.</td></tr>
+      <tr><td>424</td><td><a href="https://leetcode.com/problems/longest-repeating-character-replacement/" target="_blank" rel="noopener">Longest Repeating Character Replacement</a></td><td>Valid while (length minus the top letter count) is at most k. The top count never needs to go down.</td></tr>
+      <tr><td>567</td><td><a href="https://leetcode.com/problems/permutation-in-string/" target="_blank" rel="noopener">Permutation in String</a></td><td>A fixed window the length of the short word; compare letter counts as it slides.</td></tr>
+      <tr><td>209</td><td><a href="https://leetcode.com/problems/minimum-size-subarray-sum/" target="_blank" rel="noopener">Minimum Size Subarray Sum</a> (extra)</td><td>Template D exactly; all numbers are positive.</td></tr>
+    </tbody>
+    <tbody>
+      <tr><td colspan="3"><span class="badge diff-hard">hard</span></td></tr>
+      <tr><td>76</td><td><a href="https://leetcode.com/problems/minimum-window-substring/" target="_blank" rel="noopener">Minimum Window Substring</a></td><td>Shortest window holding every needed letter; keep a counter of how many needs are fully met.</td></tr>
+      <tr><td>239</td><td><a href="https://leetcode.com/problems/sliding-window-maximum/" target="_blank" rel="noopener">Sliding Window Maximum</a></td><td>A fixed window, but the summary is a max, so keep a monotonic deque of indices.</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">Problem pages for this pattern are built in later sessions. Try the windows now with the sandbox on the right.</p>
+</section>
+
+<section class="step" id="p6-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>9. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. Template A on <code>[2, 8, 1, 7, 3]</code> with k = 2. What is the best total? How many touches does sliding take, and how many does recounting take?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Best 10, and 8 touches each.</strong> With k = 2 a slide costs 2 touches and a recount also costs 2, so there is no saving. The slide pays off as k grows. <code>measure.py</code> prints <code>(10, 8)</code> for both.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. Template B on <code>"pqrqs"</code>. What is the answer, and how many window moves (adds plus removes) happen?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>3, after 7 moves.</strong> 5 letters enter. When the second <code>q</code> enters, <code>p</code> and the first <code>q</code> leave (2 removes). The longest valid windows are <code>"pqr"</code> and <code>"rqs"</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Template D on <code>[1, 2, 3, 4, 5]</code> with target 9. What comes back? What would go wrong if the <code>best = min(...)</code> line moved below the <code>while</code> loop?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>2</strong> (<code>4 + 5</code>), after 9 window moves (<code>measure.py</code>). Below the loop, the window has already been shrunk until it no longer reaches 9, so you would record windows that fail the goal.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>contiguous</dt><dd>Next to each other with no gaps: a subarray or substring.</dd>
+    <dt>window</dt><dd>The stretch from l to r; its length is r - l + 1.</dd>
+    <dt>fixed-size window</dt><dd>Always k items: one in, one out per step.</dd>
+    <dt>variable-size window</dt><dd>Grows on the right, shrinks on the left while a rule is broken.</dd>
+    <dt>window summary</dt><dd>A total or a count map kept up to date instead of rescanning.</dd>
+    <dt>validity rule</dt><dd>The test a window must pass, such as "at most k different letters".</dd>
+    <dt>expand / shrink</dt><dd>Move r right and add its item / move l right and remove its item.</dd>
+    <dt>touch</dt><dd>This lesson's unit of work: one number added to or taken from a total.</dd>
+    <dt>monotonic deque</dt><dd>A double-ended queue kept in sorted order, so its front is the window's max or min.</dd>
+    <dt>prefix sums</dt><dd>Running totals; the tool for "sum equals k" when numbers can be negative.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p6-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> keep a summary of a contiguous window and update it by one item in and one item out, instead of rebuilding each stretch.</p>
+    <p><strong>Signals:</strong> subarray or substring, longest / shortest / best / count, "k in a row", "at most k", "contains all of".</p>
+    <p><strong>Templates:</strong> fixed: <code>total += a[r] - a[r - k]</code>. Variable: for each <code>r</code>, add <code>a[r]</code>; <code>while invalid</code>: remove <code>a[l]</code>, <code>l += 1</code>; then <code>best = max(best, r - l + 1)</code>. Shortest: record inside the <code>while</code>, before shrinking.</p>
+    <p><strong>Cost:</strong> O(n) time, because l and r each move at most n times; memory O(1) for a total, O(different items) for a count map. At n = 1000, k = 500: 1,500 touches against 250,500.</p>
+    <p><strong>Traps:</strong> recording before the window is valid; zero counts left in the map; negative numbers (use prefix sums).</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, run "at most k different" on your own string, then switch to the fixed window and try a big k.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(6)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

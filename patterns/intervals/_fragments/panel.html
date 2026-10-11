@@ -1,0 +1,376 @@
+<div class="lesson-content xp" id="lesson15">
+  <style>#lesson15 .tp-grid td, #lesson15 .tp-grid th, #sandbox15 .tp-grid td, #sandbox15 .tp-grid th { min-width: 22px; height: 24px; padding: 0 3px; } #lesson15 .tp-grid th:first-child, #sandbox15 .tp-grid th:first-child { white-space: nowrap; }</style>
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Pattern lesson</p>
+    <h1 class="lesson-title">Intervals</h1>
+    <p class="lesson-subtitle">Goal: handle start and end pairs (meetings, bookings, ranges) without comparing every pair. Sort them once, and each interval only has to look at the last one you kept.</p>
+    <div class="lesson-meta"><span class="badge">Tier 3</span><span class="badge">pattern</span><span class="badge diff-medium">medium</span></div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in the Intervals lesson"><a href="#p15-s-idea">Calendar</a><a href="#p15-s-race">Check race</a><a href="#p15-s-words">Pattern words</a><a href="#p15-s-map">Mental map</a><a href="#p15-s-template">Templates</a><a href="#p15-s-spot">Spot it</a><a href="#p15-s-traps">Traps</a><a href="#p15-s-cost">Cost</a><a href="#p15-s-problems">Problems</a><a href="#p15-s-check">Check yourself</a><a href="#p15-recap">Recap</a></nav>
+
+<section class="step" id="p15-s-idea">
+  <span class="lvl lvl-plain">Plain words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>1. Sort by start, then only look back one step</h2>
+  <p>An <dfn class="term" tabindex="0" data-def="A pair [start, end] that stands for a stretch of time or numbers, such as a meeting from 2 to 5.">interval</dfn> is a pair <code>[start, end]</code>: a meeting from 2 to 5, a booking from day 7 to day 9.</p>
+  <p>Questions about many intervals ("which ones clash?", "join the ones that touch") look like they need every pair compared. They do not. Once the intervals are in order of start time, each one can only clash with the most recent one you kept.</p>
+  <div class="card analogy"><strong>Analogy: booking meeting rooms from a calendar.</strong> Nobody checks every meeting against every other meeting. You read the day from morning to evening. For each new meeting you ask one question: "has the last meeting I wrote down ended yet?"</div>
+  <p>Here is the job. Join every group of overlapping intervals in <code>[[7, 9], [1, 3], [2, 5], [10, 11], [6, 8]]</code>. In the pictures, each row is one interval drawn as a bar on a time line. Column t is the slot from t to t + 1, so the bar for [1, 3] fills slots 1 and 2 and stops at time 3.</p>
+  <h3>Try it: the same intervals, two ways</h3>
+  <p>Press <strong>Step</strong> or <strong>Play</strong> on each player.</p>
+  <div class="grid2">
+    <div>
+      <p><strong>Slow: compare every pair.</strong> No sorting. Test each pair for overlap and put overlapping ones in one group.</p>
+      <div id="p15tpA"></div>
+    </div>
+    <div>
+      <p><strong>Pattern: sort, then scan.</strong> Sort by start. Compare each interval only with the last merged one.</p>
+      <div id="p15tpB"></div>
+    </div>
+  </div>
+  <div class="readouts">
+    <div class="ro" id="p15roA"><span class="lab">compare every pair</span><span class="val">-</span> <span class="unit">overlap checks</span></div>
+    <div class="ro" id="p15roB"><span class="lab">sort, then scan</span><span class="val">-</span> <span class="unit">overlap checks (plus the sort)</span></div>
+  </div>
+  <p class="caption">Both find [[1, 5], [6, 9], [10, 11]]. <code>measure.py</code> prints 10 pair checks and 4 scan checks for these five intervals.</p>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Sort first. After sorting by start, an interval can only overlap the group just before it, so one look back is enough.</div>
+  <p class="newwords">New words: <span class="chip">interval</span><span class="chip">overlap</span><span class="chip">merge</span></p>
+</section>
+
+<section class="step" id="p15-s-race">
+  <span class="lvl lvl-pic">Picture</span> <span class="lvl lvl-math">Maths</span>
+  <h2>2. The check race: one look back against every pair</h2>
+  <p>With n intervals, comparing every pair costs n x (n - 1) / 2 overlap checks. The sorted scan costs n - 1 checks, plus the sort. Pick a size and start the race.</p>
+  <div class="card">
+    <canvas id="p15cvA" role="img" aria-label="Race between the sorted scan and comparing every pair: two bars that fill as each method counts its overlap checks"></canvas>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-p15n="10">n = 10</button>
+      <button class="btn btn-sm" type="button" data-p15n="100">n = 100</button>
+      <button class="btn btn-sm" type="button" data-p15n="1000">n = 1000</button>
+      <button class="btn btn-primary btn-sm" type="button" id="p15raceGo">Start the race</button>
+    </div>
+    <div class="readouts">
+      <div class="ro" id="p15roN"><span class="lab">intervals n</span><span class="val">10</span></div>
+      <div class="ro" id="p15roS"><span class="lab">scan checks</span><span class="val">-</span></div>
+      <div class="ro" id="p15roP"><span class="lab">pair checks</span><span class="val">-</span></div>
+      <div class="ro" id="p15roR"><span class="lab">pairs / scan</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">The page counts both methods on n intervals every time you pick a size. The bar scale is the pair count.</p>
+  </div>
+  <p><code>measure.py</code> counts the same thing on random intervals, and also counts the comparisons Python's own sort made:</p>
+<pre><code><span class="c"># == 2. Race: overlap checks (any n random intervals) ==</span>
+n =   10: scan checks =    9  pair checks =     45  ratio = 5.0x   (Python's sort used 22 comparisons)
+n =  100: scan checks =   99  pair checks =   4950  ratio = 50.0x   (Python's sort used 530 comparisons)
+n = 1000: scan checks =  999  pair checks = 499500  ratio = 500.0x   (Python's sort used 8,630 comparisons)</code></pre>
+  <p>Even with the sort added, n = 1000 costs 8,630 + 999 steps against 499,500. The sort is the most expensive part of the fast way, and it is still small.</p>
+</section>
+
+<section class="step" id="p15-s-words">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>3. The words interviewers use for the calendar</h2>
+  <table>
+    <thead><tr><th>Word</th><th>Plain meaning</th><th>Calendar</th><th>In Python</th></tr></thead>
+    <tbody>
+      <tr><td><dfn class="term" tabindex="0" data-def="Two intervals overlap when they share some time. For closed intervals [a, b] and [c, d]: a <= d and c <= b.">overlap</dfn></td><td>They share some time</td><td>Two meetings clash</td><td><code>a[0] &lt;= b[1] <span class="k">and</span> b[0] &lt;= a[1]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Replacing a group of overlapping intervals with one interval from the smallest start to the largest end.">merge</dfn></td><td>Join clashing ones into one</td><td>One long block of busy time</td><td><code>last[1] = max(last[1], e)</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Two intervals touch when one ends exactly where the other starts, like [1, 3] and [3, 5]. Whether that counts as an overlap depends on the problem.">touching</dfn></td><td>One ends where the next starts</td><td>A 3:00 end and a 3:00 start</td><td><code>&lt;=</code> or <code>&lt;</code>: read the problem</td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="An interval [s, e) that includes s but not e. Meetings work this way: a meeting from 1 to 3 has left the room at 3.">half-open</dfn></td><td>Includes the start, not the end</td><td>The room is free at the end time</td><td><code>s &lt;= t &lt; e</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Ordering intervals by start or by end. The key you sort by decides which greedy rule is correct.">sort key</dfn></td><td>What you put the intervals in order of</td><td>Read by start time or by end time</td><td><code>key=<span class="k">lambda</span> iv: iv[<span class="n">1</span>]</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="Turn each interval into two events (+1 at its start, -1 at its end), sort the events by time, and walk them with a running count.">sweep line</dfn></td><td>Walk through time, counting starts and ends</td><td>A clock hand moving across the day</td><td><code>events.sort()</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A heap (priority queue) that holds the end time of every room in use; its smallest item is the room that frees up first.">heap of end times</dfn></td><td>Which busy room frees up first</td><td>The earliest finishing meeting</td><td><code>heapq</code></td></tr>
+      <tr><td><dfn class="term" tabindex="0" data-def="A method that makes the best-looking choice at each step and never goes back. Here: keep the interval that ends first.">greedy</dfn></td><td>Take the safest choice now, never undo it</td><td>Keep the meeting that ends soonest</td><td>one pass, no going back</td></tr>
+    </tbody>
+  </table>
+  <p class="newwords">New words: <span class="chip">touching</span><span class="chip">half-open</span><span class="chip">sort key</span><span class="chip">sweep line</span><span class="chip">heap of end times</span><span class="chip">greedy</span></p>
+</section>
+
+<section class="step" id="p15-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>4. Mental map: from a blank page to working code</h2>
+  <p>Read this when a problem hands you pairs of numbers.</p>
+  <ol class="mmap">
+    <li class="mm-signal"><b>Signal</b><span>The input is pairs <code>[start, end]</code>: meetings, bookings, ranges, balloons, time slots. The words "overlap", "merge", "clash", "free time", "rooms", "remove the fewest".</span></li>
+    <li><b>Ask</b><span>"If I sort the intervals, what is the one thing I must remember about the ones already seen?" Usually it is the last end time, or a count of what is running.</span></li>
+    <li><b>Pick</b><span>Which question is it?</span>
+      <ul class="mm-branches">
+        <li><i>join the ones that overlap</i>Merge: sort by start, compare with the last merged end.</li>
+        <li><i>one new interval into a sorted list</i>Insert: copy the ones before it, absorb the ones that overlap, copy the rest. No sort needed.</li>
+        <li><i>how many at once? how many rooms?</i>Count overlaps: sweep line of +1 / -1 events, or a heap of end times.</li>
+        <li><i>remove the fewest so none clash</i>Greedy by end: sort by end, keep the one that ends first.</li>
+        <li><i>two sorted lists, common time</i>Intersection: two pointers, move the one that ends first.</li>
+        <li><i>can one person attend all?</i>Sort by start, check each neighbour pair once.</li>
+      </ul>
+    </li>
+    <li><b>Invariant</b><span>After sorting by start, the merged list so far has no overlaps, and only its <em>last</em> interval can still grow.</span></li>
+    <li><b>Steps</b><span>1. Sort by the right key. 2. Keep a small memory (the last end, or a running count). 3. For each interval, one comparison decides: join, keep, or remove. 4. Do not forget the last group.</span></li>
+    <li class="mm-trap"><b>Check</b><span>Do touching intervals count as overlapping here? Did you sort, and by the right key? Do you take the <code>max</code> of the ends? Does an empty list work?</span></li>
+  </ol>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Not intervals</span>Many "range" questions about one array (the sum from index l to r) are prefix sums. A run of back-to-back items is a sliding window. Intervals means many separate start and end pairs.</div>
+</section>
+
+<section class="step" id="p15-s-template">
+  <span class="lvl lvl-code">Code</span>
+  <h2>5. Templates for the four common questions</h2>
+  <h3>Template A: merge (sort by start)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">def</span> merge(intervals):</code></td><td>Join every group of overlapping intervals.</td></tr>
+      <tr><td><code>out = []</code></td><td>Merged intervals so far. Only the last one can still grow.</td></tr>
+      <tr><td><code><span class="k">for</span> s, e <span class="k">in</span> sorted(intervals):</code></td><td>Sort by start (Python sorts pairs by the first item, then the second). O(n log n).</td></tr>
+      <tr><td><code><span class="k">if</span> out <span class="k">and</span> s &lt;= out[-<span class="n">1</span>][<span class="n">1</span>]:</code></td><td>One look back: does it start before the last one ends? <code>&lt;=</code> joins touching ones.</td></tr>
+      <tr><td><code>out[-<span class="n">1</span>][<span class="n">1</span>] = max(out[-<span class="n">1</span>][<span class="n">1</span>], e)</code></td><td>Stretch the last one. <code>max</code>, because the new one may sit inside it.</td></tr>
+      <tr><td><code><span class="k">else</span>: out.append([s, e])</code></td><td>A gap: start a new merged interval.</td></tr>
+      <tr><td><code><span class="k">return</span> out</code></td><td>Already sorted and free of overlaps.</td></tr>
+    </tbody>
+  </table>
+  <h3>Template B: insert into a sorted list (no sort)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>s, e = new</code></td><td>The interval to add. The list is already sorted and has no overlaps.</td></tr>
+      <tr><td><code><span class="k">while</span> i &lt; n <span class="k">and</span> intervals[i][<span class="n">1</span>] &lt; s:</code></td><td>Phase 1: these end before the new one starts. Copy them.</td></tr>
+      <tr><td><code><span class="k">while</span> i &lt; n <span class="k">and</span> intervals[i][<span class="n">0</span>] &lt;= e:</code></td><td>Phase 2: these overlap the new one. Grow it: <code>s = min(...)</code>, <code>e = max(...)</code>.</td></tr>
+      <tr><td><code>out.append([s, e])</code></td><td>Add the grown interval once.</td></tr>
+      <tr><td><code>out.extend(intervals[i:])</code></td><td>Phase 3: the rest start after it. Copy them. O(n) in total.</td></tr>
+    </tbody>
+  </table>
+<pre><code><span class="c"># == 3. Templates ==</span>
+insert([[1, 2], [4, 6], [8, 10]], [5, 9]) = [[1, 2], [4, 10]]
+insert([[1, 2], [4, 6]], [7, 8])          = [[1, 2], [4, 6], [7, 8]]</code></pre>
+  <h3>Template C: how many rooms? (sweep line, or a heap)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code>events.append((s, <span class="n">1</span>)); events.append((e, -<span class="n">1</span>))</code></td><td>A start needs a room (+1); an end frees one (-1).</td></tr>
+      <tr><td><code>events.sort()</code></td><td>By time. At the same time, -1 comes before +1, so a room freed at 4 can be used again at 4.</td></tr>
+      <tr><td><code>rooms += d</code></td><td>Rooms busy right after this event.</td></tr>
+      <tr><td><code>best = max(best, rooms)</code></td><td>The busiest moment is the answer.</td></tr>
+      <tr><td><code><span class="k">for</span> s, e <span class="k">in</span> sorted(meetings):</code> (heap way)</td><td>The other classic: meetings by start, and a heap <code>ends</code> of rooms in use.</td></tr>
+      <tr><td><code><span class="k">if</span> ends <span class="k">and</span> ends[<span class="n">0</span>] &lt;= s: heapq.heappop(ends)</code></td><td>The earliest-finishing room is free: reuse it.</td></tr>
+      <tr><td><code>heapq.heappush(ends, e); <span class="k">return</span> len(ends)</code></td><td>This meeting takes a room. The heap size at the end is the room count.</td></tr>
+    </tbody>
+  </table>
+  <h3>Template D: remove the fewest (greedy by end)</h3>
+  <table>
+    <thead><tr><th style="width:46%">Code</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td><code><span class="k">for</span> s, e <span class="k">in</span> sorted(intervals, key=<span class="k">lambda</span> iv: iv[<span class="n">1</span>]):</code></td><td>Sort by <em>end</em>. The one that ends first leaves the most room for the others.</td></tr>
+      <tr><td><code><span class="k">if</span> end <span class="k">is not</span> <span class="k">None</span> <span class="k">and</span> s &lt; end:</code></td><td>It starts before the last kept one ends: a clash. <code>&lt;</code> lets touching ones stay.</td></tr>
+      <tr><td><code>removed += <span class="n">1</span></code></td><td>Drop it. It ends no earlier than the kept one, so dropping it is never worse.</td></tr>
+      <tr><td><code><span class="k">else</span>: end = e</code></td><td>No clash: keep it, and remember its end.</td></tr>
+    </tbody>
+  </table>
+  <h3>Watch them run</h3>
+  <p>Pick a template. In the time line, dots mean "not looked at yet", blue means "done" or "kept", teal means "now", and x means "removed".</p>
+  <div class="btn-row">
+    <button class="btn btn-sm" type="button" data-p15v="merge">A. Merge the section 1 example</button>
+    <button class="btn btn-sm" type="button" data-p15v="rooms">C. Rooms for five meetings</button>
+    <button class="btn btn-sm" type="button" data-p15v="erase">D. Remove the fewest</button>
+  </div>
+  <div id="p15tpT"></div>
+  <div class="readouts">
+    <div class="ro" id="p15roVr"><span class="lab">result</span><span class="val">-</span></div>
+    <div class="ro" id="p15roVw"><span class="lab">work (after the sort)</span><span class="val">-</span></div>
+  </div>
+<pre><code><span class="c"># measure.py, section 3</span>
+rooms [[1, 5], [2, 4], [3, 7], [4, 6], [8, 10]]: sweep = 3 (10 events)  heap = 3  brute = (3, 25)
+erase [[1, 4], [2, 3], [3, 6], [5, 7], [6, 8]]: greedy by end = (2, 4)  brute = (2, 32)   <span class="c"># (removed, work)</span></code></pre>
+  <h3>Drive the sweep line yourself</h3>
+  <p>Move the clock. The orange line is time t. A meeting is running at t when <code>start &lt;= t &lt; end</code>. The most meetings running at once is the number of rooms you need.</p>
+  <div class="card">
+    <canvas id="p15cvS" role="img" aria-label="Five meetings drawn as bars on a time line with a movable time marker; bars running at the marker are highlighted"></canvas>
+    <label class="slider">time t <output id="p15StOut">3</output><input type="range" id="p15St" min="0" max="10" step="1" value="3" aria-label="Time t"></label>
+    <div class="readouts">
+      <div class="ro" id="p15roT"><span class="lab">time t</span><span class="val">-</span></div>
+      <div class="ro" id="p15roNow"><span class="lab">running at t</span><span class="val">-</span></div>
+      <div class="ro" id="p15roBest"><span class="lab">rooms needed (busiest t)</span><span class="val">-</span></div>
+    </div>
+    <p class="caption">Look at t = 4: [2, 4] has just ended and [4, 6] has just started, so the count stays at 3 instead of jumping to 4. <code>measure.py</code> prints the running counts for t = 0 to 10: 0 1 2 3 3 2 1 0 1 1 0.</p>
+  </div>
+</section>
+
+<section class="step" id="p15-s-spot">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>6. Spot the pattern: is this an intervals problem?</h2>
+  <p>Read each made-up task. Decide yes or no, name the variant, and name the clue. Then reveal.</p>
+  <div class="predict">
+    <h3>A. A hotel has every guest's check-in and check-out day. Report the stretches of days when the hotel had anyone staying.</h3>
+    <textarea aria-label="Is task A an intervals problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: merge.</strong> Clue: start and end pairs, and "stretches" means joining the ones that overlap. Sort by check-in, stretch the last stretch.</p></div>
+  </div>
+  <div class="predict">
+    <h3>B. A gym lists every class with its start and end time. What is the fewest number of studios it needs?</h3>
+    <textarea aria-label="Is task B an intervals problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: count overlaps (meeting rooms).</strong> Clue: "how many at once". Sweep line of +1 and -1 events, or a heap of end times.</p></div>
+  </div>
+  <div class="predict">
+    <h3>C. A weather station logs rainfall per day. Many times a day, someone asks for the total rain between day l and day r.</h3>
+    <textarea aria-label="Is task C an intervals problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> It talks about ranges, but there is one array and many sum questions. Nothing overlaps or merges. That is prefix sums: one subtraction per question.</p></div>
+  </div>
+  <div class="predict">
+    <h3>D. Balloons float above a line, each covering a stretch from x1 to x2. One upward dart pops every balloon over its x. What is the fewest number of darts?</h3>
+    <textarea aria-label="Is task D an intervals problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: greedy by end.</strong> Sort by end; throw a dart at the first end and it pops every balloon that starts by then. It is the twin of "remove the fewest".</p></div>
+  </div>
+  <div class="predict">
+    <h3>E. Given an unsorted list of whole numbers, find the longest run of values that follow each other, like 4, 5, 6, 7.</h3>
+    <textarea aria-label="Is task E an intervals problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>No, not this pattern.</strong> The answer is a range, but the input is single numbers, not start and end pairs. Put them in a set and grow each run from its smallest value (arrays and hashing).</p></div>
+  </div>
+  <div class="predict">
+    <h3>F. Two friends each have a sorted list of free time slots. List the times when both are free.</h3>
+    <textarea aria-label="Is task F an intervals problem?"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>Yes: intersection.</strong> Both lists are already sorted, so no sort. Two pointers: the overlap is <code>[max(starts), min(ends)]</code> when it is not empty; then move past whichever slot ends first.</p></div>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Trigger signals</span>Start and end pairs; "overlap", "merge", "rooms", "free time", "fewest to remove". One array with range questions is prefix sums, not intervals.</div>
+</section>
+
+<section class="step" id="p15-s-traps">
+  <span class="lvl lvl-code">Code</span>
+  <h2>7. Four classic traps</h2>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 1: touching endpoints</span>
+    <p>Does a meeting ending at 3 clash with one starting at 3? For rooms, no: the first has left. If the sweep puts the +1 before the -1 at the same time, it counts one room too many.</p>
+<pre><code><span class="c"># == 5. Traps ==</span>
+touching [[1, 3], [3, 5]]: rooms fixed = 1  rooms bug (start first) = 2
+merge touching [[1, 3], [3, 5]] = [[1, 5]]   <span class="c"># merge problems count touching as overlap</span></code></pre>
+    <p><strong>Fix:</strong> read the problem's rule, then pick <code>&lt;</code> or <code>&lt;=</code> on purpose. For rooms, let ends sort before starts (the tuple <code>(t, -1)</code> does). For merge, LeetCode 56 joins touching intervals, so <code>&lt;=</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 2: sorting by the wrong key</span>
+    <p>For "remove the fewest", sorting by start keeps a long interval just because it starts first, and then everything inside it gets removed.</p>
+<pre><code>erase [[1, 10], [2, 3], [4, 5]]: by end = 1  by start (bug) = 2  brute = 1</code></pre>
+    <p><strong>Fix:</strong> greedy keeping needs sort by <em>end</em>. Merging needs sort by <em>start</em>. Say which and why before you code.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 3: replacing the end instead of taking the max</span>
+    <p>When the new interval sits inside the last one, setting the end to the new end shrinks it.</p>
+<pre><code>merge [[1, 10], [2, 3]]: fixed = [[1, 10]]  replace-end bug = [[1, 3]]</code></pre>
+    <p><strong>Fix:</strong> <code>out[-1][1] = max(out[-1][1], e)</code>.</p>
+  </div>
+  <div class="card warn"><span class="callout-title" style="color:var(--orange)">Trap 4: forgetting to sort</span>
+    <p>The one-look-back rule is only true for sorted input. Unsorted, an early interval can swallow ones it never touched.</p>
+<pre><code>merge [[4, 6], [1, 2], [2, 5]]: fixed = [[1, 6]]  no-sort bug = [[4, 6]]</code></pre>
+    <p><strong>Fix:</strong> <code>sorted(intervals)</code> first, unless the problem promises sorted input (insert, intersection).</p>
+  </div>
+  <div class="card rule"><span class="callout-title" style="color:var(--teal)">Rule to remember</span>Decide what touching means. Sort, and by the right key. Stretch with <code>max</code>.</div>
+</section>
+
+<section class="step" id="p15-s-cost">
+  <span class="lvl lvl-math">Maths</span>
+  <h2>8. What it costs</h2>
+  <details class="math"><summary>Step 1: the sort is the whole bill</summary><div>
+    <p>The scan after sorting does n - 1 checks: O(n). The sort is O(n log n). So merge, rooms and remove-fewest all cost <strong>O(n log n)</strong> time.</p>
+    <p>For n = 1000, Python's sort made 8,630 comparisons and the scan 999 checks. Comparing every pair would be 499,500.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: where n x (n - 1) / 2 comes from</summary><div>
+    <div class="eq">(n - 1) + (n - 2) + ... + 1 = n x (n - 1) / 2</div>
+    <p>For the five intervals in section 1: 5 x 4 / 2 = 10 pair checks against 4 scan checks.</p>
+  </div></details>
+  <details class="math"><summary>Step 3: memory, the heap, and insert</summary><div>
+    <p><code>sorted</code> makes a copy: O(n) extra space, and the output can be O(n). The sweep line holds 2n events. The heap holds at most one end time per room, so O(n), and each push or pop costs O(log n).</p>
+    <p>Insert needs no sort because the list is given sorted: one pass, O(n).</p>
+  </div></details>
+  <details class="math"><summary>Step 4: why greedy beats trying every choice</summary><div>
+    <p>Trying every set of intervals to keep is 2<sup>n</sup> sets: 32 for the five intervals in template D, against 4 greedy checks. At n = 30 that is over a billion sets.</p>
+    <p>Why greedy by end is safe: whatever the best answer keeps first, swap it for the interval that ends first. It ends no later, so it clashes with nothing the best answer kept after it. Repeat, and the greedy answer is just as big.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p15-s-problems">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>9. The problems in this pattern, easiest first</h2>
+  <p>None has its own page yet; they come in later sessions. Links open in a new tab. Meeting Rooms I and II are LeetCode premium; LintCode has free copies.</p>
+  <h3><span class="badge diff-easy">easy</span> Warm-up</h3>
+  <table>
+    <thead><tr><th style="width:9%">#</th><th style="width:36%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>252</td><td><a href="https://leetcode.com/problems/meeting-rooms/" target="_blank" rel="noopener">Meeting Rooms</a> (premium; <a href="https://www.lintcode.com/problem/920/" target="_blank" rel="noopener">free on LintCode 920</a>)</td><td>Sort by start; any neighbour pair that clashes means no.</td></tr>
+      <tr><td>1450</td><td><a href="https://leetcode.com/problems/number-of-students-doing-homework-at-a-given-time/" target="_blank" rel="noopener">Number of Students Doing Homework at a Given Time</a> (extra)</td><td>The sweep slider in one line: count intervals with start &lt;= t &lt;= end (closed at both ends here).</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-medium">medium</span> The core set</h3>
+  <table>
+    <thead><tr><th style="width:9%">#</th><th style="width:36%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>57</td><td><a href="https://leetcode.com/problems/insert-interval/" target="_blank" rel="noopener">Insert Interval</a></td><td>Already sorted: three phases (before, overlapping, after), no sort.</td></tr>
+      <tr><td>56</td><td><a href="https://leetcode.com/problems/merge-intervals/" target="_blank" rel="noopener">Merge Intervals</a></td><td>Template A; touching intervals merge.</td></tr>
+      <tr><td>435</td><td><a href="https://leetcode.com/problems/non-overlapping-intervals/" target="_blank" rel="noopener">Non-overlapping Intervals</a></td><td>Template D: sort by end; touching is allowed.</td></tr>
+      <tr><td>253</td><td><a href="https://leetcode.com/problems/meeting-rooms-ii/" target="_blank" rel="noopener">Meeting Rooms II</a> (premium; <a href="https://www.lintcode.com/problem/919/" target="_blank" rel="noopener">free on LintCode 919</a>)</td><td>Template C: sweep line or a heap of end times.</td></tr>
+      <tr><td>452</td><td><a href="https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/" target="_blank" rel="noopener">Minimum Number of Arrows to Burst Balloons</a> (extra)</td><td>Greedy by end, but touching balloons share an arrow: closed ends.</td></tr>
+      <tr><td>986</td><td><a href="https://leetcode.com/problems/interval-list-intersections/" target="_blank" rel="noopener">Interval List Intersections</a> (extra)</td><td>Two sorted lists, two pointers; advance the one that ends first.</td></tr>
+    </tbody>
+  </table>
+  <h3><span class="badge diff-hard">hard</span> Stretch</h3>
+  <table>
+    <thead><tr><th style="width:9%">#</th><th style="width:36%">Problem</th><th>The twist</th></tr></thead>
+    <tbody>
+      <tr><td>1851</td><td><a href="https://leetcode.com/problems/minimum-interval-to-include-each-query/" target="_blank" rel="noopener">Minimum Interval to Include Each Query</a></td><td>Sort the queries too, sweep both, and keep a heap of (size, end) for intervals that have started.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="step" id="p15-s-check">
+  <span class="lvl lvl-plain">Check yourself</span>
+  <h2>10. Your lesson's questions</h2>
+  <div class="predict">
+    <h3>Q1. What does Template A return for [[1, 4], [4, 5]]?</h3>
+    <textarea aria-label="Answer to question 1"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>[[1, 5]]</strong>. 4 &lt;= 4, so the touching pair merges. <code>measure.py</code> prints <code>[[1, 5]]</code>.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q2. How many rooms do the meetings [[0, 30], [5, 10], [15, 20]] need?</h3>
+    <textarea aria-label="Answer to question 2"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>2.</strong> The long meeting holds one room all day. The two short ones never clash with each other, so they share the second room.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q3. Template D on [[1, 2], [2, 3], [3, 4], [1, 3]]: how many are removed?</h3>
+    <textarea aria-label="Answer to question 3"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>1.</strong> Sorted by end: [1, 2], then [2, 3] and [1, 3] (both end at 3), then [3, 4]. [1, 3] starts at 1, before the kept end 3, so it goes. The touching ones stay.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Q4. With 2000 intervals, how many pair checks does the slow way make, and how many scan checks does the fast way make after sorting?</h3>
+    <textarea aria-label="Answer to question 4"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Show answer</button></div>
+    <div class="answer"><p><strong>1,999,000 pair checks</strong> (2000 x 1999 / 2) against <strong>1,999 scan checks</strong>. Both are printed by <code>measure.py</code>.</p></div>
+  </div>
+
+  <h3>Glossary: new words from this lesson</h3>
+  <dl class="glossary">
+    <dt>interval</dt><dd>A [start, end] pair for a stretch of time or numbers.</dd>
+    <dt>overlap</dt><dd>Two intervals share some time: <code>a[0] &lt;= b[1] and b[0] &lt;= a[1]</code> for closed ends.</dd>
+    <dt>merge</dt><dd>Replace a group of overlapping intervals with one from the smallest start to the largest end.</dd>
+    <dt>touching</dt><dd>One ends where the next starts. Whether it counts as overlap depends on the problem.</dd>
+    <dt>half-open</dt><dd>[s, e): includes s, not e. Meetings work this way.</dd>
+    <dt>sort key</dt><dd>What you sort by: start for merging, end for greedy keeping.</dd>
+    <dt>sweep line</dt><dd>Walk sorted +1 / -1 events through time with a running count.</dd>
+    <dt>heap of end times</dt><dd>The end time of every busy room; the smallest frees up first.</dd>
+    <dt>greedy</dt><dd>Make the best-looking choice now and never undo it; safe here when you keep the earliest end.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p15-recap">
+  <h2>Recap: the pattern card in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Idea:</strong> sort the intervals once. Then each one only needs one comparison with the last one kept (or a running count), instead of every pair.</p>
+    <p><strong>Signals:</strong> start and end pairs; meetings, bookings, ranges, balloons; "overlap", "merge", "rooms", "fewest to remove", "free time".</p>
+    <p><strong>Templates:</strong> merge: sort by start, <code>if s &lt;= last_end</code> stretch with <code>max</code>, else append. Rooms: +1 / -1 events, ends first at equal times, track the peak. Remove fewest: sort by end, keep the earliest end. Insert: before, overlapping, after.</p>
+    <p><strong>Cost:</strong> O(n log n) for the sort, O(n) for the scan. At n = 1000: 999 scan checks plus 8,630 sort comparisons, against 499,500 pair checks.</p>
+    <p><strong>Traps:</strong> what touching means; sorting by the wrong key (or not at all); replacing the end instead of taking the max.</p>
+  </div>
+  <div class="checkpoint">
+    <p>In the sandbox, type your own intervals and run all three templates on them. Try touching intervals and one long interval that swallows the rest.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="markComplete(15)">Mark lesson complete</button>
+    </div>
+  </div>
+</section>
+</div>

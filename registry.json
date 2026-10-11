@@ -1,0 +1,308 @@
+{
+  "patterns": [
+    {
+      "key": "foundations",
+      "title": "Big-O and Recursion",
+      "tier": 0,
+      "goal": 3
+    },
+    {
+      "key": "arrays-hashing",
+      "title": "Arrays and Hashing",
+      "tier": 1,
+      "goal": 8
+    },
+    {
+      "key": "two-pointers",
+      "title": "Two Pointers",
+      "tier": 1,
+      "goal": 5
+    },
+    {
+      "key": "sliding-window",
+      "title": "Sliding Window",
+      "tier": 1,
+      "goal": 6
+    },
+    {
+      "key": "stack",
+      "title": "Stack and Monotonic Stack",
+      "tier": 1,
+      "goal": 7
+    },
+    {
+      "key": "prefix-sums",
+      "title": "Prefix Sums",
+      "tier": 1,
+      "goal": 4
+    },
+    {
+      "key": "binary-search",
+      "title": "Binary Search",
+      "tier": 2,
+      "goal": 7
+    },
+    {
+      "key": "linked-list",
+      "title": "Linked List",
+      "tier": 2,
+      "goal": 11
+    },
+    {
+      "key": "trees",
+      "title": "Trees",
+      "tier": 2,
+      "goal": 15
+    },
+    {
+      "key": "heap",
+      "title": "Heap and Priority Queue",
+      "tier": 3,
+      "goal": 7
+    },
+    {
+      "key": "backtracking",
+      "title": "Backtracking",
+      "tier": 3,
+      "goal": 9
+    },
+    {
+      "key": "tries",
+      "title": "Tries",
+      "tier": 3,
+      "goal": 3
+    },
+    {
+      "key": "intervals",
+      "title": "Intervals",
+      "tier": 3,
+      "goal": 5
+    },
+    {
+      "key": "greedy",
+      "title": "Greedy",
+      "tier": 3,
+      "goal": 8
+    },
+    {
+      "key": "graphs",
+      "title": "Graphs: BFS, DFS, Topological Sort, Union-Find",
+      "tier": 4,
+      "goal": 11
+    },
+    {
+      "key": "advanced-graphs",
+      "title": "Advanced Graphs: Shortest Paths and MST",
+      "tier": 4,
+      "goal": 6
+    },
+    {
+      "key": "dp-1d",
+      "title": "1D Dynamic Programming",
+      "tier": 4,
+      "goal": 12
+    },
+    {
+      "key": "dp-2d",
+      "title": "2D Dynamic Programming",
+      "tier": 5,
+      "goal": 11
+    },
+    {
+      "key": "bit-manipulation",
+      "title": "Bit Manipulation",
+      "tier": 5,
+      "goal": 7
+    },
+    {
+      "key": "math-geometry",
+      "title": "Math and Matrix",
+      "tier": 5,
+      "goal": 6
+    }
+  ],
+  "slots": [
+    {
+      "n": 1,
+      "kind": "pattern",
+      "pattern": "arrays-hashing",
+      "title": "Pattern: Arrays and Hashing",
+      "short": "P Arrays and Has",
+      "dir": "patterns/arrays-hashing"
+    },
+    {
+      "n": 2,
+      "kind": "problem",
+      "pattern": "arrays-hashing",
+      "title": "Contains Duplicate",
+      "diff": "easy",
+      "dir": "problems/arrays-hashing/0217-contains-duplicate",
+      "fn": "contains_duplicate",
+      "short": "217 Duplicate",
+      "lc": 217
+    },
+    {
+      "n": 3,
+      "kind": "problem",
+      "pattern": "arrays-hashing",
+      "title": "Two Sum",
+      "diff": "easy",
+      "dir": "problems/arrays-hashing/0001-two-sum",
+      "fn": "two_sum",
+      "short": "1 Two Sum",
+      "lc": 1
+    },
+    {
+      "n": 4,
+      "kind": "pattern",
+      "pattern": "foundations",
+      "title": "Pattern: Big-O and Recursion",
+      "short": "P Big-O and Recu",
+      "dir": "patterns/foundations"
+    },
+    {
+      "n": 5,
+      "kind": "pattern",
+      "pattern": "two-pointers",
+      "title": "Pattern: Two Pointers",
+      "short": "P Two Pointers",
+      "dir": "patterns/two-pointers"
+    },
+    {
+      "n": 6,
+      "kind": "pattern",
+      "pattern": "sliding-window",
+      "title": "Pattern: Sliding Window",
+      "short": "P Sliding Window",
+      "dir": "patterns/sliding-window"
+    },
+    {
+      "n": 7,
+      "kind": "pattern",
+      "pattern": "stack",
+      "title": "Pattern: Stack and Monotonic Stack",
+      "short": "P Stack and Mono",
+      "dir": "patterns/stack"
+    },
+    {
+      "n": 8,
+      "kind": "pattern",
+      "pattern": "prefix-sums",
+      "title": "Pattern: Prefix Sums",
+      "short": "P Prefix Sums",
+      "dir": "patterns/prefix-sums"
+    },
+    {
+      "n": 9,
+      "kind": "pattern",
+      "pattern": "binary-search",
+      "title": "Pattern: Binary Search",
+      "short": "P Binary Search",
+      "dir": "patterns/binary-search"
+    },
+    {
+      "n": 10,
+      "kind": "pattern",
+      "pattern": "linked-list",
+      "title": "Pattern: Linked List",
+      "short": "P Linked List",
+      "dir": "patterns/linked-list"
+    },
+    {
+      "n": 11,
+      "kind": "pattern",
+      "pattern": "trees",
+      "title": "Pattern: Trees",
+      "short": "P Trees",
+      "dir": "patterns/trees"
+    },
+    {
+      "n": 12,
+      "kind": "pattern",
+      "pattern": "heap",
+      "title": "Pattern: Heap and Priority Queue",
+      "short": "P Heap and Prior",
+      "dir": "patterns/heap"
+    },
+    {
+      "n": 13,
+      "kind": "pattern",
+      "pattern": "backtracking",
+      "title": "Pattern: Backtracking",
+      "short": "P Backtracking",
+      "dir": "patterns/backtracking"
+    },
+    {
+      "n": 14,
+      "kind": "pattern",
+      "pattern": "tries",
+      "title": "Pattern: Tries",
+      "short": "P Tries",
+      "dir": "patterns/tries"
+    },
+    {
+      "n": 15,
+      "kind": "pattern",
+      "pattern": "intervals",
+      "title": "Pattern: Intervals",
+      "short": "P Intervals",
+      "dir": "patterns/intervals"
+    },
+    {
+      "n": 16,
+      "kind": "pattern",
+      "pattern": "greedy",
+      "title": "Pattern: Greedy",
+      "short": "P Greedy",
+      "dir": "patterns/greedy"
+    },
+    {
+      "n": 17,
+      "kind": "pattern",
+      "pattern": "graphs",
+      "title": "Pattern: Graphs: BFS, DFS, Topological Sort, Union-Find",
+      "short": "P Graphs: BFS, D",
+      "dir": "patterns/graphs"
+    },
+    {
+      "n": 18,
+      "kind": "pattern",
+      "pattern": "advanced-graphs",
+      "title": "Pattern: Advanced Graphs: Shortest Paths and MST",
+      "short": "P Advanced Graph",
+      "dir": "patterns/advanced-graphs"
+    },
+    {
+      "n": 19,
+      "kind": "pattern",
+      "pattern": "dp-1d",
+      "title": "Pattern: 1D Dynamic Programming",
+      "short": "P 1D Dynamic Pro",
+      "dir": "patterns/dp-1d"
+    },
+    {
+      "n": 20,
+      "kind": "pattern",
+      "pattern": "dp-2d",
+      "title": "Pattern: 2D Dynamic Programming",
+      "short": "P 2D Dynamic Pro",
+      "dir": "patterns/dp-2d"
+    },
+    {
+      "n": 21,
+      "kind": "pattern",
+      "pattern": "bit-manipulation",
+      "title": "Pattern: Bit Manipulation",
+      "short": "P Bit Manipulati",
+      "dir": "patterns/bit-manipulation"
+    },
+    {
+      "n": 22,
+      "kind": "pattern",
+      "pattern": "math-geometry",
+      "title": "Pattern: Math and Matrix",
+      "short": "P Math and Matri",
+      "dir": "patterns/math-geometry"
+    }
+  ]
+}

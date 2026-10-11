@@ -1,0 +1,37 @@
+<div class="sandbox-container" id="sandbox13">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Decision tree runner</span></div>
+  <div class="sandbox-body">
+    <p class="sidebar-hint">Pick a template, type whole numbers separated by commas, and run. Watch the tree grow, the path change, and branches get cut.</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s13m="sub">Subsets</button>
+      <button class="btn btn-sm" type="button" data-s13m="sub2">Subsets, skip duplicates</button>
+      <button class="btn btn-sm" type="button" data-s13m="perm">Permutations</button>
+      <button class="btn btn-sm" type="button" data-s13m="comb">Combination sum</button>
+    </div>
+    <div class="control-group">
+      <label for="s13In">nums (up to 6 numbers; 5 for permutations)</label>
+      <input type="text" id="s13In" value="1, 2, 3" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="control-group">
+      <label for="s13Tg">target (combination sum only, 1 to 30)</label>
+      <input type="text" id="s13Tg" value="8" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="sidebar-hint">Try an example:</p>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" data-s13ex="sub|1, 2, 3">Subsets of 1, 2, 3</button>
+      <button class="btn btn-sm" type="button" data-s13ex="sub|1, 2, 2">Repeats, no skip</button>
+      <button class="btn btn-sm" type="button" data-s13ex="sub2|1, 2, 2">Repeats, with skip</button>
+      <button class="btn btn-sm" type="button" data-s13ex="perm|1, 2, 3">Orders of 1, 2, 3</button>
+      <button class="btn btn-sm" type="button" data-s13ex="comb|2, 3, 5|8">2, 3, 5 to 8</button>
+      <button class="btn btn-sm" type="button" data-s13ex="comb|2, 3, 6, 7|7">2, 3, 6, 7 to 7</button>
+      <button class="btn btn-sm" type="button" data-s13ex="comb|3, 5|4">No answer</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" id="s13Run">Run</button>
+    </div>
+    <p class="sb-error" id="s13Err" role="alert"></p>
+    <div class="readout" id="s13Out" aria-live="polite"></div>
+    <div id="s13Tp"></div>
+    <p class="sidebar-hint">For the examples, the counts match <code>patterns/backtracking/measure.py</code>: subsets of 1, 2, 3 visit 8 nodes; with the skip, 1, 2, 2 gives 6 answers and skips 2 branches; orders of 1, 2, 3 visit 16 nodes; 2, 3, 5 to 8 visits 13 nodes with 7 cuts; 2, 3, 6, 7 to 7 visits 10 nodes with 7 cuts; 3, 5 to 4 visits 2 nodes with 2 cuts. Long runs stop recording after 60 steps, but the counts cover the whole run.</p>
+  </div>
+</div>
