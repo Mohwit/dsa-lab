@@ -1,0 +1,257 @@
+<div class="lesson-content xp" id="lesson23">
+  <header class="lesson-header-block">
+    <p class="lesson-num-label">Problem 23 (practice Q1)</p>
+    <h1 class="lesson-title">Second Largest Element</h1>
+    <p class="lesson-subtitle">Goal: find the second biggest different value in a list, or -1 if there is none. You solved it by sorting; here you race that against a single pass.</p>
+    <div class="lesson-meta">
+      <span class="badge diff-easy">easy</span>
+      <span class="badge">big-O and recursion</span>
+      <a href="https://leetcode.com/problems/third-maximum-number/" target="_blank" rel="noopener">Closest on LeetCode: 414 Third Maximum Number</a>
+    </div>
+    <p class="lesson-legend"><dfn class="term" tabindex="0" data-def="Technical words look like this. Hover or focus one to read a plain-English definition.">Dotted words</dfn> show a definition on hover. <span class="lg-math">Maths boxes</span> are optional. <span class="lg-pred">Predict boxes</span> hide the answer until you guess.</p>
+  </header>
+  <nav class="lesson-toc" aria-label="Sections in problem 23"><a href="#p23-s-plain">The problem</a><a href="#p23-s-yours">Your solution</a><a href="#p23-s-predict">Predict</a><a href="#p23-s-try">Try it</a><a href="#p23-s-hints">Hints</a><a href="#p23-s-brute">Sorting</a><a href="#p23-s-insight">The insight</a><a href="#p23-s-approaches">Approaches</a><a href="#p23-s-map">Mental map</a><a href="#p23-s-code">Code</a><a href="#p23-s-cost">Complexity</a><a href="#p23-s-talk">Interview</a><a href="#p23-s-check">Check yourself</a><a href="#p23-recap">Recap</a></nav>
+
+<section class="step" id="p23-s-plain">
+  <span class="lvl lvl-plain">Plain words</span>
+  <h2>1. Who wins the silver medal?</h2>
+  <p>A school runs a long-jump contest. Each jump is written on a list as a whole number of centimetres. Some jumpers tie with the exact same distance.</p>
+  <p>You hand out the silver medal. It goes to the second best <em>distance</em>, not the second best jumper. If two jumpers tie for the best distance, they share gold, and silver goes to the next distance down. If everyone jumped the same, there is no silver: answer -1.</p>
+  <div class="card analogy"><strong>Analogy: a two-step podium.</strong> Walk past the jumpers one at a time. Keep only two spots: gold and silver. A new jump either takes gold (and pushes the old gold down to silver), takes silver, or walks past. You never need the rest of the ranking.</div>
+  <p><strong>Input:</strong> a list of whole numbers called <code>arr</code>, never empty. <strong>Output:</strong> the second largest <dfn class="term" tabindex="0" data-def="Different from every other value counted. Ties count once: 8, 8, 7 has two distinct values, 8 and 7.">distinct</dfn> value, or <code>-1</code> when the list has fewer than two different values.</p>
+  <div id="p23tpX"></div>
+  <p class="caption">Step through the three examples. The bright cell is the largest; the boxed cell is the answer.</p>
+  <h3>The limits, and what they hint at</h3>
+  <ul>
+    <li>The list holds up to 5,000 numbers, and there can be 100 lists per run. Sorting each list is fast enough here. But an interviewer will ask for <dfn class="term" tabindex="0" data-def="Big-O notation: how the work grows as the input grows. O(n) means the work grows in step with n.">O(n)</dfn>, because you only need two values, not a full ranking.</li>
+    <li>Numbers go from minus one billion to one billion. So <code>-1</code> can be a real value in the list. Keep that in mind for the "empty" marker you choose.</li>
+  </ul>
+  <p class="newwords">New words: <span class="chip">distinct</span><span class="chip">O(n)</span></p>
+</section>
+
+<section class="step" id="p23-s-yours">
+  <h2>Your solution</h2>
+  <div class="card">
+    <p><strong>Your idea in one sentence:</strong> drop the repeats with a set, sort what is left from high to low, and take index 1.</p>
+    <p><strong>Result:</strong> it passes all 20 tests, including every page example, a single number, all equal, all negative and five random lists checked against a brute force.</p>
+    <p><strong>Cost:</strong> O(n log n) time, because of the sort. O(n) extra space for the set and the new list.</p>
+    <p><strong>What is good:</strong> removing repeats first is exactly what makes <code>10 10 10 10 10</code> give -1 and <code>7 8 8 1 4 3</code> give 7. Many first tries return 8 there. The <code>len(arr) &lt; 2</code> check covers "one number" and "all the same" in one line.</p>
+    <p><strong>One improvement:</strong> you sort every value but use only the top two. Keep just those two while you walk the list once, and the cost drops to O(n) time and O(1) space. Sections 6 and 9 show how.</p>
+  </div>
+</section>
+
+<section class="step" id="p23-s-predict">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>2. Predict before you code</h2>
+  <div class="predict">
+    <h3>Predict: what should <code>second_largest_element([9, 3, 9, 5])</code> return?</h3>
+    <textarea aria-label="Your prediction for [9, 3, 9, 5]"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p><code>5</code>. The two 9s share first place, so the next different value, 5, is second.</p></div>
+  </div>
+</section>
+
+<section class="step" id="p23-s-try">
+  <h2>3. Try it first (15 minutes)</h2>
+  <div class="card try-first">
+    <p><strong>Your turn.</strong> Your practice solution is already in <code>problems/foundations/0000-second-largest-element/attempt.py</code>. For a review, move it to <code>attempt.prev.py</code> and write the one-pass version from a blank file.</p>
+    <p>Run the tests from the <code>dsa-lab</code> folder:</p>
+    <pre><code>python3 tools/run_tests.py problems/foundations/0000-second-largest-element</code></pre>
+    <p>Time box: 15 minutes for an easy problem. Goal for the review: no sort, one loop.</p>
+  </div>
+</section>
+
+<section class="step" id="p23-s-hints">
+  <h2>4. Hints, one at a time</h2>
+  <details class="hint"><summary>Hint 1: how much of the ranking do you really need?</summary><div><p>Sorting builds the full order, from first to last. Which places of that order does the answer use? What could you keep instead of the whole sorted list?</p></div></details>
+  <details class="hint"><summary>Hint 2: which tool fits?</summary><div><p>Two plain variables, <code>first</code> and <code>second</code>, updated during one walk over the list. This is the "single pass with a few tracking variables" idea from the Big-O lesson.</p></div></details>
+  <details class="hint"><summary>Hint 3: the key step, in words</summary><div><p>For each number x: if x is bigger than first, the old first moves down to second and x becomes first. Else, if x is strictly below first and bigger than second, x becomes second. Equal to first? Ignore it.</p></div></details>
+</section>
+
+<section class="step" id="p23-s-brute">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>5. The sure way: drop repeats, then sort (your approach)</h2>
+  <details class="spoiler"><summary>Show the sorting method</summary><div>
+    <p>This is your solution. It is correct and short. Watch where the work goes on <code>[12, 1, 35, 10, 34, 1]</code>.</p>
+    <div id="p23tpB"></div>
+    <div class="readouts">
+      <div class="ro"><span class="lab">set inserts</span><span class="val">6</span></div>
+      <div class="ro"><span class="lab">sort comparisons in this trace</span><span class="val">9</span></div>
+      <div class="ro"><span class="lab">total steps</span><span class="val">15</span></div>
+    </div>
+    <p>The sort ranks all 5 distinct values. We read only the first two. For 100,000 random numbers, Python's sort made 1,529,213 comparisons (counted by <code>approaches.py</code>). A single pass needs 100,000 steps.</p>
+    <div class="card warn"><span class="callout-title" style="color:var(--orange)">Why an interviewer pushes back</span>Sorting costs <dfn class="term" tabindex="0" data-def="The work grows a little faster than n: n times the number of halvings of n. For 100,000 numbers, log2 n is about 17.">O(n log n)</dfn>. The question needs a fixed number of values (two), and that almost always means one pass is enough.</div>
+  </div></details>
+  <p class="newwords">New words: <span class="chip">O(n log n)</span></p>
+</section>
+
+<section class="step" id="p23-s-insight">
+  <span class="lvl lvl-words">Pattern words</span> <span class="lvl lvl-pic">Picture</span>
+  <h2>6. Two faster ideas</h2>
+  <details class="spoiler"><summary>Show the pattern solution</summary><div>
+    <h3>Idea A: two passes</h3>
+    <p>Pass 1 finds the largest value, <code>top</code>. Pass 2 finds the biggest value that is strictly below <code>top</code>. Each pass is a plain walk, so this is already O(n).</p>
+    <div id="p23tpT"></div>
+    <p>On the example: 5 comparisons for <code>max</code>, then 6 steps in the second pass. 11 steps in total.</p>
+
+    <h3>Idea B: one pass, two <dfn class="term" tabindex="0" data-def="Variables that remember the best values seen so far while a loop walks the list. Here: first and second.">tracking variables</dfn> (the pattern)</h3>
+    <p>The one observation: <strong>the answer only depends on the top two distinct values seen so far</strong>. So keep exactly those two, and update them as each number arrives.</p>
+    <div class="card rule"><span class="callout-title" style="color:var(--teal)">The invariant</span>An <dfn class="term" tabindex="0" data-def="A fact that stays true at every step of a loop. It is how you convince yourself the code is right.">invariant</dfn> is a fact that stays true every step. Here: after looking at the first i numbers, <code>first</code> is their largest value and <code>second</code> is their largest value strictly below <code>first</code> (or <code>None</code> if there is none).</div>
+    <div id="p23tpA"></div>
+    <p>Each number is looked at once: 6 steps. Watch step 4: when 35 arrives, the old champion 12 does not vanish. It steps down to second. Forgetting that move is the classic bug.</p>
+    <p>Why <code>None</code> and not <code>-1</code> as the "empty" marker? Because -1 can be a real value in the list. With <code>[-5, -3]</code> and <code>first = second = -1</code> at the start, neither number ever beats -1, and the code would return -1 instead of -5.</p>
+  </div></details>
+  <p class="newwords">New words: <span class="chip">tracking variables</span><span class="chip">invariant</span></p>
+</section>
+
+<section class="step" id="p23-s-approaches">
+  <span class="lvl lvl-words">Pattern words</span>
+  <h2>7. All approaches side by side</h2>
+  <details class="spoiler"><summary>Show all approaches</summary><div>
+    <p>Steps on <code>[12, 1, 35, 10, 34, 1]</code> are counted by the page's trace. The 100,000 counts come from <code>approaches.py</code> in this problem's folder, which also checks every approach on the tests and 3,000 random lists.</p>
+    <table class="approaches">
+      <tr><th>Approach</th><th>Idea</th><th>Time</th><th>Space</th><th>Choose it when</th></tr>
+      <tr><td>Drop repeats, sort (yours)</td><td><code>sorted(set(arr), reverse=True)[1]</code> after a length check.<br><small>Example: 6 inserts + 9 comparisons. n = 100,000: 1,529,213 sort comparisons.</small></td><td>O(n log n)</td><td>O(n)</td><td>n is small and you want the shortest correct code, or you need the full ranking anyway.</td></tr>
+      <tr><td>Two passes</td><td><code>top = max(arr)</code>, then the max of values below <code>top</code>.<br><small>Example: 11 steps. n = 100,000: 199,999 steps.</small></td><td>O(n)</td><td>O(1)</td><td>You want O(n) that is very easy to explain and hard to get wrong.</td></tr>
+      <tr class="is-best"><td>One pass, two variables</td><td>Keep <code>first</code> and <code>second</code>; update on each number.<br><small>Example: 6 steps. n = 100,000: 100,000 steps.</small></td><td>O(n)</td><td>O(1)</td><td>The default answer. It also grows to "top 3" (LeetCode 414) by adding one variable.</td></tr>
+      <tr><td>Heap</td><td><code>heapq.nlargest(2, set(arr))</code>, then read index 1.</td><td>O(n)</td><td>O(n) for the set</td><td>You need the top k for a large k; overkill for k = 2.</td></tr>
+    </table>
+  </div></details>
+</section>
+
+<section class="step" id="p23-s-map">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>8. Mental map: how to get here next time</h2>
+  <details class="spoiler"><summary>Show the mental map</summary><div>
+    <ol class="mmap">
+      <li class="mm-signal"><b>Signal</b><span>"Largest", "smallest", "second", "third": the answer is a small, fixed number of values from the list.</span></li>
+      <li><b>Ask</b><span>"How many values do I need to remember to answer at the end?" Here: two.</span></li>
+      <li><b>Pick</b><span>Rule out the forks that do more work than needed.</span>
+        <ul class="mm-branches">
+          <li><i>need the whole order</i>Sort. O(n log n), more than we need.</li>
+          <li><i>need the top k, k large</i>A heap of size k.</li>
+          <li><i>simplest O(n)</i>Two passes: max, then max below it.</li>
+          <li class="is-pick"><i>need a fixed top 2</i>One pass with two variables.</li>
+        </ul>
+      </li>
+      <li><b>Invariant</b><span><code>first</code> is the largest so far; <code>second</code> is the largest so far strictly below <code>first</code>.</span></li>
+      <li><b>Steps</b><span>Both start as <code>None</code>. For each x: bigger than first, shift first down and take first. Else strictly between, take second. At the end, <code>None</code> becomes -1.</span></li>
+      <li class="mm-trap"><b>Check</b><span>When first changes, the old first must move to second. <code>[1, 5]</code> must give 1, not -1.</span></li>
+      <li class="mm-trap"><b>Check</b><span>Use <code>x &lt; first</code>, not <code>x &lt;= first</code>, or <code>[8, 8]</code> gives 8.</span></li>
+      <li class="mm-trap"><b>Check</b><span>Start from <code>None</code> (or minus infinity), never from -1 or 0: values can be negative.</span></li>
+    </ol>
+  </div></details>
+</section>
+
+<section class="step" id="p23-s-code">
+  <span class="lvl lvl-code">Code</span>
+  <h2>9. The code, line by line</h2>
+  <details class="spoiler"><summary>Show the code walk</summary><div>
+    <table>
+      <thead><tr><th>Code</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code><span class="k">def</span> second_largest_element(arr):</code></td><td>Takes the list, returns one whole number.</td></tr>
+        <tr><td><code>first = second = <span class="k">None</span></code></td><td>An empty two-step podium. <code>None</code> cannot be confused with a real number.</td></tr>
+        <tr><td><code><span class="k">for</span> x <span class="k">in</span> arr:</code></td><td>One walk, left to right.</td></tr>
+        <tr><td><code><span class="k">if</span> first <span class="k">is</span> None <span class="k">or</span> x &gt; first:</code></td><td>A new champion (or the very first number).</td></tr>
+        <tr><td><code>first, second = x, first</code></td><td>The old champion steps down to second; x takes first. Both change at once.</td></tr>
+        <tr><td><code><span class="k">elif</span> x &lt; first <span class="k">and</span> (second <span class="k">is</span> None <span class="k">or</span> x &gt; second):</code></td><td>Strictly below the champion, and better than the current runner-up. Equal to first fails here: that is the repeat guard.</td></tr>
+        <tr><td><code>second = x</code></td><td>New runner-up.</td></tr>
+        <tr><td><code><span class="k">return</span> -1 <span class="k">if</span> second <span class="k">is</span> None <span class="k">else</span> second</code></td><td>Nobody reached second place means fewer than two distinct values.</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Edge cases it handles:</strong> one number (-1), all equal (-1), the largest repeated (<code>[7, 8, 8]</code> gives 7), all negative, rising and falling lists, and the extremes -10<sup>9</sup> and 10<sup>9</sup>.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p23-s-cost">
+  <span class="lvl lvl-math">Maths (optional)</span>
+  <h2>10. Counting the work</h2>
+  <details class="math"><summary>Step 1: your sort, counted</summary><div>
+    <div class="eq">set:   n inserts                       = 100,000
+sort:  about k * log2(k) comparisons   = 100,000 * 16.6 = about 1,660,000
+measured: Python sorted 100,000 random values with 1,529,213 comparisons</div>
+    <p>Time O(n log n). Space O(n) for the set and the list.</p>
+  </div></details>
+  <details class="math"><summary>Step 2: one pass, and why you cannot beat O(n)</summary><div>
+    <div class="eq">steps: n = 100,000      (one look per number)
+space: 2 variables      = O(1)</div>
+    <p><strong>Why O(n) is the best possible:</strong> any number you skip could have been the largest or the second largest. So every number must be read at least once.</p>
+  </div></details>
+</section>
+
+<section class="step" id="p23-s-talk">
+  <h2>11. Interview talk track</h2>
+  <div class="card">
+    <ol>
+      <li><strong>Clarify.</strong> "Does second largest mean the second distinct value? What do I return if there is none? Can numbers be negative?"</li>
+      <li><strong>Example.</strong> "For 7 8 8 1 4 3 the answer is 7, because the two 8s share first place."</li>
+      <li><strong>Simple first.</strong> "Drop repeats and sort: O(n log n) time, O(n) space."</li>
+      <li><strong>Better idea.</strong> "I only need the top two, so I keep two variables and walk once."</li>
+      <li><strong>Code.</strong> The one-pass loop with <code>None</code> as the empty marker.</li>
+      <li><strong>Test.</strong> The example, then <code>[8, 8]</code>, <code>[1, 5]</code> and an all-negative list.</li>
+      <li><strong>Complexity.</strong> "O(n) time, O(1) extra space."</li>
+    </ol>
+    <div class="predict">
+      <h3>Follow-ups: (1) how would you find the third largest? (2) what if the numbers arrive as an endless stream?</h3>
+      <textarea aria-label="Your answers to the two follow-up questions"></textarea>
+      <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+      <div class="answer">
+        <p><strong>(1) Third largest:</strong> add a third variable. A new champion shifts all three down one step; skip values equal to any of them. That is LeetCode 414. For a general k, keep a min-heap of size k: O(n log k).</p>
+        <p><strong>(2) A stream:</strong> the one-pass version already works, because it never looks back. Keep <code>first</code> and <code>second</code> and update them as each number arrives. Sorting would need to store everything.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="p23-s-check">
+  <span class="lvl lvl-pic">Picture</span>
+  <h2>12. Check yourself</h2>
+  <div class="predict">
+    <h3>Predict: someone writes <code>if x &gt; first: first = x</code> without moving the old first down. What does <code>[1, 5]</code> return?</h3>
+    <textarea aria-label="Your prediction for the missing shift bug"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p><code>-1</code>, but the right answer is 1. When 5 arrives, 1 is thrown away instead of moving to second place.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Predict: what does the function return for <code>[-1, -1, 0]</code>? Is that answer a problem?</h3>
+    <textarea aria-label="Your prediction for [-1, -1, 0]"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p><code>-1</code>, and it is correct: -1 really is the second largest. But the caller cannot tell it apart from "no answer". In an interview, point this out and offer to return <code>None</code> instead.</p></div>
+  </div>
+  <div class="predict">
+    <h3>Predict: the list is promised to be sorted from small to large. What is the fastest method?</h3>
+    <textarea aria-label="Your answer for a sorted list"></textarea>
+    <div class="btnrow"><button class="lock primary" type="button">Lock in my guess</button><button class="skip" type="button">Just show me</button></div>
+    <div class="answer"><p>Start at the last element (the largest) and walk left until you meet a smaller value. Usually that is one or two steps, but if the end is full of repeats it is still O(n) in the worst case.</p></div>
+  </div>
+  <h3>Glossary</h3>
+  <dl class="glossary">
+    <dt>distinct</dt><dd>Counted once, however many times it appears.</dd>
+    <dt>O(n), O(n log n)</dt><dd>How the work grows with n: in step with n, or a little faster.</dd>
+    <dt>tracking variables</dt><dd>A few variables that hold the best values seen so far during one walk.</dd>
+    <dt>invariant</dt><dd>A fact that stays true at every step of a loop.</dd>
+  </dl>
+</section>
+
+<section class="step recap" id="p23-recap">
+  <h2>Recap: the pattern in one minute</h2>
+  <div class="mental-model">
+    <p><strong>Pattern:</strong> a single pass with a few tracking variables (Big-O lesson). Keep only what the answer needs.</p>
+    <p><strong>Trigger signals:</strong> largest, smallest, second, third; "can you do it without sorting?"</p>
+    <p><strong>Template:</strong> <code>first = second = None</code>; one loop; a new champion shifts the old one down; skip ties with the champion.</p>
+    <p><strong>Cost:</strong> sort O(n log n); two passes O(n); one pass O(n) time and O(1) space.</p>
+  </div>
+  <div class="checkpoint">
+    <p>How did it go? Your practice file passed every test, so it is logged as solved alone. Race your own lists in the sandbox.</p>
+    <div class="outcome-row" data-slot="23">
+      <button class="btn btn-sm" type="button" data-outcome="alone">Solved it alone</button>
+      <button class="btn btn-sm" type="button" data-outcome="hints">Solved with hints</button>
+      <button class="btn btn-sm" type="button" data-outcome="solution">Read the solution</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-sm" type="button" onclick="switchLesson(4)">Back to the Big-O lesson</button>
+    </div>
+  </div>
+</section>
+</div>

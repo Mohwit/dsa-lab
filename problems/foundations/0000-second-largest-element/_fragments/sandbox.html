@@ -1,0 +1,33 @@
+<div class="sandbox-container" id="sandbox23">
+  <div class="sandbox-header"><span class="sandbox-dot"></span><span>Podium race: sort, two passes or one pass</span></div>
+  <div class="sandbox-body">
+    <div class="control-group">
+      <label for="s23In">arr (1 to 12 whole numbers, split by commas or spaces)</label>
+      <input type="text" id="s23In" value="12, 1, 35, 10, 34, 1" spellcheck="false" autocomplete="off">
+    </div>
+    <div class="control-group">
+      <label>Try an example</label>
+      <div class="btn-row">
+        <button class="btn btn-sm" type="button" data-s23ex="7, 8, 8, 1, 4, 3">Largest twice</button>
+        <button class="btn btn-sm" type="button" data-s23ex="10, 10, 10, 10, 10">All the same</button>
+        <button class="btn btn-sm" type="button" data-s23ex="1, 2, 3, 4, 5, 6, 7, 8">Rising</button>
+        <button class="btn btn-sm" type="button" data-s23ex="8, 7, 6, 5, 4, 3, 2, 1">Falling</button>
+        <button class="btn btn-sm" type="button" data-s23ex="-3, -1, -2">All negative</button>
+        <button class="btn btn-sm" type="button" data-s23ex="5">One number</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Approach to trace</label>
+      <div class="btn-row" role="group" aria-label="Approach to trace">
+        <button class="btn btn-sm" type="button" data-s23ap="sort" aria-pressed="false">Sort (yours)</button>
+        <button class="btn btn-sm" type="button" data-s23ap="two" aria-pressed="false">Two passes</button>
+        <button class="btn btn-sm btn-primary" type="button" data-s23ap="one" aria-pressed="true">One pass</button>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" type="button" id="s23Run">Run</button></div>
+    <p class="sb-error" id="s23Err" role="alert"></p>
+    <div id="s23Tp"></div>
+    <div class="readout" id="s23Out" aria-live="polite"></div>
+    <p class="sidebar-hint">The race counts the steps of all three approaches on your list, whichever one you trace. Try the rising list: the champion changes on every step, and the one pass still looks at each number once.</p>
+  </div>
+</div>

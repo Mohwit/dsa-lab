@@ -10,7 +10,7 @@ Workspace: this folder. Page: `site/index.html`. Run tests: `python3 tools/run_t
 | Interview date | (none) |
 | Language | Python |
 | Daily target | 2-3 problems |
-| Current pattern | Arrays and Hashing |
+| Current pattern | Big-O and Recursion (practice plan phase 1: array traversal) |
 | Workflow | Solves problems on their own in `problems/` (inbox), then runs `/dsa-coach` to file each one into `problems/<pattern>/NNNN-slug/` and build its page |
 
 ## Pattern status
@@ -19,8 +19,8 @@ Status advances on evidence only: `not started` -> `introduced` (did the pattern
 
 | Tier | Pattern | Status | Solved | Alone | Last seen | Notes |
 |---|---|---|---|---|---|---|
-| 0 | Big-O and Recursion | not started | 0 | 0 | | |
-| 1 | Arrays and Hashing | not started | 0 | 0 | | Day 1 built 2026-10-11: pattern lesson (slot 1), 217 (slot 2), 1 (slot 3) |
+| 0 | Big-O and Recursion | not started | 1 | 1 | 2026-10-13 | Second Largest Element (slot 23) filed from practice Q1 |
+| 1 | Arrays and Hashing | not started | 0 | 0 | | Pattern lesson (slot 1). Default sample problems 217 and 1 removed 2026-10-13 |
 | 1 | Two Pointers | not started | 0 | 0 | | |
 | 1 | Sliding Window | not started | 0 | 0 | | |
 | 1 | Stack and Monotonic Stack | not started | 0 | 0 | | |
@@ -46,6 +46,7 @@ Outcome: `alone` (no hints), `hints` (used 1-3 hints), `solution` (read the solu
 
 | Date | Slot | Problem | Pattern | Diff | Outcome | Minutes | Next review | Mistake or insight |
 |---|---|---|---|---|---|---|---|---|
+| 2026-10-13 | 23 | Second Largest Element (practice Q1) | foundations | easy | alone | | 2026-10-20 | Correct with set + sort, O(n log n); review goal: one pass with two variables, O(n) |
 
 ## Mistake journal
 

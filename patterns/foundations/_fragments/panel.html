@@ -340,6 +340,7 @@ n = 1000000: calls = 2,097,151   power calls = 21</code></pre>
   <table class="approaches">
     <thead><tr><th>Level</th><th>Problem</th><th>The twist</th></tr></thead>
     <tbody>
+      <tr><td><span class="badge diff-easy">easy</span></td><td><a href="#" onclick="switchLesson(23); return false;">Second Largest Element</a> (practice Q1)</td><td>One pass with two tracking variables beats sorting: O(n) instead of O(n log n). <button class="btn btn-sm" type="button" onclick="switchLesson(23)">Open</button></td></tr>
       <tr><td><span class="badge diff-easy">easy</span></td><td><a href="https://leetcode.com/problems/fibonacci-number/" target="_blank" rel="noopener">509 Fibonacci Number</a></td><td>Write it naive, count the calls, then add a memo, then a two-variable loop with O(1) space.</td></tr>
       <tr><td><span class="badge diff-easy">easy</span></td><td><a href="https://leetcode.com/problems/reverse-string/" target="_blank" rel="noopener">344 Reverse String</a></td><td>Two-ended recursion in place; then notice the O(n) stack and say why a loop is better.</td></tr>
       <tr><td><span class="badge diff-medium">medium</span></td><td><a href="https://leetcode.com/problems/powx-n/" target="_blank" rel="noopener">50 Pow(x, n)</a></td><td>Fast power with negative n, and n as small as -2<sup>31</sup>. The loop times out; halving makes 34 calls for n = -2<sup>31</sup> (from <code>measure.py</code>).</td></tr>

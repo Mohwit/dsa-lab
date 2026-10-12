@@ -53,6 +53,7 @@ Python is the default language (system `python3`, standard library only). If the
 | `file` (or bare invocation when the inbox has files) | File every loose solution in `problems/`: identify the problem, pick its pattern, move it to `problems/<pattern>/NNNN-slug/attempt.py`, test it, review it, build its full page (all approaches, mental map, traces) | [daily-session.md](reference/daily-session.md), Filing |
 | `today` (or bare invocation with an empty inbox) | Pick 2-3 problems (due reviews first, then the current pattern), build any missing slots, write `today.json`, rebuild, hand over links and time boxes | [daily-session.md](reference/daily-session.md) |
 | `hint` | The next rung of the hint ladder for the current problem | daily-session.md, Coaching |
+| `practice [qNN]` | For each folder in `practice/qNN_slug/` whose `solution.py` has code but whose `feedback.md` is still the "Not reviewed yet" placeholder (or the named one): read `problem.md`, run `solution.py` on the problem's examples plus edge cases, and write `feedback.md`: verdict (correct / bugs with failing input), time and space complexity, review notes, the pattern, the best solution with explanation, and other approaches. Tick it in `practice/tracker/plan.md`. Never edit `solution.py` | daily-session.md, Coaching |
 | `check` / pasted code | Run the tests on `attempt.py`, review it, log the outcome, schedule its review | daily-session.md, Coaching + Spaced review |
 | `pattern <name>` | Build or open the pattern lesson | [patterns.md](reference/patterns.md), [problem-page.md](reference/problem-page.md) |
 | `problem <name or LeetCode number>` | Build a slot for a specific problem outside the plan | problem-page.md |
@@ -61,7 +62,7 @@ Python is the default language (system `python3`, standard library only). If the
 | `progress` | Pattern map, streak, due reviews, mistake journal highlights, next step | `tracking/dsa-progress.md` |
 | `explain <idea>` | Explain a concept (recursion, heap, Big-O ...) with a picture; add it to the matching pattern lesson if it is missing | patterns.md |
 
-Routing: an explicit command wins. **Bare invocation first looks at the inbox**: any `.py` file (or folder) directly under `problems/` that is not a pattern folder is a solution the learner wrote on their own; file them all (`file`). With an empty inbox, bare invocation or "what now" means `today`. A pasted solution or "it fails" means `check`. A LeetCode-style question without a command means: find the pattern, ask the learner for their idea first, then hint.
+Routing: an explicit command wins. **Bare invocation first looks at the inbox**: any `.py` file (or folder) directly under `problems/` that is not a pattern folder is a solution the learner wrote on their own; file them all (`file`). Then it looks for unreviewed solutions in `practice/` (`practice`). With both empty, bare invocation or "what now" means `today`. A pasted solution or "it fails" means `check`. A LeetCode-style question without a command means: find the pattern, ask the learner for their idea first, then hint.
 
 ## Before building any page
 

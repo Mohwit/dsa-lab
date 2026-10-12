@@ -131,28 +131,6 @@
       "dir": "patterns/arrays-hashing"
     },
     {
-      "n": 2,
-      "kind": "problem",
-      "pattern": "arrays-hashing",
-      "title": "Contains Duplicate",
-      "diff": "easy",
-      "dir": "problems/arrays-hashing/0217-contains-duplicate",
-      "fn": "contains_duplicate",
-      "short": "217 Duplicate",
-      "lc": 217
-    },
-    {
-      "n": 3,
-      "kind": "problem",
-      "pattern": "arrays-hashing",
-      "title": "Two Sum",
-      "diff": "easy",
-      "dir": "problems/arrays-hashing/0001-two-sum",
-      "fn": "two_sum",
-      "short": "1 Two Sum",
-      "lc": 1
-    },
-    {
       "n": 4,
       "kind": "pattern",
       "pattern": "foundations",
@@ -303,6 +281,16 @@
       "title": "Pattern: Math and Matrix",
       "short": "P Math and Matri",
       "dir": "patterns/math-geometry"
+    },
+    {
+      "n": 23,
+      "kind": "problem",
+      "pattern": "foundations",
+      "title": "Second Largest Element",
+      "diff": "easy",
+      "dir": "problems/foundations/0000-second-largest-element",
+      "fn": "second_largest_element",
+      "short": "Second largest"
     }
   ]
 }
